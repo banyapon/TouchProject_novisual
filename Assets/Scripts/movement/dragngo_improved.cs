@@ -26,6 +26,7 @@ public class dragngo_improved : MonoBehaviour
     [SerializeField] private float oneFingerDeadZoneRaw = 8f;
     [SerializeField] private float twoFingerDeadZoneRaw = 8f;
     [SerializeField] private float twoFingerRotateDegrees = 90f;
+    [SerializeField] private float twoFingerSmoothingSeconds = 0.06f;
     [SerializeField] private float maxAimLineDistance = 100f;
     [SerializeField] private float laserWidth = 0.025f;
     [SerializeField] private Color aimingColor = Color.white;
@@ -39,8 +40,11 @@ public class dragngo_improved : MonoBehaviour
     private bool isTwoFingerMode;
     private bool hasTwoFingerCenter;
     private bool hasLastOneFingerPosition;
+    private bool hasPassedTwoFingerDeadZone;
     private Vector2 lastOneFingerPosition;
     private float lastTwoFingerCenterX;
+    private float twoFingerGestureRawDelta;
+    private float pendingRotationDegrees;
 
     private struct TouchSession
     {
@@ -82,6 +86,8 @@ public class dragngo_improved : MonoBehaviour
         }
 
         CleanupExpiredSessions();
+        UpdateTwoFingerRotationInput();
+        ApplyPendingTwoFingerRotation();
         UpdateAimVisual();
     }
 
@@ -163,7 +169,6 @@ public class dragngo_improved : MonoBehaviour
                 return;
             }
 
-            RotateFromTwoFingerDrag(contactId);
             return;
         }
 
@@ -397,14 +402,22 @@ public class dragngo_improved : MonoBehaviour
         isTwoFingerMode = true;
         hasTwoFingerCenter = false;
         hasLastOneFingerPosition = false;
+        hasPassedTwoFingerDeadZone = false;
+        twoFingerGestureRawDelta = 0f;
+        pendingRotationDegrees = 0f;
         hasTarget = false;
         ResetSessionStarts();
         SetLaserColor(aimingColor);
         Debug.Log("dragngo_improved enter two finger rotate mode.");
     }
 
-    private void RotateFromTwoFingerDrag(int contactId)
+    private void UpdateTwoFingerRotationInput()
     {
+        if (!isTwoFingerMode || sessions.Count < 2)
+        {
+            return;
+        }
+
         float centerX = GetAverageActiveX();
 
         if (!hasTwoFingerCenter)
@@ -417,14 +430,50 @@ public class dragngo_improved : MonoBehaviour
         float deltaX = centerX - lastTwoFingerCenterX;
         lastTwoFingerCenterX = centerX;
 
-        if (DeathZone(deltaX, twoFingerDeadZoneRaw))
+        if (Mathf.Approximately(deltaX, 0f))
         {
             return;
         }
 
-        Transform target = worldRotateTarget != null ? worldRotateTarget : transform;
+        if (!hasPassedTwoFingerDeadZone)
+        {
+            twoFingerGestureRawDelta += deltaX;
+            if (DeathZone(twoFingerGestureRawDelta, twoFingerDeadZoneRaw))
+            {
+                return;
+            }
+
+            float direction = Mathf.Sign(twoFingerGestureRawDelta);
+            deltaX = twoFingerGestureRawDelta - direction * twoFingerDeadZoneRaw;
+            hasPassedTwoFingerDeadZone = true;
+        }
+
         float degreesPerRaw = twoFingerRotateDegrees / CalibratedRawDistance;
-        float rotationDegrees = -deltaX * degreesPerRaw;
+        pendingRotationDegrees += -deltaX * degreesPerRaw;
+    }
+
+    private void ApplyPendingTwoFingerRotation()
+    {
+        if (Mathf.Approximately(pendingRotationDegrees, 0f))
+        {
+            return;
+        }
+
+        float rotationDegrees = pendingRotationDegrees;
+        if (twoFingerSmoothingSeconds > 0f)
+        {
+            float smoothingFactor = 1f - Mathf.Exp(-Time.deltaTime / twoFingerSmoothingSeconds);
+            rotationDegrees *= smoothingFactor;
+
+            if (Mathf.Abs(rotationDegrees) < 0.001f && Mathf.Abs(pendingRotationDegrees) < 0.01f)
+            {
+                rotationDegrees = pendingRotationDegrees;
+            }
+        }
+
+        pendingRotationDegrees -= rotationDegrees;
+
+        Transform target = worldRotateTarget != null ? worldRotateTarget : transform;
 
         target.Rotate(Vector3.up, rotationDegrees, Space.World);
         if (Player != null && Player.transform != target && !Player.transform.IsChildOf(target))
@@ -433,8 +482,8 @@ public class dragngo_improved : MonoBehaviour
         }
 
         Debug.Log(
-            $"dragngo_improved two finger rotate id={contactId}, centerX={centerX}, " +
-            $"deltaX={deltaX}, rotationDegrees={rotationDegrees}, target={target.name}"
+            $"dragngo_improved two finger rotate rotationDegrees={rotationDegrees}, " +
+            $"pendingRotationDegrees={pendingRotationDegrees}, target={target.name}"
         );
     }
 
@@ -500,6 +549,9 @@ public class dragngo_improved : MonoBehaviour
         isTwoFingerMode = false;
         hasTwoFingerCenter = false;
         hasLastOneFingerPosition = false;
+        hasPassedTwoFingerDeadZone = false;
+        twoFingerGestureRawDelta = 0f;
+        pendingRotationDegrees = 0f;
         ResetSessionStarts();
         Debug.Log("dragngo_improved exit two finger rotate mode.");
     }
