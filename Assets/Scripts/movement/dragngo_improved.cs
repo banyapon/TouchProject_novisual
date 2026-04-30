@@ -10,13 +10,15 @@ public class dragngo_improved : MonoBehaviour
     private const float CalibratedCmDistance = 6f;
     private const float CmPerRaw = CalibratedCmDistance / CalibratedRawDistance;
     private const float ContactTimeoutSeconds = 0.08f;
+    private const string DefaultNavPointLayerName = "NavPoint";
     private const string DefaultRoadLayerName = "Road";
 
     [SerializeField] private GameObject Player;
-    [SerializeField] private Transform fireOrigin;
+    [SerializeField] private Transform rayOrigin;
     [SerializeField] private Transform worldRotateTarget;
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private GameObject targetPrefab;
+    [SerializeField] private LayerMask navPointLayerMask;
     [SerializeField] private LayerMask roadLayerMask;
     [SerializeField] private float roadRaycastHeight = 5f;
     [SerializeField] private float roadRaycastDistance = 20f;
@@ -37,6 +39,7 @@ public class dragngo_improved : MonoBehaviour
     private Vector3 movementStartPosition;
     private Vector3 currentTargetPosition;
     private bool hasTarget;
+    private bool isDraggingToTarget;
     private bool isTwoFingerMode;
     private bool hasTwoFingerCenter;
     private bool hasLastOneFingerPosition;
@@ -103,14 +106,14 @@ public class dragngo_improved : MonoBehaviour
 
         movementStartPosition = Player.transform.position;
 
-        if (fireOrigin == null && Camera.main != null)
+        if (rayOrigin == null && Camera.main != null)
         {
-            fireOrigin = Camera.main.transform;
+            rayOrigin = Camera.main.transform;
         }
 
         if (worldRotateTarget == null)
         {
-            worldRotateTarget = fireOrigin != null ? fireOrigin : transform;
+            worldRotateTarget = rayOrigin != null ? rayOrigin : transform;
         }
 
         if (lineRenderer == null)
@@ -131,6 +134,7 @@ public class dragngo_improved : MonoBehaviour
             : new Material(Shader.Find("Sprites/Default"));
         SetLaserColor(aimingColor);
 
+        ResolveNavPointLayerMask();
         ResolveRoadLayerMask();
         EnsureTargetInstance();
     }
@@ -195,19 +199,22 @@ public class dragngo_improved : MonoBehaviour
 
     private void BeginOneFingerTargeting(TouchpadContact contact)
     {
-        if (Player == null)
+        if (Player == null || !hasTarget)
         {
+            isDraggingToTarget = false;
             return;
         }
 
+        isDraggingToTarget = true;
         movementStartPosition = Player.transform.position;
         hasLastOneFingerPosition = true;
         lastOneFingerPosition = new Vector2(contact.X, contact.Y);
+        SetLaserColor(readyColor);
     }
 
     private void UpdateOneFingerTarget(int contactId, TouchSession session)
     {
-        if (Player == null)
+        if (!isDraggingToTarget || Player == null || !hasTarget)
         {
             return;
         }
@@ -223,29 +230,29 @@ public class dragngo_improved : MonoBehaviour
         Vector2 dragDelta = currentPosition - lastOneFingerPosition;
         lastOneFingerPosition = currentPosition;
 
-        Vector2 totalRawDistance = new Vector2(
-            session.LastX - session.StartX,
-            session.LastY - session.StartY);
+        float totalRawDistance = session.LastY - session.StartY;
 
-        if (Mathf.Abs(totalRawDistance.x) <= oneFingerDeadZoneRaw &&
-            Mathf.Abs(totalRawDistance.y) <= oneFingerDeadZoneRaw)
+        if (Mathf.Abs(totalRawDistance) <= oneFingerDeadZoneRaw)
         {
             Player.transform.position = movementStartPosition;
-            currentTargetPosition = movementStartPosition;
-            hasTarget = false;
             return;
         }
 
-        Vector2 totalCmDistance = totalRawDistance * CmPerRaw;
-        Vector2 scaledWorldDistance = totalCmDistance * Scale;
-        Vector3 candidatePosition =
-            movementStartPosition +
-            Player.transform.right * scaledWorldDistance.x +
-            Player.transform.forward * scaledWorldDistance.y;
+        Vector3 targetDirection = currentTargetPosition - movementStartPosition;
+        float targetDistance = targetDirection.magnitude;
+        if (Mathf.Approximately(targetDistance, 0f))
+        {
+            Player.transform.position = currentTargetPosition;
+            return;
+        }
+
+        float totalCmDistance = totalRawDistance * CmPerRaw;
+        float scaledWorldDistance = totalCmDistance * Scale;
+        float moveDistance = Mathf.Clamp(scaledWorldDistance, 0f, targetDistance);
+        Vector3 candidatePosition = movementStartPosition + targetDirection.normalized * moveDistance;
 
         if (!TryProjectToRoad(candidatePosition, out Vector3 roadPosition))
         {
-            hasTarget = false;
             Debug.Log(
                 $"dragngo_improved target blocked id={contactId}, dragDelta={dragDelta}, " +
                 $"candidate={candidatePosition}, roadLayerMask={roadLayerMask.value}"
@@ -255,13 +262,11 @@ public class dragngo_improved : MonoBehaviour
 
         Vector3 previousPosition = Player.transform.position;
         Player.transform.position = roadPosition;
-        currentTargetPosition = roadPosition;
-        hasTarget = true;
 
         Debug.Log(
             $"dragngo_improved target id={contactId}, current={currentPosition}, dragDelta={dragDelta}, " +
             $"totalRaw={totalRawDistance}, totalCm={totalCmDistance}, scaledWorld={scaledWorldDistance}, " +
-            $"Player from {previousPosition} to {roadPosition}"
+            $"moveDistance={moveDistance}, Player from {previousPosition} to {roadPosition}, target={currentTargetPosition}"
         );
     }
 
@@ -301,7 +306,7 @@ public class dragngo_improved : MonoBehaviour
             return;
         }
 
-        if (fireOrigin == null)
+        if (rayOrigin == null)
         {
             lineRenderer.enabled = hasTarget;
             UpdateTargetPreview(hasTarget);
@@ -309,9 +314,9 @@ public class dragngo_improved : MonoBehaviour
         }
 
         lineRenderer.enabled = true;
-        lineRenderer.SetPosition(0, fireOrigin.position);
+        lineRenderer.SetPosition(0, rayOrigin.position);
 
-        if (hasTarget)
+        if (isDraggingToTarget)
         {
             lineRenderer.SetPosition(1, currentTargetPosition);
             SetLaserColor(readyColor);
@@ -319,7 +324,32 @@ public class dragngo_improved : MonoBehaviour
             return;
         }
 
-        lineRenderer.SetPosition(1, fireOrigin.position + fireOrigin.forward * maxAimLineDistance);
+        ResolveNavPointLayerMask();
+
+        Vector3 origin = rayOrigin.position;
+        Vector3 direction = rayOrigin.forward;
+        Vector3 laserEnd = origin + direction * maxAimLineDistance;
+        bool hitNavPoint = false;
+
+        if (navPointLayerMask.value != 0 &&
+            Physics.Raycast(origin, direction, out RaycastHit hit, maxAimLineDistance, navPointLayerMask, QueryTriggerInteraction.Collide))
+        {
+            laserEnd = hit.point;
+            currentTargetPosition = hit.point + Vector3.up * playerGroundOffset;
+            hitNavPoint = true;
+        }
+
+        hasTarget = hitNavPoint;
+
+        if (hasTarget)
+        {
+            lineRenderer.SetPosition(1, laserEnd);
+            SetLaserColor(readyColor);
+            UpdateTargetPreview(true);
+            return;
+        }
+
+        lineRenderer.SetPosition(1, laserEnd);
         SetLaserColor(aimingColor);
         UpdateTargetPreview(false);
     }
@@ -392,6 +422,20 @@ public class dragngo_improved : MonoBehaviour
         }
     }
 
+    private void ResolveNavPointLayerMask()
+    {
+        if (navPointLayerMask.value != 0)
+        {
+            return;
+        }
+
+        int navPointLayer = LayerMask.NameToLayer(DefaultNavPointLayerName);
+        if (navPointLayer >= 0)
+        {
+            navPointLayerMask = 1 << navPointLayer;
+        }
+    }
+
     private bool DeathZone(float rawDistance, float zoneRaw)
     {
         return Mathf.Abs(rawDistance) <= zoneRaw;
@@ -400,6 +444,7 @@ public class dragngo_improved : MonoBehaviour
     private void EnterTwoFingerMode()
     {
         isTwoFingerMode = true;
+        isDraggingToTarget = false;
         hasTwoFingerCenter = false;
         hasLastOneFingerPosition = false;
         hasPassedTwoFingerDeadZone = false;
@@ -533,8 +578,8 @@ public class dragngo_improved : MonoBehaviour
 
         if (sessions.Count == 0)
         {
+            isDraggingToTarget = false;
             hasLastOneFingerPosition = false;
-            hasTarget = false;
             SetLaserColor(aimingColor);
         }
 

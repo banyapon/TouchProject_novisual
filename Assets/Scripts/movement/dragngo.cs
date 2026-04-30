@@ -16,7 +16,7 @@ public class dragngo : MonoBehaviour
 
     [FormerlySerializedAs("cubeObject")]
     [SerializeField] private GameObject Player;
-    [SerializeField] private Transform fireOrigin;
+    [SerializeField] private Transform rayOrigin;
     [SerializeField] private Transform worldRotateTarget;
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private GameObject targetPrefab;
@@ -106,14 +106,14 @@ public class dragngo : MonoBehaviour
         playerStartPosition = Player.transform.position;
         movementStartPosition = playerStartPosition;
 
-        if (fireOrigin == null && Camera.main != null)
+        if (rayOrigin == null && Camera.main != null)
         {
-            fireOrigin = Camera.main.transform;
+            rayOrigin = Camera.main.transform;
         }
 
         if (worldRotateTarget == null)
         {
-            worldRotateTarget = fireOrigin != null ? fireOrigin : transform;
+            worldRotateTarget = rayOrigin != null ? rayOrigin : transform;
         }
 
         if (lineRenderer == null)
@@ -258,14 +258,14 @@ public class dragngo : MonoBehaviour
 
     private void UpdateAim()
     {
-        if (fireOrigin == null || lineRenderer == null)
+        if (rayOrigin == null || lineRenderer == null)
         {
             return;
         }
 
         if (isDraggingToTarget)
         {
-            lineRenderer.SetPosition(0, fireOrigin.position);
+            lineRenderer.SetPosition(0, rayOrigin.position);
             lineRenderer.SetPosition(1, currentTargetPosition);
             SetLaserColor(readyColor);
             UpdateTargetPreview(true);
@@ -274,8 +274,8 @@ public class dragngo : MonoBehaviour
 
         ResolveNavPointLayerMask();
 
-        Vector3 origin = fireOrigin.position;
-        Vector3 direction = fireOrigin.forward;
+        Vector3 origin = rayOrigin.position;
+        Vector3 direction = rayOrigin.forward;
         Vector3 laserEnd = origin + direction * maxRaycastDistance;
         bool hitNavPoint = false;
 
