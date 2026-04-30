@@ -16,7 +16,8 @@ public class dragngo : MonoBehaviour
 
     [FormerlySerializedAs("cubeObject")]
     [SerializeField] private GameObject Player;
-    [SerializeField] private Transform rayOrigin;
+    [FormerlySerializedAs("rayOrigin")]
+    [SerializeField] private Transform fireOrigin;
     [SerializeField] private Transform worldRotateTarget;
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private GameObject targetPrefab;
@@ -106,14 +107,19 @@ public class dragngo : MonoBehaviour
         playerStartPosition = Player.transform.position;
         movementStartPosition = playerStartPosition;
 
-        if (rayOrigin == null && Camera.main != null)
+        if (fireOrigin == null && Camera.main != null)
         {
-            rayOrigin = Camera.main.transform;
+            fireOrigin = Camera.main.transform;
+        }
+
+        if (fireOrigin == null)
+        {
+            fireOrigin = transform;
         }
 
         if (worldRotateTarget == null)
         {
-            worldRotateTarget = rayOrigin != null ? rayOrigin : transform;
+            worldRotateTarget = fireOrigin != null ? fireOrigin : transform;
         }
 
         if (lineRenderer == null)
@@ -258,14 +264,19 @@ public class dragngo : MonoBehaviour
 
     private void UpdateAim()
     {
-        if (rayOrigin == null || lineRenderer == null)
+        if (lineRenderer == null)
         {
             return;
         }
 
+        if (fireOrigin == null)
+        {
+            fireOrigin = transform;
+        }
+
         if (isDraggingToTarget)
         {
-            lineRenderer.SetPosition(0, rayOrigin.position);
+            lineRenderer.SetPosition(0, fireOrigin.position);
             lineRenderer.SetPosition(1, currentTargetPosition);
             SetLaserColor(readyColor);
             UpdateTargetPreview(true);
@@ -274,8 +285,8 @@ public class dragngo : MonoBehaviour
 
         ResolveNavPointLayerMask();
 
-        Vector3 origin = rayOrigin.position;
-        Vector3 direction = rayOrigin.forward;
+        Vector3 origin = fireOrigin.position;
+        Vector3 direction = fireOrigin.forward;
         Vector3 laserEnd = origin + direction * maxRaycastDistance;
         bool hitNavPoint = false;
 

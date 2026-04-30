@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using RawInput.Touchpad;
 using TrackpadDll;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class dragngo_improved : MonoBehaviour
 {
@@ -14,7 +15,8 @@ public class dragngo_improved : MonoBehaviour
     private const string DefaultRoadLayerName = "Road";
 
     [SerializeField] private GameObject Player;
-    [SerializeField] private Transform rayOrigin;
+    [FormerlySerializedAs("rayOrigin")]
+    [SerializeField] private Transform fireOrigin;
     [SerializeField] private Transform worldRotateTarget;
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private GameObject targetPrefab;
@@ -106,14 +108,19 @@ public class dragngo_improved : MonoBehaviour
 
         movementStartPosition = Player.transform.position;
 
-        if (rayOrigin == null && Camera.main != null)
+        if (fireOrigin == null && Camera.main != null)
         {
-            rayOrigin = Camera.main.transform;
+            fireOrigin = Camera.main.transform;
+        }
+
+        if (fireOrigin == null)
+        {
+            fireOrigin = transform;
         }
 
         if (worldRotateTarget == null)
         {
-            worldRotateTarget = rayOrigin != null ? rayOrigin : transform;
+            worldRotateTarget = fireOrigin != null ? fireOrigin : transform;
         }
 
         if (lineRenderer == null)
@@ -248,7 +255,9 @@ public class dragngo_improved : MonoBehaviour
 
         float totalCmDistance = totalRawDistance * CmPerRaw;
         float scaledWorldDistance = totalCmDistance * Scale;
-        float moveDistance = Mathf.Clamp(scaledWorldDistance, 0f, targetDistance);
+        float moveDistance = scaledWorldDistance > 0f
+            ? Mathf.Min(scaledWorldDistance, targetDistance)
+            : scaledWorldDistance;
         Vector3 candidatePosition = movementStartPosition + targetDirection.normalized * moveDistance;
 
         if (!TryProjectToRoad(candidatePosition, out Vector3 roadPosition))
@@ -306,15 +315,18 @@ public class dragngo_improved : MonoBehaviour
             return;
         }
 
-        if (rayOrigin == null)
+        if (fireOrigin == null)
         {
-            lineRenderer.enabled = hasTarget;
-            UpdateTargetPreview(hasTarget);
+            fireOrigin = transform;
+        }
+
+        if (fireOrigin == null)
+        {
             return;
         }
 
         lineRenderer.enabled = true;
-        lineRenderer.SetPosition(0, rayOrigin.position);
+        lineRenderer.SetPosition(0, fireOrigin.position);
 
         if (isDraggingToTarget)
         {
@@ -326,8 +338,8 @@ public class dragngo_improved : MonoBehaviour
 
         ResolveNavPointLayerMask();
 
-        Vector3 origin = rayOrigin.position;
-        Vector3 direction = rayOrigin.forward;
+        Vector3 origin = fireOrigin.position;
+        Vector3 direction = fireOrigin.forward;
         Vector3 laserEnd = origin + direction * maxAimLineDistance;
         bool hitNavPoint = false;
 
