@@ -21,6 +21,7 @@ public class TouchpadManager : MonoBehaviour
             // contact.Id identifies which finger is which (multi-touch!)
             
             Debug.Log($"Finger {contact.ContactId} at: {contact.X}, {contact.Y}");
+            
 
             // Example: Map raw 0-4095 to screen width/height
             float screenX = (contact.X / 4095f) * Screen.width;
