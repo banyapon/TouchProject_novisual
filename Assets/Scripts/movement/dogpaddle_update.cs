@@ -78,15 +78,15 @@ public class dogpaddle_update : MonoBehaviour
         lastRawPosition = currentRawPosition;
 
         float dragYcm = dragDeltaRaw.y * VerticalCmPerRaw;
-        float moveMeters = dragYcm * ScaleResearch;
-        if (Mathf.Approximately(moveMeters, 0f))
+        float AvatarMoveDistance = dragYcm * ScaleResearch;
+        if (Mathf.Approximately(AvatarMoveDistance, 0f))
         {
             return;
         }
 
         Transform moveTarget = worldRotateTarget != null ? worldRotateTarget : Player.transform;
         // ลากแกน Y เพื่อเดินหน้า/ถอยหลัง
-        Player.transform.position += moveTarget.forward * moveMeters;
+        Player.transform.position += moveTarget.forward * AvatarMoveDistance;
     }
 
     private void RotateTwoFingerDrag()

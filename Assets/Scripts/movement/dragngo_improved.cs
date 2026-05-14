@@ -14,7 +14,7 @@ public class dragngo_improved : MonoBehaviour
 
     [SerializeField] private TouchpadManager touchManager;
     [SerializeField] private GameObject Player;
-    [SerializeField] private Transform fireOrigin;
+    [SerializeField] private Transform RaycastOrigin;
     [SerializeField] private Transform worldRotateTarget;
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private GameObject targetPrefab;
@@ -26,7 +26,7 @@ public class dragngo_improved : MonoBehaviour
     [SerializeField] private float laserWidth = 0.025f;
 
     private GameObject targetInstance;
-    private Vector2 lastRawPosition;
+    private Vector2 dragStartRawPosition;
     private bool hasLastRawPosition;
     private Vector2 lastTwoFingerRawPosition;
     private bool hasLastTwoFingerRawPosition;
@@ -72,19 +72,19 @@ public class dragngo_improved : MonoBehaviour
             Player.transform.position = new Vector3(0f, 0.5f, 0f);
         }
 
-        if (fireOrigin == null && Camera.main != null)
+        if (RaycastOrigin == null && Camera.main != null)
         {
-            fireOrigin = Camera.main.transform;
+            RaycastOrigin = Camera.main.transform;
         }
 
-        if (fireOrigin == null)
+        if (RaycastOrigin == null)
         {
-            fireOrigin = transform;
+            RaycastOrigin = transform;
         }
 
         if (worldRotateTarget == null)
         {
-            worldRotateTarget = fireOrigin;
+            worldRotateTarget = RaycastOrigin;
         }
 
         if (lineRenderer == null)
@@ -140,15 +140,12 @@ public class dragngo_improved : MonoBehaviour
         if (!hasLastRawPosition)
         {
             // เริ่มลากเมื่อ ray ชน NavPoint
-            lastRawPosition = currentRawPosition;
+            dragStartRawPosition = currentRawPosition;
             hasLastRawPosition = true;
             isDraggingToTarget = hasTarget;
             movementStartPosition = Player.transform.position;
             return;
         }
-
-        Vector2 dragDeltaRaw = currentRawPosition - lastRawPosition;
-        lastRawPosition = currentRawPosition;
 
         if (!isDraggingToTarget || !hasTarget)
         {
@@ -163,19 +160,14 @@ public class dragngo_improved : MonoBehaviour
             return;
         }
 
-        float dragYcm = dragDeltaRaw.y * VerticalCmPerRaw;
-        float moveMeters = dragYcm * ScaleResearch;
-        if (Mathf.Approximately(moveMeters, 0f))
-        {
-            return;
-        }
+        float totalDragRawY = currentRawPosition.y - dragStartRawPosition.y;
+        float availableRawY = totalDragRawY >= 0f
+            ? Mathf.Max(RawVerticalDistance - dragStartRawPosition.y, 1f)
+            : Mathf.Max(dragStartRawPosition.y, 1f);
+        float progress = Mathf.Clamp01(Mathf.Abs(totalDragRawY) / availableRawY);
 
-        Vector3 direction = targetOffset / targetDistance;
-        float currentDistance = Vector3.Dot(Player.transform.position - movementStartPosition, direction);
-        float nextDistance = Mathf.Clamp(currentDistance + moveMeters, 0f, targetDistance);
-
-        // ลากเพื่อเลื่อนไปยัง target
-        Player.transform.position = movementStartPosition + direction * nextDistance;
+        // map ระยะลากกับระยะถึง target
+        Player.transform.position = Vector3.Lerp(movementStartPosition, currentTargetPosition, progress);
     }
 
     private void RotateTwoFingerDrag()
@@ -220,35 +212,35 @@ public class dragngo_improved : MonoBehaviour
             return;
         }
 
-        if (fireOrigin == null)
+        if (RaycastOrigin == null)
         {
-            fireOrigin = transform;
+            RaycastOrigin = transform;
         }
 
         ResolveNavPointLayerMask();
 
-        Vector3 origin = fireOrigin.position;
-        Vector3 direction = fireOrigin.forward;
-        Vector3 laserEnd = origin + direction * maxRaycastDistance;
+        Vector3 origin = RaycastOrigin.position;
+        Vector3 direction = RaycastOrigin.forward;
+        Vector3 raycastEnd = origin + direction * maxRaycastDistance;
         bool hitNavPoint = false;
 
         if (!isDraggingToTarget &&
             navPointLayerMask.value != 0 &&
             Physics.Raycast(origin, direction, out RaycastHit hit, maxRaycastDistance, navPointLayerMask, QueryTriggerInteraction.Collide))
         {
-            laserEnd = hit.point;
+            raycastEnd = hit.point;
             currentTargetPosition = hit.point + Vector3.up * playerGroundOffset;
             hitNavPoint = true;
         }
         else if (isDraggingToTarget)
         {
-            laserEnd = currentTargetPosition;
+            raycastEnd = currentTargetPosition;
             hitNavPoint = true;
         }
 
         hasTarget = hitNavPoint;
         lineRenderer.SetPosition(0, origin);
-        lineRenderer.SetPosition(1, laserEnd);
+        lineRenderer.SetPosition(1, raycastEnd);
         SetLaserColor(hitNavPoint ? readyColor : aimingColor);
         UpdateTargetPreview(hitNavPoint);
     }

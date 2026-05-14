@@ -975,74 +975,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &806574672
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 806574675}
-  - component: {fileID: 806574674}
-  - component: {fileID: 806574673}
-  m_Layer: 0
-  m_Name: EventSystem
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &806574673
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 806574672}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.EventSystems.StandaloneInputModule
-  m_SendPointerHoverToParent: 1
-  m_HorizontalAxis: Horizontal
-  m_VerticalAxis: Vertical
-  m_SubmitButton: Submit
-  m_CancelButton: Cancel
-  m_InputActionsPerSecond: 10
-  m_RepeatDelay: 0.5
-  m_ForceModuleActive: 0
---- !u!114 &806574674
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 806574672}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76c392e42b5098c458856cdf6ecaaaa1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.EventSystems.EventSystem
-  m_FirstSelected: {fileID: 0}
-  m_sendNavigationEvents: 1
-  m_DragThreshold: 10
---- !u!4 &806574675
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 806574672}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &895060011
 GameObject:
   m_ObjectHideFlags: 0
@@ -2054,8 +1986,8 @@ GameObject:
   - component: {fileID: 1686857502}
   - component: {fileID: 1686857501}
   - component: {fileID: 1686857500}
-  - component: {fileID: 1686857505}
   - component: {fileID: 1686857504}
+  - component: {fileID: 1686857506}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -2269,7 +2201,7 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
---- !u!114 &1686857505
+--- !u!114 &1686857506
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2278,33 +2210,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 1686857499}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 315951e0e974e24459cc6b9006222184, type: 3}
+  m_Script: {fileID: 11500000, guid: f2ace1d5d70dc654aac13765470de2ae, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::dragngo
+  m_EditorClassIdentifier: Assembly-CSharp::dragngo_improved
+  touchManager: {fileID: 1963717907}
   Player: {fileID: 1686857499}
   fireOrigin: {fileID: 1686857503}
   worldRotateTarget: {fileID: 1686857503}
   lineRenderer: {fileID: 1686857504}
   targetPrefab: {fileID: 3093415857066049624, guid: ee35b5119184fe64fad81b96d465d863, type: 3}
-  settingsButton: {fileID: 1290168922}
-  settingsPanel: {fileID: 87655084}
-  constrainToRoadToggle: {fileID: 1577297028}
   navPointLayerMask:
     serializedVersion: 2
     m_Bits: 8
   maxRaycastDistance: 100
   playerGroundOffset: 0
-  oneFingerDeadZoneRaw: 8
-  twoFingerDeadZoneRaw: 8
-  twoFingerRotateDegrees: 90
-  twoFingerSmoothingSeconds: 0.06
   aimingColor: {r: 1, g: 1, b: 1, a: 1}
   readyColor: {r: 1, g: 0, b: 0, a: 1}
-  laserWidth: 0.03
-  constrainToRoad: 0
-  roadLayerMask:
-    serializedVersion: 2
-    m_Bits: 256
+  laserWidth: 0.025
 --- !u!1 &1756299297
 GameObject:
   m_ObjectHideFlags: 0
@@ -3463,16 +3385,16 @@ MonoBehaviour:
   m_UpdateColliders: 1
   m_Sides: 8
   m_SegmentsPerUnit: 1
-  m_Capped: 0
+  m_Capped: 1
   m_Radius: 5
   m_Range: {x: 0, y: 1}
   m_FlipNormals: 0
   m_Shape:
-    rid: 6199603074628845664
+    rid: 6199603232073056321
   references:
     version: 2
     RefIds:
-    - rid: 6199603074628845664
+    - rid: 6199603232073056321
       type: {class: Road, ns: UnityEngine.Splines.ExtrusionShapes, asm: Unity.Splines}
       data: 
 --- !u!23 &1963717904
@@ -3563,9 +3485,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1963717897}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2157cd0e1dddf944995dd539f2e4b09, type: 3}
+  m_Script: {fileID: 11500000, guid: 7786613854810134f928b8a7ea0e9f06, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LoadSceneManager
+  m_EditorClassIdentifier: Assembly-CSharp::TouchpadManager
 --- !u!1 &1970632728
 GameObject:
   m_ObjectHideFlags: 0
@@ -3852,7 +3774,7 @@ PrefabInstance:
     - target: {fileID: 4443623468643473347, guid: 22cc28e59d5ae024088744b15912c64a, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 1963717907}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -3880,4 +3802,3 @@ SceneRoots:
   - {fileID: 675174476}
   - {fileID: 1756299301}
   - {fileID: 4383350229012400259}
-  - {fileID: 806574675}
