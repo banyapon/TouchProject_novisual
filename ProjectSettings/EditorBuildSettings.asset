@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/Demo/DragnGo.unity
     guid: 1d288157839cc5a4a95f86ddc18f7bf7
   - enabled: 1
+    path: Assets/Demo/Dogpaddlenew.unity
+    guid: b85ba0ad7c9dbb3448643c59c4afa46b
+  - enabled: 1
     path: Assets/Demo/DragnGonew.unity
     guid: bd6b0d29f06004c4d9cb9a91d7cb02e2
   m_configObjects: {}

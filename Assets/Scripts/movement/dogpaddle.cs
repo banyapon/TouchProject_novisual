@@ -3,14 +3,18 @@ using RawInput.Touchpad;
 using TrackpadDll;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 public class dogpaddle : MonoBehaviour
 {
     private const float Scale = 1.625f;
     private const float CalibratedRawDistance = 1784f;
     private const float CalibratedCmDistance = 6f;
+    private const float CalibratedHorizontalRawDistance = 4095f;
+    private const float CalibratedHorizontalCmDistance = 11f;
     private const float VrFullDistanceMeters = 65f;
     private const float CmPerRaw = CalibratedCmDistance / CalibratedRawDistance;
+    private const float HorizontalCmPerRaw = CalibratedHorizontalCmDistance / CalibratedHorizontalRawDistance;
     private const float ContactTimeoutSeconds = 0.08f;
     private const string DefaultRoadLayerName = "Road";
 
@@ -18,6 +22,12 @@ public class dogpaddle : MonoBehaviour
     [FormerlySerializedAs("cubeObject")]
     [SerializeField] private GameObject Player;
     [SerializeField] private Transform worldRotateTarget;
+    [SerializeField] private Button settingsButton;
+    [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private Slider speedSlider;
+    [SerializeField] private Toggle horizontalToggle;
+    [SerializeField] private float speed = 5f;
+    [SerializeField] private bool isHorizontal = true;
     [SerializeField] private float oneFingerDeadZoneRaw = 8f;
     [SerializeField] private float twoFingerDeadZoneRaw = 8f;
     [SerializeField] private float twoFingerRotateDegrees = 90f;
@@ -108,6 +118,7 @@ public class dogpaddle : MonoBehaviour
         }
 
         ResolveRoadLayerMask();
+        SetupSettingsUi();
     }
 
     private void HandleContact(TouchpadContact contact)
@@ -181,15 +192,18 @@ public class dogpaddle : MonoBehaviour
         bool horizontalInDeadZone = deathZone(totalRawDistance.x, oneFingerDeadZoneRaw);
         bool verticalInDeadZone = deathZone(totalRawDistance.y, oneFingerDeadZoneRaw);
 
-        if (horizontalInDeadZone && verticalInDeadZone && session.AppliedWorldDistance == Vector2.zero)
+        bool inactiveDrag = verticalInDeadZone && (!isHorizontal || horizontalInDeadZone);
+        if (inactiveDrag && session.AppliedWorldDistance == Vector2.zero)
         {
             session.AppliedWorldDistance = Vector2.zero;
             sessions[contactId] = session;
             return;
         }
 
-        Vector2 totalCmDistance = totalRawDistance * CmPerRaw;
-        Vector2 valueWorldDistance = totalCmDistance * Scale;
+        Vector2 totalCmDistance = new Vector2(
+            totalRawDistance.x * HorizontalCmPerRaw,
+            totalRawDistance.y * CmPerRaw);
+        Vector2 valueWorldDistance = totalCmDistance * Scale * speed;
         Vector2 deltaWorldDistance = valueWorldDistance - session.AppliedWorldDistance;
 
         if (Mathf.Approximately(deltaWorldDistance.x, 0f) && Mathf.Approximately(deltaWorldDistance.y, 0f))
@@ -224,7 +238,11 @@ public class dogpaddle : MonoBehaviour
         Vector3 previousPosition = Player.transform.position;
         Vector3 right = Player.transform.right;
         Vector3 forward = Player.transform.forward;
-        Vector3 movement = (right * deltaWorldDistance.x) + (forward * deltaWorldDistance.y);
+        Vector3 movement = forward * deltaWorldDistance.y;
+        if (isHorizontal)
+        {
+            movement += right * deltaWorldDistance.x;
+        }
         Vector3 newPosition = previousPosition + movement;
 
         if (!TryProjectToRoad(newPosition, out Vector3 roadPosition))
@@ -241,7 +259,8 @@ public class dogpaddle : MonoBehaviour
         Debug.Log(
             $"One finger move id={contactId}, start=({startX},{startY}), last=({lastX},{lastY}), " +
             $"totalRawDistance={totalRawDistance}, totalCmDistance={totalCmDistance}, " +
-            $"WorldDistance={valueWorldDistance}, deltaWorldDistance={deltaWorldDistance}, right={right}, forward={forward}, " +
+            $"WorldDistance={valueWorldDistance}, deltaWorldDistance={deltaWorldDistance}, isHorizontal={isHorizontal}, " +
+            $"right={right}, forward={forward}, " +
             $"Player from {previousPosition} to {roadPosition}, distanceFromStart={distanceFromStart}"
         );
 
@@ -434,5 +453,136 @@ public class dogpaddle : MonoBehaviour
     {
         StopTrackpad();
         SceneEscape.Handle();
+    }
+
+    public void SetupSettingsUi()
+    {
+        AutoFindSettingsUi();
+
+        if (settingsPanel != null)
+        {
+            settingsPanel.SetActive(false);
+        }
+
+        if (settingsButton != null)
+        {
+            settingsButton.onClick.RemoveListener(ToggleSettingsPanel);
+            settingsButton.onClick.AddListener(ToggleSettingsPanel);
+        }
+
+        if (speedSlider != null)
+        {
+            if (speedSlider.maxValue < speed)
+            {
+                speedSlider.maxValue = speed;
+            }
+
+            speedSlider.value = speed;
+            speedSlider.onValueChanged.AddListener(SetSpeed);
+        }
+
+        if (horizontalToggle != null)
+        {
+            horizontalToggle.isOn = isHorizontal;
+            horizontalToggle.onValueChanged.AddListener(SetHorizontal);
+        }
+    }
+
+    public void ToggleSettingsPanel()
+    {
+        if (settingsPanel == null)
+        {
+            AutoFindSettingsUi();
+        }
+
+        if (settingsPanel == null)
+        {
+            Debug.LogWarning("Settings panel is missing.", this);
+            return;
+        }
+
+        settingsPanel.SetActive(!settingsPanel.activeSelf);
+    }
+
+    private void SetSpeed(float value)
+    {
+        speed = value;
+    }
+
+    private void SetHorizontal(bool value)
+    {
+        isHorizontal = value;
+        foreach (int id in new List<int>(sessions.Keys))
+        {
+            TouchSession session = sessions[id];
+            session.StartX = session.LastX;
+            session.StartY = session.LastY;
+            session.AppliedWorldDistance = Vector2.zero;
+            sessions[id] = session;
+        }
+    }
+
+    private void AutoFindSettingsUi()
+    {
+        if (settingsButton == null)
+        {
+            settingsButton = FindUiByName<Button>("setting");
+        }
+
+        if (settingsPanel == null)
+        {
+            Transform panelTransform = FindTransformByName("Panel");
+            settingsPanel = panelTransform != null ? panelTransform.gameObject : null;
+        }
+
+        if (speedSlider == null)
+        {
+            speedSlider = FindUiByName<Slider>("speed");
+        }
+
+        if (horizontalToggle == null)
+        {
+            horizontalToggle = FindUiByName<Toggle>("horizontal");
+            if (horizontalToggle == null)
+            {
+                horizontalToggle = FindUiByName<Toggle>("toggle");
+            }
+        }
+    }
+
+    private static T FindUiByName<T>(string namePart) where T : Component
+    {
+        foreach (T component in Resources.FindObjectsOfTypeAll<T>())
+        {
+            if (!component.gameObject.scene.IsValid())
+            {
+                continue;
+            }
+
+            if (component.name.ToLowerInvariant().Contains(namePart))
+            {
+                return component;
+            }
+        }
+
+        return null;
+    }
+
+    private static Transform FindTransformByName(string namePart)
+    {
+        foreach (Transform transform in Resources.FindObjectsOfTypeAll<Transform>())
+        {
+            if (!transform.gameObject.scene.IsValid())
+            {
+                continue;
+            }
+
+            if (transform.name.ToLowerInvariant().Contains(namePart))
+            {
+                return transform;
+            }
+        }
+
+        return null;
     }
 }

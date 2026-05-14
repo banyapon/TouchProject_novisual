@@ -3,6 +3,7 @@ using RawInput.Touchpad;
 using TrackpadDll;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 public class dragngo : MonoBehaviour
 {
@@ -21,6 +22,9 @@ public class dragngo : MonoBehaviour
     [SerializeField] private Transform worldRotateTarget;
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private GameObject targetPrefab;
+    [SerializeField] private Button settingsButton;
+    [SerializeField] private GameObject settingsPanel;
+    [SerializeField] private Toggle constrainToRoadToggle;
     [SerializeField] private LayerMask navPointLayerMask;
     [SerializeField] private float maxRaycastDistance = 100f;
     [SerializeField] private float playerGroundOffset = 0f;
@@ -31,7 +35,7 @@ public class dragngo : MonoBehaviour
     [SerializeField] private Color aimingColor = Color.white;
     [SerializeField] private Color readyColor = Color.red;
     [SerializeField] private float laserWidth = 0.025f;
-    [SerializeField] private bool constrainToRoad = false;
+    [SerializeField] private bool constrainToRoad = true;
     [SerializeField] private LayerMask roadLayerMask;
 
     private readonly Dictionary<int, TouchSession> sessions = new Dictionary<int, TouchSession>();
@@ -142,6 +146,7 @@ public class dragngo : MonoBehaviour
 
         ResolveNavPointLayerMask();
         EnsureTargetInstance();
+        SetupSettingsUi();
     }
 
     private void HandleContact(TouchpadContact contact)
@@ -357,6 +362,12 @@ public class dragngo : MonoBehaviour
 
         lineRenderer.startColor = color;
         lineRenderer.endColor = color;
+        if (lineRenderer.material != null)
+        {
+            lineRenderer.material.color = color;
+            lineRenderer.material.EnableKeyword("_EMISSION");
+            lineRenderer.material.SetColor("_EmissionColor", color);
+        }
     }
 
     private bool IsOnRoad(Vector3 position)
@@ -579,5 +590,39 @@ public class dragngo : MonoBehaviour
     {
         StopTrackpad();
         SceneEscape.Handle();
+    }
+
+    public void SetupSettingsUi()
+    {
+        if (settingsPanel != null)
+        {
+            settingsPanel.SetActive(false);
+        }
+
+        if (settingsButton != null)
+        {
+            settingsButton.onClick.AddListener(ToggleSettingsPanel);
+        }
+
+        if (constrainToRoadToggle != null)
+        {
+            constrainToRoadToggle.isOn = constrainToRoad;
+            constrainToRoadToggle.onValueChanged.AddListener(SetConstrainToRoad);
+        }
+    }
+
+    private void ToggleSettingsPanel()
+    {
+        if (settingsPanel == null)
+        {
+            return;
+        }
+
+        settingsPanel.SetActive(!settingsPanel.activeSelf);
+    }
+
+    private void SetConstrainToRoad(bool value)
+    {
+        constrainToRoad = value;
     }
 }
