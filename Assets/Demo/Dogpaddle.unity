@@ -293,33 +293,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7705121953240171743, guid: 6c6c9089ef957e846b3e10e6f4482fc2, type: 3}
   m_PrefabInstance: {fileID: 361415146}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &361415148 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5074945190356041337, guid: 6c6c9089ef957e846b3e10e6f4482fc2, type: 3}
-  m_PrefabInstance: {fileID: 361415146}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Toggle
---- !u!114 &361415149 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 113023157628455747, guid: 6c6c9089ef957e846b3e10e6f4482fc2, type: 3}
-  m_PrefabInstance: {fileID: 361415146}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
---- !u!1 &361415150 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8854239733230380326, guid: 6c6c9089ef957e846b3e10e6f4482fc2, type: 3}
-  m_PrefabInstance: {fileID: 361415146}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &775784559
 GameObject:
   m_ObjectHideFlags: 0
@@ -736,17 +709,6 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 265782240145201721, guid: 3570618e57b76be4a8dcb09229fa1210, type: 3}
   m_PrefabInstance: {fileID: 1562873383}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1562873385 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5026905999003710373, guid: 3570618e57b76be4a8dcb09229fa1210, type: 3}
-  m_PrefabInstance: {fileID: 1562873383}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1 &1686857499
 GameObject:
   m_ObjectHideFlags: 0
@@ -1919,11 +1881,11 @@ MonoBehaviour:
   m_Range: {x: 0, y: 1}
   m_FlipNormals: 0
   m_Shape:
-    rid: 6199603074628845666
+    rid: 6199603232073056325
   references:
     version: 2
     RefIds:
-    - rid: 6199603074628845666
+    - rid: 6199603232073056325
       type: {class: Road, ns: UnityEngine.Splines.ExtrusionShapes, asm: Unity.Splines}
       data: 
 --- !u!23 &1963717904
@@ -2044,16 +2006,6 @@ MonoBehaviour:
   touchManager: {fileID: 1963717908}
   Player: {fileID: 1686857499}
   worldRotateTarget: {fileID: 1686857503}
-  settingsButton: {fileID: 1562873385}
-  settingsPanel: {fileID: 361415150}
-  speedSlider: {fileID: 361415149}
-  horizontalToggle: {fileID: 361415148}
-  moveSpeed: 0.01
-  speed: 5
-  isHorizontal: 1
-  oneFingerDeadZone: 0.5
-  twoFingerDeadZone: 0.5
-  twoFingerRotateDegrees: 90
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
