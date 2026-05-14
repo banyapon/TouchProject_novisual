@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 public class ProveAlgorithm : MonoBehaviour
 {
-    private const float AvatarMetersPerFingerCm = 65f / 40f;
+    private const float ScaleResearch = 65f / 40f;
     private const float RawVerticalDistance = 1784f;
     private const float RawHorizontalDistance = 4095f;
     private const float TouchPadHorizontalCmDistance = 11f;
@@ -57,7 +57,7 @@ public class ProveAlgorithm : MonoBehaviour
         lastRawPosition = currentRawPosition;
 
         float dragYcm = dragDeltaRaw.y * VerticalCmPerRaw;
-        float moveMeters = dragYcm * AvatarMetersPerFingerCm;
+        float moveMeters = dragYcm * ScaleResearch;
         if (Mathf.Approximately(moveMeters, 0f))
         {
             return;

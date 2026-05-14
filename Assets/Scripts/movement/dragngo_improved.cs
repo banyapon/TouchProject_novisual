@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class dragngo_improved : MonoBehaviour
 {
@@ -14,6 +15,7 @@ public class dragngo_improved : MonoBehaviour
 
     [SerializeField] private TouchpadManager touchManager;
     [SerializeField] private GameObject Player;
+    [FormerlySerializedAs("fireOrigin")]
     [SerializeField] private Transform RaycastOrigin;
     [SerializeField] private Transform worldRotateTarget;
     [SerializeField] private LineRenderer lineRenderer;
@@ -87,23 +89,7 @@ public class dragngo_improved : MonoBehaviour
             worldRotateTarget = RaycastOrigin;
         }
 
-        if (lineRenderer == null)
-        {
-            lineRenderer = GetComponent<LineRenderer>();
-            if (lineRenderer == null)
-            {
-                lineRenderer = gameObject.AddComponent<LineRenderer>();
-            }
-        }
-
-        lineRenderer.useWorldSpace = true;
-        lineRenderer.positionCount = 2;
-        lineRenderer.startWidth = laserWidth;
-        lineRenderer.endWidth = laserWidth;
-        if (lineRenderer.material == null)
-        {
-            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-        }
+        EnsureLineRenderer();
 
         ResolveNavPointLayerMask();
         EnsureTargetInstance();
@@ -207,6 +193,7 @@ public class dragngo_improved : MonoBehaviour
 
     private void UpdateAim()
     {
+        EnsureLineRenderer();
         if (lineRenderer == null)
         {
             return;
@@ -243,6 +230,34 @@ public class dragngo_improved : MonoBehaviour
         lineRenderer.SetPosition(1, raycastEnd);
         SetLaserColor(hitNavPoint ? readyColor : aimingColor);
         UpdateTargetPreview(hitNavPoint);
+    }
+
+    private void EnsureLineRenderer()
+    {
+        if (lineRenderer == null)
+        {
+            lineRenderer = GetComponent<LineRenderer>();
+            if (lineRenderer == null)
+            {
+                lineRenderer = gameObject.AddComponent<LineRenderer>();
+            }
+        }
+
+        // เปิดเส้นและตั้งค่าพื้นฐาน
+        lineRenderer.enabled = true;
+        lineRenderer.useWorldSpace = true;
+        lineRenderer.positionCount = 2;
+        lineRenderer.startWidth = laserWidth;
+        lineRenderer.endWidth = laserWidth;
+
+        if (lineRenderer.sharedMaterial == null)
+        {
+            Shader shader = Shader.Find("Sprites/Default");
+            if (shader != null)
+            {
+                lineRenderer.sharedMaterial = new Material(shader);
+            }
+        }
     }
 
     private void UpdateTargetPreview(bool showTarget)

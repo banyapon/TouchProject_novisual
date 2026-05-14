@@ -1876,16 +1876,16 @@ MonoBehaviour:
   m_UpdateColliders: 1
   m_Sides: 8
   m_SegmentsPerUnit: 1
-  m_Capped: 1
+  m_Capped: 0
   m_Radius: 5
   m_Range: {x: 0, y: 1}
   m_FlipNormals: 0
   m_Shape:
-    rid: 6199603232073056325
+    rid: 6199603232073056326
   references:
     version: 2
     RefIds:
-    - rid: 6199603232073056325
+    - rid: 6199603232073056326
       type: {class: Road, ns: UnityEngine.Splines.ExtrusionShapes, asm: Unity.Splines}
       data: 
 --- !u!23 &1963717904
