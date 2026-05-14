@@ -1,265 +1,366 @@
-# HOWTO: การทำงานของระบบการเดิน (Movement Systems)
+# HOWTO: Touchpad Movement
 
-อธิบายการคำนวณของ `dogpaddle.cs` และ `dragngo.cs` ในภาษาคนทั่วไป  
-ไม่มีศัพท์เทคนิค เน้นตัวเลขจริงและตัวอย่างที่จับต้องได้
+คู่มือนี้อธิบายการใช้งานระบบเดินจาก touchpad ในโปรเจกต์นี้ โดยอิงจากไฟล์ปัจจุบัน:
 
----
+- `Assets/Scripts/TouchManager.cs`
+- `Assets/Scripts/movement/dogpaddle_update.cs`
+- `Assets/Scripts/movement/dragngo_improved.cs`
 
-## ค่าคงที่ที่ใช้ร่วมกัน (ทั้งสองระบบ)
+## 1. TouchpadManager
 
-| ชื่อตัวแปร | ค่า | ความหมายง่ายๆ |
-|---|---|---|
-| `CalibratedRawDistance` | 1784 | ระยะที่ trackpad รายงานออกมา เมื่อเลื่อนนิ้ว 6 ซม. จริง |
-| `CalibratedCmDistance` | 6.0 ซม. | ระยะนิ้วจริงที่ใช้วัด/ปรับตั้งค่า |
-| `CmPerRaw` | 6 ÷ 1784 = **0.003363 ซม./หน่วย** | แปลงหน่วย raw → ซม. จริง |
-| `Scale` | 1.625 | ขยายระยะซม. → หน่วยโลก Unity (1 ซม. = 1.625 units) |
-| `ContactTimeoutSeconds` | 0.08 วินาที (80 ms) | ถ้าไม่มีสัญญาณนิ้วนาน 80 ms ถือว่าเอานิ้วออกแล้ว |
+`TouchpadManager` เป็นตัวกลางรับข้อมูลจาก trackpad แล้วส่งค่าให้ระบบเดินใช้
 
----
+ค่าที่สคริปต์ movement ใช้บ่อย:
 
-## ระบบ 1 — dogpaddle (เดินตรงตามนิ้ว)
+| Property | ความหมาย |
+|---|---|
+| `IsTouching` | มีนิ้วแตะอยู่หรือไม่ |
+| `TouchCount` | จำนวนจุดสัมผัส |
+| `PrimaryRawPosition` | ตำแหน่งนิ้วหลักแบบ raw |
+| `AverageRawPosition` | ค่าเฉลี่ยตำแหน่งนิ้วทั้งหมด ใช้ตอน 2 นิ้ว |
 
-### แนวคิดหลัก
+ใน scene ควรมี GameObject ที่ติด `TouchpadManager` ไว้ 1 ตัว
 
-> "เลื่อนนิ้วไปทิศไหน ตัวละครก็เดินตามทิศนั้น"  
-> ใช้นิ้วเดียว เลื่อนในแนวราบ/แนวดิ่งบน trackpad
+## 2. ค่าปรับเทียบ
 
-### ขั้นตอนการคำนวณระยะทาง
+ทั้ง `dogpaddle_update.cs` และ `dragngo_improved.cs` ใช้ค่าปรับเทียบชุดเดียวกัน:
 
-```
-นิ้วตอนนี้อยู่ที่  →  ลบ  →  นิ้วตอนเริ่มแตะ  =  totalRawDistance
-```
-
-**ตัวอย่าง:** นิ้วเริ่มแตะที่ X=400, ตอนนี้ X=500  
-→ totalRawDistance.x = 500 − 400 = **100 หน่วย raw**
-
-**ขั้นที่ 1 — raw → ซม.**
-```
-totalCmDistance = totalRawDistance × CmPerRaw
-               = 100 × 0.003363
-               = 0.3363 ซม.
+```csharp
+private const float ScaleResearch = 65f / 40f;
+private const float RawVerticalDistance = 1784f;
+private const float TouchPadVerticalCmDistance = 6f;
+private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
 ```
 
-**ขั้นที่ 2 — ซม. → Unity units (ระยะโลก)**
-```
-valueWorldDistance = totalCmDistance × Scale
-                   = 0.3363 × 1.625
-                   = 0.5465 units
-```
+ความหมาย:
 
-**ขั้นที่ 3 — คำนวณระยะที่ต้องขยับเพิ่มใน frame นี้**
-```
-deltaWorldDistance = valueWorldDistance − AppliedWorldDistance (ที่ใช้ไปแล้ว)
-```
-> เหตุที่ต้องลบ: เพราะ `valueWorldDistance` คือผลรวม**ตั้งแต่แตะ**  
-> ต้องหักส่วนที่เดินไปแล้วออก เพื่อได้เฉพาะส่วนใหม่ของ frame นี้
+```text
+ลากนิ้ว 40 cm = Avatar เคลื่อนที่ 65 m
+ดังนั้น 1 cm = 65 / 40 = 1.625 m
 
-**ขั้นที่ 4 — แปลงเป็นทิศทางในโลก 3D**
-```
-movement = (right × deltaWorldDistance.x) + (forward × deltaWorldDistance.y)
-newPosition = oldPosition + movement
-```
-- `right` = ทิศขวาของตัวละคร
-- `forward` = ทิศหน้าของตัวละคร
-- แกน X ของนิ้ว = เดินซ้าย/ขวา, แกน Y ของนิ้ว = เดินหน้า/หลัง
-
-### Dead Zone (เขตไม่ขยับ)
-
-```
-oneFingerDeadZoneRaw = 8 หน่วย raw
+1784 raw = 6 cm
+ดังนั้น 1 raw = 6 / 1784 cm
 ```
 
-ถ้าขยับนิ้วน้อยกว่า 8 raw → ไม่ขยับตัวละครเลย  
-8 raw = 8 × 0.003363 = **0.027 ซม.** (เพื่อกรองมือสั่นเล็กน้อย)
+สูตรพื้นฐาน:
 
-### การตรวจสอบพื้นถนน (Road Raycast)
-
-ก่อนย้ายตัวละคร ระบบยิง "แสงเลเซอร์" ลงพื้น:
-- ยิงจากเหนือตำแหน่งใหม่ลงมา (`roadRaycastHeight = 5 units` สูง)
-- ถ้าชนชั้น "Road" → ย้ายตัวละครได้
-- ถ้าไม่ชน → **บล็อก** ไม่ให้เดินออกนอกถนน
-
----
-
-## ระบบ 2 — dragngo (เล็งแล้วลาก)
-
-### แนวคิดหลัก
-
-> "เล็งกล้องไปที่จุดหมาย แล้วเลื่อนนิ้วขึ้น = เดินเข้าหาเป้า"  
-> ใช้นิ้วเดียว แต่การเดินผูกกับเป้าหมายที่เล็งไว้
-
-### ขั้นตอนที่ 1 — หาเป้าหมาย (Aiming Phase)
-
-```
-ทุก frame → ยิงแสงจากกล้องไปข้างหน้า
-           → ถ้าชน NavPoint → บันทึก currentTargetPosition
-           → เลเซอร์เปลี่ยนจากขาว → แดง (มีเป้าแล้ว)
+```text
+dragYcm = DragDeltaY * (6 / 1784)
+AvatarMoveDistance = dragYcm * (65 / 40)
 ```
 
-### ขั้นตอนที่ 2 — เริ่มเดิน (Touch Down)
+ตัวอย่าง:
 
-เมื่อแตะ trackpad ขณะมีเป้าหมาย:
-- บันทึก `movementStartPosition` = ตำแหน่งตัวละครตอนนี้
-- ระบบเข้าสู่โหมด "กำลังลากไปเป้า"
-
-### ขั้นตอนที่ 3 — คำนวณ Progress (ความคืบหน้า)
-
-การเดินใน dragngo ใช้เฉพาะ **แกน Y (ขึ้น-ลง)** ของนิ้ว:
-
-```
-totalRawDistance = Y ปัจจุบัน − Y ตอนเริ่มแตะ
-totalCmDistance  = totalRawDistance × CmPerRaw
+```text
+ลากนิ้ว 10 cm
+AvatarMoveDistance = 10 * (65 / 40)
+AvatarMoveDistance = 16.25 m
 ```
 
-**คำนวณว่าเหลือพื้นที่เลื่อนได้อีกเท่าไร:**
-```
-ถ้าเลื่อนขึ้น (Y บวก):
-    availableRaw = CalibratedRawDistance − Y ตอนเริ่ม
-                 = 1784 − Y_start   (พื้นที่ trackpad ที่เหลือด้านบน)
+## 3. Dogpaddle
 
-ถ้าเลื่อนลง (Y ลบ):
-    availableRaw = Y ตอนเริ่ม       (พื้นที่ trackpad ที่เหลือด้านล่าง)
+ไฟล์:
+
+```text
+Assets/Scripts/movement/dogpaddle_update.cs
 ```
 
-**คำนวณ progress (0.0 = ยังอยู่ที่เดิม, 1.0 = ถึงเป้าแล้ว):**
-```
-progress = totalCmDistance ÷ availableCm
-progress = clamp(progress, 0, 1)   ← ไม่ให้เกิน 0–1
-```
+แนวคิด:
 
-**ขยับตัวละคร:**
-```
-newPosition = Lerp(movementStartPosition, currentTargetPosition, progress)
-```
-> `Lerp` = "เลือกจุดกึ่งกลางระหว่างสองจุด ตามสัดส่วน"  
-> progress=0.5 = ตรงกลางระหว่าง start กับ target พอดี
-
-**ตัวอย่างตัวเลข:**
-- เริ่มแตะที่ Y=892 (กลาง trackpad)
-- เลื่อนนิ้วขึ้น 200 raw
-- availableRaw = 1784 − 892 = 892
-- totalCmDistance = 200 × 0.003363 = 0.673 ซม.
-- availableCm = 892 × 0.003363 = 2.999 ซม. ≈ 3 ซม.
-- progress = 0.673 ÷ 2.999 = **0.224** (เดินไปแล้ว 22.4% ของทาง)
-
----
-
-## การหมุนโลก (2 นิ้ว) — ใช้ร่วมกันทั้งสองระบบ
-
-| ตัวแปร | ค่า | ความหมาย |
-|---|---|---|
-| `twoFingerDeadZoneRaw` | 8 raw | Dead zone ของ 2 นิ้ว |
-| `twoFingerRotateDegrees` | 90° | เลื่อนข้าม trackpad ทั้งหมด = หมุน 90° |
-
-**ขั้นตอน:**
-```
-centerX = ค่าเฉลี่ย X ของ 2 นิ้ว
-deltaX  = centerX_ตอนนี้ − centerX_ก่อนหน้า
-degreesPerRaw  = 90 ÷ 1784 = 0.05045 องศา/หน่วย raw
-rotationDegrees = −deltaX × degreesPerRaw
+```text
+1 นิ้ว = เดินหน้า/ถอยหลัง
+2 นิ้ว = หยุดเดิน แล้วหมุนโลก
 ```
 
-**ตัวอย่าง:** เลื่อน 2 นิ้วไปทางขวา 100 raw  
-→ หมุน −100 × 0.05045 = **−5.045°** (หมุนซ้าย)
+### ตั้งค่าใน Inspector
 
-> เครื่องหมายลบ: เลื่อนขวา = โลกหมุนซ้าย (เหมือนมองจากมุมมองผู้เล่น)
+ใส่ค่าเหล่านี้ใน component `dogpaddle_update`
 
----
+| Field | ค่า |
+|---|---|
+| `touchManager` | ตัว `TouchpadManager` ถ้าว่างจะหา `TouchpadManager.Instance` |
+| `Player` | Avatar ที่ต้องการขยับ |
+| `worldRotateTarget` | Transform ที่ใช้เป็นทิศ forward และใช้หมุนโลก |
 
-## การวิเคราะห์ FPS และ Timestamp 0.02 วินาที
+ถ้า `worldRotateTarget` ว่าง จะใช้ `Player.transform`
 
-### ทำไม 0.02 วินาที?
+### การเดิน 1 นิ้ว
 
-Unity ใช้ **Fixed Timestep = 0.02 วินาที** (50 ครั้ง/วินาที) เป็นค่า default สำหรับ Physics  
-แต่ทั้ง `dogpaddle` และ `dragngo` ทำงานใน `Update()` ซึ่งรันตาม **FPS จริง** ไม่ใช่ fixed
+สคริปต์จำตำแหน่งนิ้ว frame ก่อนหน้า แล้วหาค่า delta:
 
-| FPS | เวลาต่อ frame | ชื่อเรียก |
-|---|---|---|
-| 50 FPS | **0.020 วินาที** | Unity Fixed Timestep default |
-| 60 FPS | 0.0167 วินาที | มาตรฐานทั่วไป |
-| 30 FPS | 0.0333 วินาที | ต่ำสุดที่รับได้ |
-
-### dogpaddle — ระยะทางใน 1 วินาที
-
-ระบบ dogpaddle **ไม่ใช้ Time.deltaTime** — ระยะทางขึ้นกับ "นิ้วเลื่อนไปเท่าไร" ไม่ใช่เวลา  
-ดังนั้นความเร็วขึ้นกับ "นิ้วคนเลื่อนเร็วแค่ไหน"
-
-**สมมติเลื่อนนิ้วข้ามบน trackpad 6 ซม. (= 1784 raw) ในเวลา 1 วินาที:**
-
-```
-totalRawDistance  = 1784 raw
-totalCmDistance   = 1784 × 0.003363  =  6.0 ซม.
-valueWorldDistance = 6.0 × 1.625     = 9.75 Unity units
+```text
+dragDeltaRaw = currentRawPosition - lastRawPosition
+dragYcm = dragDeltaRaw.y * VerticalCmPerRaw
+AvatarMoveDistance = dragYcm * ScaleResearch
 ```
 
-**→ เดิน 9.75 เมตร (Unity units) ในการเลื่อนนิ้ว 6 ซม. / 1 วินาที**
+จากนั้นขยับ Avatar:
 
-**ถ้าแบ่งตาม FPS — deltaWorldDistance ต่อ frame:**
-
-| FPS | deltaTime | Raw ต่อ frame (6ซม./วินาที) | World units ต่อ frame |
-|---|---|---|---|
-| 50 FPS | 0.020 วิ | 1784 ÷ 50 = **35.68 raw** | 35.68 × 0.003363 × 1.625 = **0.195 units** |
-| 60 FPS | 0.0167 วิ | 1784 ÷ 60 = **29.73 raw** | 29.73 × 0.003363 × 1.625 = **0.163 units** |
-| 30 FPS | 0.033 วิ | 1784 ÷ 30 = **59.47 raw** | 59.47 × 0.003363 × 1.625 = **0.325 units** |
-
-> **ข้อสังเกต:** ที่ 50 FPS (0.02 วิ) แต่ละ frame เดินได้ 0.195 units  
-> × 50 frames = **9.75 units/วินาที** — ตรงกันทุก FPS เพราะเป็น position-based ไม่ใช่ velocity-based
-
-### dragngo — ระยะทางใน 1 วินาที
-
-dragngo ใช้ Lerp — ระยะทางขึ้นกับ progress ไม่ได้วัดเป็น units/วินาที  
-แต่ถ้าเลื่อนนิ้วจาก Y กลาง (892) ขึ้นสุด (1784) ใน 1 วินาที:
-
-```
-availableRaw    = 1784 − 892  = 892 raw
-totalRawDistance = 892 raw ใน 1 วินาที
-totalCmDistance  = 892 × 0.003363 = 2.999 ≈ 3 ซม.
-availableCm      = 892 × 0.003363 = 3.0 ซม.
-progress         = 3.0 ÷ 3.0 = 1.0 (ถึงเป้าพอดี)
+```text
+Player.position += moveTarget.forward * AvatarMoveDistance
 ```
 
-**→ เลื่อนนิ้ว 3 ซม. จาก Y กลาง = เดินถึงเป้าหมายทันที (100%)**
+ผลลัพธ์:
 
-**ต่อ frame ที่ 50 FPS:**
+- ลากขึ้น = เดินหน้า
+- ลากลง = ถอยหลัง
+- ระยะเดินขึ้นกับระยะนิ้วที่ลากจริง
 
-| FPS | เวลาต่อ frame | raw ต่อ frame | progress เพิ่มต่อ frame |
-|---|---|---|---|
-| 50 FPS | 0.020 วิ | 892 ÷ 50 = **17.84 raw** | 17.84 ÷ 892 = **0.02** (2% ของทาง) |
-| 60 FPS | 0.0167 วิ | 892 ÷ 60 = **14.87 raw** | 14.87 ÷ 892 = **0.017** (1.7% ของทาง) |
+### การหมุน 2 นิ้ว
 
-> ที่ 50 FPS (0.02 วิ): progress เพิ่มขึ้น **2% ต่อ frame** เมื่อเลื่อนนิ้วในอัตรา 892 raw/วินาที
+เมื่อ `TouchCount >= 2` ระบบจะเข้าโหมดหมุน:
 
-### ContactTimeout กับ FPS
-
-```
-ContactTimeoutSeconds = 0.08 วินาที = 80 ms
-```
-
-| FPS | เวลาต่อ frame | กี่ frame ก่อน timeout |
-|---|---|---|
-| 50 FPS | 0.020 วิ | 80 ÷ 20 = **4 frames** |
-| 60 FPS | 0.0167 วิ | 80 ÷ 16.7 = **≈5 frames** |
-| 30 FPS | 0.033 วิ | 80 ÷ 33 = **≈2.4 frames** |
-
-> ที่ 30 FPS อันตราย: ถ้า frame หนึ่งหน่วงนาน session อาจ timeout ทั้งที่นิ้วยังแตะอยู่
-
----
-
-## สรุปเส้นทางการคำนวณ (Flow)
-
-### dogpaddle
-```
-trackpad raw  →  ×0.003363  →  ซม.  →  ×1.625  →  World units
-→  − ส่วนที่ใช้แล้ว  →  deltaDistance  →  × right/forward  →  ขยับตัวละคร
+```text
+currentRawPosition = touchManager.AverageRawPosition
+dragDeltaX = currentRawPosition.x - lastTwoFingerRawPosition.x
+rotationDegrees = -dragDeltaX * (90 / 1784)
 ```
 
-### dragngo
-```
-กล้องเล็ง NavPoint  →  บันทึก targetPosition
-→  นิ้วเลื่อน Y  →  คำนวณ progress (0–1)  →  Lerp(start, target, progress)  →  ขยับตัวละคร
+ทิศทางที่ตั้งไว้:
+
+```text
+ลากสองนิ้วซ้าย = หันขวา
+ลากสองนิ้วขวา = หันซ้าย
 ```
 
-### 2 นิ้ว (ทั้งคู่)
+เมื่อปล่อยนิ้ว ระบบ reset state เพื่อไม่ให้ Avatar กระโดดตอนกลับไปเดิน 1 นิ้ว
+
+## 4. Drag-N-Go
+
+ไฟล์:
+
+```text
+Assets/Scripts/movement/dragngo_improved.cs
 ```
-ค่าเฉลี่ย X ของ 2 นิ้ว  →  deltaX  →  × (90÷1784)  →  หมุนโลก (องศา)
+
+แนวคิด:
+
+```text
+Raycast หา NavPoint
+ถ้าเจอ NavPoint ให้แสดง target และเปลี่ยนเส้นเป็นสีแดง
+จากนั้นลาก 1 นิ้วเพื่อพา Avatar ไปถึง target
+```
+
+### ตั้งค่าใน Inspector
+
+ใส่ค่าเหล่านี้ใน component `dragngo_improved`
+
+| Field | ค่า |
+|---|---|
+| `touchManager` | ตัว `TouchpadManager` ถ้าว่างจะหา `TouchpadManager.Instance` |
+| `Player` | Avatar ที่ต้องการขยับ |
+| `RaycastOrigin` | จุดยิง Raycast เช่น Camera |
+| `worldRotateTarget` | Transform ที่ใช้หมุนโลกตอน 2 นิ้ว |
+| `lineRenderer` | เส้นแสดง Raycast ถ้าว่างจะสร้างเอง |
+| `targetPrefab` | Prefab เป้าหมาย |
+| `navPointLayerMask` | Layer ของจุดหมาย |
+| `maxRaycastDistance` | ระยะยิง Raycast |
+| `playerGroundOffset` | ยก target ขึ้น/ลงจากจุดชน |
+
+ต้องมี Layer ชื่อ:
+
+```text
+NavPoint
+```
+
+Object ที่ใช้เป็นจุดหมายต้องอยู่ใน Layer `NavPoint`
+
+### Raycast
+
+ทุก frame ระบบยิง Raycast จาก:
+
+```text
+RaycastOrigin.position
+RaycastOrigin.forward
+```
+
+ถ้าไม่ชน `NavPoint`:
+
+- `hasTarget = false`
+- เส้นเป็นสีขาว
+- ซ่อน target
+- แตะลากแล้วไม่เดินไป target
+
+ถ้าชน `NavPoint`:
+
+- `hasTarget = true`
+- เส้นเป็นสีแดง
+- บันทึก `currentTargetPosition`
+- แสดง `targetInstance`
+
+### Target Prefab
+
+สคริปต์จะสร้าง `targetInstance` ด้วยลำดับนี้:
+
+1. ใช้ `targetPrefab` จาก Inspector
+2. ถ้าว่าง จะโหลด `Resources.Load<GameObject>("Target")`
+3. ใน Unity Editor ถ้ายังว่าง จะโหลด `Assets/Prefabs/Target.prefab`
+4. ถ้ายังไม่มี จะสร้าง Sphere ให้แทน
+
+## 5. Drag-N-Go: วิธี Map ระยะลากไป Target
+
+ระบบ Drag-N-Go ไม่ได้เดินด้วยสูตร `dragYcm * 1.625` แบบ Dogpaddle
+
+แต่ใช้หลักนี้:
+
+```text
+ระยะลากที่เหลือบน touchpad = 0% ถึง 100%
+ระยะจาก Avatar ถึง Target = 0% ถึง 100%
+```
+
+ตอนเริ่มแตะ:
+
+```text
+dragStartRawPosition = ตำแหน่งนิ้วตอนเริ่ม
+movementStartPosition = ตำแหน่ง Avatar ตอนเริ่ม
+currentTargetPosition = ตำแหน่ง target จาก Raycast
+```
+
+ตอนลาก:
+
+```text
+totalDragRawY = currentRawY - dragStartRawY
+
+ถ้าลากขึ้น:
+availableRawY = 1784 - dragStartRawY
+
+ถ้าลากลง:
+availableRawY = dragStartRawY
+
+progress = abs(totalDragRawY) / availableRawY
+progress = clamp(progress, 0, 1)
+
+Player.position = Lerp(movementStartPosition, currentTargetPosition, progress)
+```
+
+ความหมาย:
+
+- ลากถึงขอบ touchpad = ถึง target
+- เริ่มแตะกลาง touchpad เหลือลาก 3 cm ก็ลาก 3 cm ถึง target
+- เริ่มแตะใกล้ขอบล่าง เหลือลาก 2 cm ก็ลาก 2 cm ถึง target
+- ถ้าพื้นที่ลากเหลือน้อย Avatar จะเดินเร็วขึ้น
+
+ตัวอย่าง:
+
+```text
+Avatar ห่าง Target 20 m
+เหลือพื้นที่ลาก 6 cm
+ลาก 3 cm = progress 50% = เดิน 10 m
+ลาก 6 cm = progress 100% = ถึง Target
+```
+
+อีกตัวอย่าง:
+
+```text
+Avatar ห่าง Target 20 m
+เหลือพื้นที่ลาก 2 cm
+ลาก 1 cm = progress 50% = เดิน 10 m
+ลาก 2 cm = progress 100% = ถึง Target
+```
+
+## 6. Drag-N-Go: หมุน 2 นิ้ว
+
+Drag-N-Go ใช้การหมุน 2 นิ้วเหมือน Dogpaddle
+
+เมื่อ `TouchCount >= 2`:
+
+- หยุดการลากไป target
+- เข้าโหมดหมุน
+- ใช้ `AverageRawPosition.x`
+
+สูตร:
+
+```text
+rotationDegrees = -dragDeltaX * (90 / 1784)
+```
+
+ทิศทาง:
+
+```text
+ลากสองนิ้วซ้าย = หันขวา
+ลากสองนิ้วขวา = หันซ้าย
+```
+
+## 7. วิธีทดสอบ
+
+### ทดสอบ Dogpaddle
+
+1. มี GameObject ที่ติด `TouchpadManager`
+2. สร้าง GameObject แล้วติด `dogpaddle_update`
+3. ใส่ `Player`
+4. ใส่ `worldRotateTarget`
+5. Play scene
+6. ลาก 1 นิ้วขึ้น/ลงเพื่อเดิน
+7. ลาก 2 นิ้วซ้าย/ขวาเพื่อหมุน
+
+### ทดสอบ Drag-N-Go
+
+1. มี GameObject ที่ติด `TouchpadManager`
+2. สร้าง GameObject แล้วติด `dragngo_improved`
+3. ใส่ `Player`
+4. ใส่ `RaycastOrigin`
+5. ใส่หรือปล่อยให้สร้าง `LineRenderer`
+6. สร้าง object จุดหมาย และตั้ง Layer เป็น `NavPoint`
+7. เล็งให้ Raycast ชน `NavPoint`
+8. เห็นเส้นแดงและ target
+9. แตะ 1 นิ้ว แล้วลากเพื่อเดินไป target
+10. แตะ 2 นิ้ว แล้วลากซ้าย/ขวาเพื่อหมุน
+
+## 8. ปัญหาที่พบบ่อย
+
+### ไม่มีการเดิน
+
+เช็ก:
+
+- มี `TouchpadManager` ใน scene หรือไม่
+- `Player` ถูกใส่ใน Inspector หรือไม่
+- สำหรับ Drag-N-Go ต้องเล็งโดน Layer `NavPoint` ก่อน
+
+### เส้นไม่เปลี่ยนเป็นสีแดง
+
+เช็ก:
+
+- Object เป้าหมายอยู่ Layer `NavPoint`
+- `navPointLayerMask` ถูกตั้งไว้ หรือมี Layer ชื่อ `NavPoint`
+- `RaycastOrigin.forward` หันไปทางเป้าหมาย
+- `maxRaycastDistance` มากพอ
+
+### Target ไม่ขึ้น
+
+เช็ก:
+
+- ใส่ `targetPrefab` แล้วหรือไม่
+- มี prefab ที่ `Assets/Prefabs/Target.prefab` หรือไม่
+- Raycast ชน `NavPoint` จริงหรือไม่
+
+### หมุนผิดทิศ
+
+บรรทัดนี้เป็นตัวกำหนดทิศ:
+
+```csharp
+float rotationDegrees = -dragDeltaX * degreesPerRaw;
+```
+
+ถ้าต้องการกลับทิศ ให้เอาเครื่องหมาย `-` ออก
+
+## 9. สรุปสั้น
+
+Dogpaddle:
+
+```text
+DragDeltaY raw -> cm -> meter -> เดินตาม forward
+```
+
+Drag-N-Go:
+
+```text
+Raycast ชน NavPoint -> ได้ target
+ระยะลากที่เหลือบน touchpad -> progress 0 ถึง 1
+Lerp จาก Avatar ไป target
+```
+
+2 นิ้ว:
+
+```text
+AverageRawPosition.x -> dragDeltaX -> หมุนโลก
 ```
