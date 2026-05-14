@@ -1,131 +1,95 @@
-using System.Collections.Generic;
-using RawInput.Touchpad;
-using TrackpadDll;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 public class dragngo_improved : MonoBehaviour
 {
-    private const float Scale = 1.625f;
-    private const float CalibratedRawDistance = 1784f;
-    private const float CalibratedCmDistance = 6f;
-    private const float CmPerRaw = CalibratedCmDistance / CalibratedRawDistance;
-    private const float ContactTimeoutSeconds = 0.08f;
+    private const float ScaleResearch = 65f / 40f;
+    private const float TwoFingerRotateDegrees = 90f;
+    private const float RawVerticalDistance = 1784f;
+    private const float RawHorizontalDistance = 4095f;
+    private const float TouchPadHorizontalCmDistance = 11f;
+    private const float TouchPadVerticalCmDistance = 6f;
+    private const float HorizontalCmPerRaw = TouchPadHorizontalCmDistance / RawHorizontalDistance;
+    private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
     private const string DefaultNavPointLayerName = "NavPoint";
-    private const string DefaultRoadLayerName = "Road";
 
+    [SerializeField] private TouchpadManager touchManager;
     [SerializeField] private GameObject Player;
-    [FormerlySerializedAs("rayOrigin")]
-    [SerializeField] private Transform fireOrigin;
+    [SerializeField] private Transform RaycastOrigin;
     [SerializeField] private Transform worldRotateTarget;
     [SerializeField] private LineRenderer lineRenderer;
     [SerializeField] private GameObject targetPrefab;
     [SerializeField] private LayerMask navPointLayerMask;
-    [SerializeField] private LayerMask roadLayerMask;
-    [SerializeField] private float roadRaycastHeight = 5f;
-    [SerializeField] private float roadRaycastDistance = 20f;
+    [SerializeField] private float maxRaycastDistance = 100f;
     [SerializeField] private float playerGroundOffset = 0f;
-    [SerializeField] private bool snapPlayerHeightToRoad = false;
-    [SerializeField, Range(0f, 1f)] private float minRoadSurfaceNormalY = 0.75f;
-    [SerializeField] private float oneFingerDeadZoneRaw = 8f;
-    [SerializeField] private float twoFingerDeadZoneRaw = 8f;
-    [SerializeField] private float twoFingerRotateDegrees = 90f;
-    [SerializeField] private float twoFingerSmoothingSeconds = 0.06f;
-    [SerializeField] private float maxAimLineDistance = 100f;
-    [SerializeField] private float laserWidth = 0.025f;
     [SerializeField] private Color aimingColor = Color.white;
     [SerializeField] private Color readyColor = Color.red;
+    [SerializeField] private float laserWidth = 0.025f;
 
-    private readonly Dictionary<int, TouchSession> sessions = new Dictionary<int, TouchSession>();
     private GameObject targetInstance;
-    private Vector3 movementStartPosition;
-    private Vector3 currentTargetPosition;
+    private Vector2 dragStartRawPosition;
+    private bool hasLastRawPosition;
+    private Vector2 lastTwoFingerRawPosition;
+    private bool hasLastTwoFingerRawPosition;
+    private bool isTwoFingerMode;
     private bool hasTarget;
     private bool isDraggingToTarget;
-    private bool isTwoFingerMode;
-    private bool hasTwoFingerCenter;
-    private bool hasLastOneFingerPosition;
-    private bool hasPassedTwoFingerDeadZone;
-    private Vector2 lastOneFingerPosition;
-    private float lastTwoFingerCenterX;
-    private float twoFingerGestureRawDelta;
-    private float pendingRotationDegrees;
-
-    private struct TouchSession
-    {
-        public float StartX;
-        public float StartY;
-        public float LastX;
-        public float LastY;
-        public float LastSeenTime;
-    }
+    private Vector3 movementStartPosition;
+    private Vector3 currentTargetPosition;
 
     private void Awake()
     {
         EnsureSceneObjects();
     }
 
-    private void Start()
-    {
-        TrackpadInterface.Start();
-        Debug.Log(
-            $"dragngo_improved Scale={Scale}, RawDistance={CalibratedRawDistance}, " +
-            $"CmDistance={CalibratedCmDistance}, CmPerRaw={CmPerRaw}"
-        );
-    }
-
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (touchManager == null)
         {
-            StopTrackpad();
-            SceneEscape.Handle();
+            touchManager = TouchpadManager.Instance;
+        }
+
+        if (touchManager == null || Player == null)
+        {
+            UpdateAim();
             return;
         }
 
-        CleanupExpiredSessions();
-
-        while (TrackpadInterface.EventQueue.TryDequeue(out TouchpadContact contact))
-        {
-            HandleContact(contact);
-        }
-
-        CleanupExpiredSessions();
-        UpdateTwoFingerRotationInput();
-        ApplyPendingTwoFingerRotation();
-        UpdateAimVisual();
+        UpdateTouchInput();
+        UpdateAim();
     }
 
     private void EnsureSceneObjects()
     {
+        if (touchManager == null)
+        {
+            touchManager = TouchpadManager.Instance;
+        }
+
         if (Player == null)
         {
             Player = GameObject.CreatePrimitive(PrimitiveType.Cube);
             Player.name = "Player";
             Player.transform.position = new Vector3(0f, 0.5f, 0f);
-            Player.transform.localScale = Vector3.one;
         }
 
-        movementStartPosition = Player.transform.position;
-
-        if (fireOrigin == null && Camera.main != null)
+        if (RaycastOrigin == null && Camera.main != null)
         {
-            fireOrigin = Camera.main.transform;
+            RaycastOrigin = Camera.main.transform;
         }
 
-        if (fireOrigin == null)
+        if (RaycastOrigin == null)
         {
-            fireOrigin = transform;
+            RaycastOrigin = transform;
         }
 
         if (worldRotateTarget == null)
         {
-            worldRotateTarget = fireOrigin != null ? fireOrigin : transform;
+            worldRotateTarget = RaycastOrigin;
         }
 
         if (lineRenderer == null)
         {
-            lineRenderer = gameObject.GetComponent<LineRenderer>();
+            lineRenderer = GetComponent<LineRenderer>();
             if (lineRenderer == null)
             {
                 lineRenderer = gameObject.AddComponent<LineRenderer>();
@@ -136,240 +100,154 @@ public class dragngo_improved : MonoBehaviour
         lineRenderer.positionCount = 2;
         lineRenderer.startWidth = laserWidth;
         lineRenderer.endWidth = laserWidth;
-        lineRenderer.material = lineRenderer.material != null
-            ? lineRenderer.material
-            : new Material(Shader.Find("Sprites/Default"));
-        SetLaserColor(aimingColor);
+        if (lineRenderer.material == null)
+        {
+            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        }
 
         ResolveNavPointLayerMask();
-        ResolveRoadLayerMask();
         EnsureTargetInstance();
+        SetLaserColor(aimingColor);
     }
 
-    private void HandleContact(TouchpadContact contact)
+    private void UpdateTouchInput()
     {
-        int contactId = contact.ContactId;
-        float now = Time.time;
-
-        if (!sessions.TryGetValue(contactId, out TouchSession session) || now - session.LastSeenTime >= ContactTimeoutSeconds)
+        if (!touchManager.IsTouching)
         {
-            sessions[contactId] = CreateSession(contact, now);
-
-            if (sessions.Count >= 2)
-            {
-                EnterTwoFingerMode();
-            }
-            else
-            {
-                BeginOneFingerTargeting(contact);
-            }
-
+            ResetTouchState();
             return;
         }
 
-        session.LastX = contact.X;
-        session.LastY = contact.Y;
-        session.LastSeenTime = now;
-        sessions[contactId] = session;
-
-        if (sessions.Count >= 2)
+        if (touchManager.TouchCount >= 2)
         {
-            if (!isTwoFingerMode)
-            {
-                EnterTwoFingerMode();
-                return;
-            }
-
+            RotateTwoFingerDrag();
             return;
         }
 
         if (isTwoFingerMode)
         {
-            ExitTwoFingerMode();
+            // รีเซ็ตก่อนกลับมาแตะหนึ่งนิ้ว
+            ResetTouchState();
             return;
         }
 
-        UpdateOneFingerTarget(contactId, session);
+        OneFingerDrag();
     }
 
-    private TouchSession CreateSession(TouchpadContact contact, float now)
+    private void OneFingerDrag()
     {
-        return new TouchSession
+        Vector2 currentRawPosition = touchManager.PrimaryRawPosition;
+        if (!hasLastRawPosition)
         {
-            StartX = contact.X,
-            StartY = contact.Y,
-            LastX = contact.X,
-            LastY = contact.Y,
-            LastSeenTime = now
-        };
-    }
-
-    private void BeginOneFingerTargeting(TouchpadContact contact)
-    {
-        if (Player == null || !hasTarget)
-        {
-            isDraggingToTarget = false;
+            // เริ่มลากเมื่อ ray ชน NavPoint
+            dragStartRawPosition = currentRawPosition;
+            hasLastRawPosition = true;
+            isDraggingToTarget = hasTarget;
+            movementStartPosition = Player.transform.position;
             return;
         }
 
-        isDraggingToTarget = true;
-        movementStartPosition = Player.transform.position;
-        hasLastOneFingerPosition = true;
-        lastOneFingerPosition = new Vector2(contact.X, contact.Y);
-        SetLaserColor(readyColor);
-    }
-
-    private void UpdateOneFingerTarget(int contactId, TouchSession session)
-    {
-        if (!isDraggingToTarget || Player == null || !hasTarget)
+        if (!isDraggingToTarget || !hasTarget)
         {
             return;
         }
 
-        Vector2 currentPosition = new Vector2(session.LastX, session.LastY);
-        if (!hasLastOneFingerPosition)
-        {
-            lastOneFingerPosition = currentPosition;
-            hasLastOneFingerPosition = true;
-            return;
-        }
-
-        Vector2 dragDelta = currentPosition - lastOneFingerPosition;
-        lastOneFingerPosition = currentPosition;
-
-        float totalRawDistance = session.LastY - session.StartY;
-
-        if (Mathf.Abs(totalRawDistance) <= oneFingerDeadZoneRaw)
-        {
-            Player.transform.position = movementStartPosition;
-            return;
-        }
-
-        Vector3 targetDirection = currentTargetPosition - movementStartPosition;
-        float targetDistance = targetDirection.magnitude;
+        Vector3 targetOffset = currentTargetPosition - movementStartPosition;
+        float targetDistance = targetOffset.magnitude;
         if (Mathf.Approximately(targetDistance, 0f))
         {
             Player.transform.position = currentTargetPosition;
             return;
         }
 
-        float totalCmDistance = totalRawDistance * CmPerRaw;
-        float scaledWorldDistance = totalCmDistance * Scale;
-        float moveDistance = scaledWorldDistance > 0f
-            ? Mathf.Min(scaledWorldDistance, targetDistance)
-            : scaledWorldDistance;
-        Vector3 candidatePosition = movementStartPosition + targetDirection.normalized * moveDistance;
+        float totalDragRawY = currentRawPosition.y - dragStartRawPosition.y;
+        float availableRawY = totalDragRawY >= 0f
+            ? Mathf.Max(RawVerticalDistance - dragStartRawPosition.y, 1f)
+            : Mathf.Max(dragStartRawPosition.y, 1f);
+        float progress = Mathf.Clamp01(Mathf.Abs(totalDragRawY) / availableRawY);
 
-        if (!TryProjectToRoad(candidatePosition, out Vector3 roadPosition))
+        // map ระยะลากกับระยะถึง target
+        Player.transform.position = Vector3.Lerp(movementStartPosition, currentTargetPosition, progress);
+    }
+
+    private void RotateTwoFingerDrag()
+    {
+        isTwoFingerMode = true;
+        isDraggingToTarget = false;
+        hasLastRawPosition = false;
+
+        Vector2 currentRawPosition = touchManager.AverageRawPosition;
+        if (!hasLastTwoFingerRawPosition)
         {
-            Debug.Log(
-                $"dragngo_improved target blocked id={contactId}, dragDelta={dragDelta}, " +
-                $"candidate={candidatePosition}, roadLayerMask={roadLayerMask.value}"
-            );
+            // เริ่มจำตำแหน่งสองนิ้ว
+            lastTwoFingerRawPosition = currentRawPosition;
+            hasLastTwoFingerRawPosition = true;
             return;
         }
 
-        Vector3 previousPosition = Player.transform.position;
-        Player.transform.position = roadPosition;
+        float dragDeltaX = currentRawPosition.x - lastTwoFingerRawPosition.x;
+        lastTwoFingerRawPosition = currentRawPosition;
 
-        Debug.Log(
-            $"dragngo_improved target id={contactId}, current={currentPosition}, dragDelta={dragDelta}, " +
-            $"totalRaw={totalRawDistance}, totalCm={totalCmDistance}, scaledWorld={scaledWorldDistance}, " +
-            $"moveDistance={moveDistance}, Player from {previousPosition} to {roadPosition}, target={currentTargetPosition}"
-        );
+        if (Mathf.Approximately(dragDeltaX, 0f))
+        {
+            return;
+        }
+
+        Transform rotateTarget = worldRotateTarget != null ? worldRotateTarget : Player.transform;
+        float degreesPerRaw = TwoFingerRotateDegrees / RawVerticalDistance;
+        float rotationDegrees = -dragDeltaX * degreesPerRaw;
+
+        // สองนิ้วซ้ายหันขวา ขวาหันซ้าย
+        rotateTarget.Rotate(Vector3.up, rotationDegrees, Space.World);
+        if (Player.transform != rotateTarget && !Player.transform.IsChildOf(rotateTarget))
+        {
+            Player.transform.Rotate(Vector3.up, rotationDegrees, Space.World);
+        }
     }
 
-    private bool TryProjectToRoad(Vector3 targetPosition, out Vector3 roadPosition)
-    {
-        roadPosition = targetPosition;
-        ResolveRoadLayerMask();
-
-        if (roadLayerMask.value == 0)
-        {
-            return true;
-        }
-
-        Vector3 rayOrigin = targetPosition + Vector3.up * roadRaycastHeight;
-        if (!Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, roadRaycastDistance, roadLayerMask, QueryTriggerInteraction.Ignore))
-        {
-            return false;
-        }
-
-        if (hit.normal.y < minRoadSurfaceNormalY)
-        {
-            return false;
-        }
-
-        if (snapPlayerHeightToRoad)
-        {
-            roadPosition = hit.point + Vector3.up * playerGroundOffset;
-        }
-
-        return true;
-    }
-
-    private void UpdateAimVisual()
+    private void UpdateAim()
     {
         if (lineRenderer == null)
         {
             return;
         }
 
-        if (fireOrigin == null)
+        if (RaycastOrigin == null)
         {
-            fireOrigin = transform;
-        }
-
-        if (fireOrigin == null)
-        {
-            return;
-        }
-
-        lineRenderer.enabled = true;
-        lineRenderer.SetPosition(0, fireOrigin.position);
-
-        if (isDraggingToTarget)
-        {
-            lineRenderer.SetPosition(1, currentTargetPosition);
-            SetLaserColor(readyColor);
-            UpdateTargetPreview(true);
-            return;
+            RaycastOrigin = transform;
         }
 
         ResolveNavPointLayerMask();
 
-        Vector3 origin = fireOrigin.position;
-        Vector3 direction = fireOrigin.forward;
-        Vector3 laserEnd = origin + direction * maxAimLineDistance;
+        Vector3 origin = RaycastOrigin.position;
+        Vector3 direction = RaycastOrigin.forward;
+        Vector3 raycastEnd = origin + direction * maxRaycastDistance;
         bool hitNavPoint = false;
 
-        if (navPointLayerMask.value != 0 &&
-            Physics.Raycast(origin, direction, out RaycastHit hit, maxAimLineDistance, navPointLayerMask, QueryTriggerInteraction.Collide))
+        if (!isDraggingToTarget &&
+            navPointLayerMask.value != 0 &&
+            Physics.Raycast(origin, direction, out RaycastHit hit, maxRaycastDistance, navPointLayerMask, QueryTriggerInteraction.Collide))
         {
-            laserEnd = hit.point;
+            raycastEnd = hit.point;
             currentTargetPosition = hit.point + Vector3.up * playerGroundOffset;
+            hitNavPoint = true;
+        }
+        else if (isDraggingToTarget)
+        {
+            raycastEnd = currentTargetPosition;
             hitNavPoint = true;
         }
 
         hasTarget = hitNavPoint;
-
-        if (hasTarget)
-        {
-            lineRenderer.SetPosition(1, laserEnd);
-            SetLaserColor(readyColor);
-            UpdateTargetPreview(true);
-            return;
-        }
-
-        lineRenderer.SetPosition(1, laserEnd);
-        SetLaserColor(aimingColor);
-        UpdateTargetPreview(false);
+        lineRenderer.SetPosition(0, origin);
+        lineRenderer.SetPosition(1, raycastEnd);
+        SetLaserColor(hitNavPoint ? readyColor : aimingColor);
+        UpdateTargetPreview(hitNavPoint);
     }
 
     private void UpdateTargetPreview(bool showTarget)
     {
         EnsureTargetInstance();
-
         if (targetInstance == null)
         {
             return;
@@ -418,19 +296,11 @@ public class dragngo_improved : MonoBehaviour
 
         lineRenderer.startColor = color;
         lineRenderer.endColor = color;
-    }
-
-    private void ResolveRoadLayerMask()
-    {
-        if (roadLayerMask.value != 0)
+        if (lineRenderer.material != null)
         {
-            return;
-        }
-
-        int roadLayer = LayerMask.NameToLayer(DefaultRoadLayerName);
-        if (roadLayer >= 0)
-        {
-            roadLayerMask = 1 << roadLayer;
+            lineRenderer.material.color = color;
+            lineRenderer.material.EnableKeyword("_EMISSION");
+            lineRenderer.material.SetColor("_EmissionColor", color);
         }
     }
 
@@ -448,200 +318,11 @@ public class dragngo_improved : MonoBehaviour
         }
     }
 
-    private bool DeathZone(float rawDistance, float zoneRaw)
+    private void ResetTouchState()
     {
-        return Mathf.Abs(rawDistance) <= zoneRaw;
-    }
-
-    private void EnterTwoFingerMode()
-    {
-        isTwoFingerMode = true;
-        isDraggingToTarget = false;
-        hasTwoFingerCenter = false;
-        hasLastOneFingerPosition = false;
-        hasPassedTwoFingerDeadZone = false;
-        twoFingerGestureRawDelta = 0f;
-        pendingRotationDegrees = 0f;
-        hasTarget = false;
-        ResetSessionStarts();
-        SetLaserColor(aimingColor);
-        Debug.Log("dragngo_improved enter two finger rotate mode.");
-    }
-
-    private void UpdateTwoFingerRotationInput()
-    {
-        if (!isTwoFingerMode || sessions.Count < 2)
-        {
-            return;
-        }
-
-        float centerX = GetAverageActiveX();
-
-        if (!hasTwoFingerCenter)
-        {
-            lastTwoFingerCenterX = centerX;
-            hasTwoFingerCenter = true;
-            return;
-        }
-
-        float deltaX = centerX - lastTwoFingerCenterX;
-        lastTwoFingerCenterX = centerX;
-
-        if (Mathf.Approximately(deltaX, 0f))
-        {
-            return;
-        }
-
-        if (!hasPassedTwoFingerDeadZone)
-        {
-            twoFingerGestureRawDelta += deltaX;
-            if (DeathZone(twoFingerGestureRawDelta, twoFingerDeadZoneRaw))
-            {
-                return;
-            }
-
-            float direction = Mathf.Sign(twoFingerGestureRawDelta);
-            deltaX = twoFingerGestureRawDelta - direction * twoFingerDeadZoneRaw;
-            hasPassedTwoFingerDeadZone = true;
-        }
-
-        float degreesPerRaw = twoFingerRotateDegrees / CalibratedRawDistance;
-        pendingRotationDegrees += -deltaX * degreesPerRaw;
-    }
-
-    private void ApplyPendingTwoFingerRotation()
-    {
-        if (Mathf.Approximately(pendingRotationDegrees, 0f))
-        {
-            return;
-        }
-
-        float rotationDegrees = pendingRotationDegrees;
-        if (twoFingerSmoothingSeconds > 0f)
-        {
-            float smoothingFactor = 1f - Mathf.Exp(-Time.deltaTime / twoFingerSmoothingSeconds);
-            rotationDegrees *= smoothingFactor;
-
-            if (Mathf.Abs(rotationDegrees) < 0.001f && Mathf.Abs(pendingRotationDegrees) < 0.01f)
-            {
-                rotationDegrees = pendingRotationDegrees;
-            }
-        }
-
-        pendingRotationDegrees -= rotationDegrees;
-
-        Transform target = worldRotateTarget != null ? worldRotateTarget : transform;
-
-        target.Rotate(Vector3.up, rotationDegrees, Space.World);
-        if (Player != null && Player.transform != target && !Player.transform.IsChildOf(target))
-        {
-            Player.transform.Rotate(Vector3.up, rotationDegrees, Space.World);
-        }
-
-        Debug.Log(
-            $"dragngo_improved two finger rotate rotationDegrees={rotationDegrees}, " +
-            $"pendingRotationDegrees={pendingRotationDegrees}, target={target.name}"
-        );
-    }
-
-    private float GetAverageActiveX()
-    {
-        float totalX = 0f;
-        int count = 0;
-
-        foreach (TouchSession session in sessions.Values)
-        {
-            totalX += session.LastX;
-            count++;
-        }
-
-        return count > 0 ? totalX / count : 0f;
-    }
-
-    private void CleanupExpiredSessions()
-    {
-        float now = Time.time;
-        List<int> expiredIds = null;
-
-        foreach (KeyValuePair<int, TouchSession> pair in sessions)
-        {
-            if (now - pair.Value.LastSeenTime < ContactTimeoutSeconds)
-            {
-                continue;
-            }
-
-            if (expiredIds == null)
-            {
-                expiredIds = new List<int>();
-            }
-
-            expiredIds.Add(pair.Key);
-        }
-
-        if (expiredIds == null)
-        {
-            return;
-        }
-
-        foreach (int id in expiredIds)
-        {
-            sessions.Remove(id);
-        }
-
-        if (sessions.Count == 0)
-        {
-            isDraggingToTarget = false;
-            hasLastOneFingerPosition = false;
-            SetLaserColor(aimingColor);
-        }
-
-        if (isTwoFingerMode && sessions.Count < 2)
-        {
-            ExitTwoFingerMode();
-        }
-    }
-
-    private void ExitTwoFingerMode()
-    {
+        hasLastRawPosition = false;
+        hasLastTwoFingerRawPosition = false;
         isTwoFingerMode = false;
-        hasTwoFingerCenter = false;
-        hasLastOneFingerPosition = false;
-        hasPassedTwoFingerDeadZone = false;
-        twoFingerGestureRawDelta = 0f;
-        pendingRotationDegrees = 0f;
-        ResetSessionStarts();
-        Debug.Log("dragngo_improved exit two finger rotate mode.");
-    }
-
-    private void ResetSessionStarts()
-    {
-        foreach (int id in new List<int>(sessions.Keys))
-        {
-            TouchSession session = sessions[id];
-            session.StartX = session.LastX;
-            session.StartY = session.LastY;
-            sessions[id] = session;
-        }
-    }
-
-    private void OnDisable()
-    {
-        StopTrackpad();
-    }
-
-    private void OnApplicationQuit()
-    {
-        StopTrackpad();
-    }
-
-    private void StopTrackpad()
-    {
-        TrackpadInterface.Stop();
-    }
-
-    private void QuitApplication()
-    {
-        StopTrackpad();
-        SceneEscape.Handle();
+        isDraggingToTarget = false;
     }
 }

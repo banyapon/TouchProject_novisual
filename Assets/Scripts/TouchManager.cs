@@ -1,95 +1,161 @@
 using UnityEngine;
 using System.Collections.Generic;
-using TrackpadDll; // The namespace you defined in Visual Studio
+using TrackpadDll;
 using RawInput.Touchpad;
-using NUnit.Framework; // The namespace for the TouchpadContact class
-
 
 public class TouchpadManager : MonoBehaviour
 {
     private struct TouchSession
     {
-        public float StartY;
+        public float LastX;
         public float LastY;
+        public float RawX;
+        public float RawY;
         public float LastSeenTime;
-    
     }
+
     private readonly Dictionary<int, TouchSession> sessions = new Dictionary<int, TouchSession>();
-    
-    private const float ContactTimeoutSeconds = 0.1f; // Timeout for lost contacts
-    
+
+    private const float ContactTimeoutSeconds = 0.1f;
+
+    public static TouchpadManager Instance { get; private set; }
+
     public bool IsTouching => sessions.Count > 0;
-    void Start()
+    public bool isTouching => IsTouching;
+    public int TouchCount => sessions.Count;
+    public Vector2 PrimaryTouchPosition { get; private set; }
+    public Vector2 AverageTouchPosition { get; private set; }
+    public Vector2 PrimaryRawPosition { get; private set; }
+    public Vector2 AverageRawPosition { get; private set; }
+
+    private bool lastDebugIsTouching;
+    private bool hasDebugState;
+
+    private void Awake()
     {
-        //Application.targetFrameRate =120;
-        // This starts the hidden window thread we built in the DLL
+        Instance = this;
+    }
+
+    private void Start()
+    {
         TrackpadInterface.Start();
         Debug.Log("Trackpad Listener Started!");
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         float now = Time.time;
-        bool isTouching = false;
-        // Try to pull data out of the thread-safe queue
+
         while (TrackpadInterface.EventQueue.TryDequeue(out TouchpadContact contact))
         {
-            int contactId = contact.ContactId;
-            
-            // contact.X and contact.Y are raw values (usually 0 to 4095)
-            // contact.Id identifies which finger is which (multi-touch!)
-            
-            isTouching = true;
-            Debug.Log(isTouching);
-            /*if(isTouching){
-                Debug.Log("in while time=" + Time.time);
-            }*/
+            //float screenX = (contact.X / 4095f) * Screen.width;
+            //float screenY = (1f - (contact.Y / 4095f)) * Screen.height;
 
-            // Example: Map raw 0-4095 to screen width/height
-            float screenX = (contact.X / 4095f) * Screen.width;
-            float screenY = (1f - (contact.Y / 4095f)) * Screen.height;
-
-            // Debug.Log($"Finger {contactId} at: {screenX}, {screenY}");
-            // You can use these coordinates to move objects or UI cursors here
-        }
-
-        if(!isTouching){
-            Debug.Log(isTouching);
-            //Debug.Log("current time=" + Time.time);
-        }
-       
-        
-        // Clean up expired touch sessions
-        var expiredContacts = new List<int>();
-        foreach (var kvp in sessions)
-        {
-            if (now - kvp.Value.LastSeenTime >= ContactTimeoutSeconds)
+            sessions[contact.ContactId] = new TouchSession
             {
-                expiredContacts.Add(kvp.Key);
-                Debug.Log($"Touch end id={kvp.Key}");
-            }
+                //LastX = screenX,
+                //LastY = screenY,
+                RawX = contact.X,
+                RawY = contact.Y,
+                LastSeenTime = now
+            };
         }
-        foreach (var contactId in expiredContacts)
+
+        CleanupExpiredSessions(now);
+        UpdateTouchPositions();
+        DebugTouching();
+    }
+
+    private void CleanupExpiredSessions(float now)
+    {
+        List<int> expiredContacts = null;
+        foreach (KeyValuePair<int, TouchSession> kvp in sessions)
+        {
+            if (now - kvp.Value.LastSeenTime < ContactTimeoutSeconds)
+            {
+                continue;
+            }
+
+            if (expiredContacts == null)
+            {
+                expiredContacts = new List<int>();
+            }
+
+            expiredContacts.Add(kvp.Key);
+        }
+
+        if (expiredContacts == null)
+        {
+            return;
+        }
+
+        foreach (int contactId in expiredContacts)
         {
             sessions.Remove(contactId);
+            Debug.Log($"Touch end id={contactId}");
         }
+    }
+
+    private void UpdateTouchPositions()
+    {
+        if (sessions.Count == 0)
+        {
+            PrimaryTouchPosition = Vector2.zero;
+            AverageTouchPosition = Vector2.zero;
+            PrimaryRawPosition = Vector2.zero;
+            AverageRawPosition = Vector2.zero;
+            return;
+        }
+
+        Vector2 totalTouch = Vector2.zero;
+        Vector2 totalRaw = Vector2.zero;
+        bool hasPrimary = false;
+
+        foreach (TouchSession session in sessions.Values)
+        {
+            Vector2 touchPosition = new Vector2(session.LastX, session.LastY);
+            Vector2 rawPosition = new Vector2(session.RawX, session.RawY);
+
+            if (!hasPrimary)
+            {
+                PrimaryTouchPosition = touchPosition;
+                PrimaryRawPosition = rawPosition;
+                hasPrimary = true;
+            }
+
+            totalTouch += touchPosition;
+            totalRaw += rawPosition;
+        }
+
+        AverageTouchPosition = totalTouch / sessions.Count;
+        AverageRawPosition = totalRaw / sessions.Count;
+    }
+
+    private void DebugTouching()
+    {
+        if (hasDebugState && lastDebugIsTouching == isTouching)
+        {
+            return;
+        }
+
+        Debug.Log($"isTouching={isTouching}, touchCount={TouchCount}");
+        lastDebugIsTouching = isTouching;
+        hasDebugState = true;
     }
 
     private void OnDisable()
     {
         StopThread();
     }
+
     private void OnApplicationQuit()
     {
-        // CRITICAL: If you don't stop the thread, the hidden window 
-        // might stay alive after you stop the Unity Editor!
-        TrackpadInterface.Stop();
         StopThread();
     }
+
     private void StopThread()
     {
         Debug.Log("Shutting down Trackpad Thread...");
         TrackpadInterface.Stop();
     }
-
 }
