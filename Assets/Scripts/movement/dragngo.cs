@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Serialization;
 
-public class dragngo_improved : MonoBehaviour
+public class dragngo : MonoBehaviour
 {
     private const float ScaleResearch = 65f / 40f;
     private const float TwoFingerRotateDegrees = 90f;
