@@ -13,6 +13,7 @@ public class dogpaddle : MonoBehaviour
     [SerializeField] private Transform worldRotateTarget;
 
     private int TouchCount = 0;
+    private int lastTouchManagerCount = 0;
     private Vector2? lastPosition = null;
 
     private void Awake()
@@ -23,7 +24,7 @@ public class dogpaddle : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (touchManager == null)
         {
@@ -38,12 +39,22 @@ public class dogpaddle : MonoBehaviour
         if (!touchManager.IsTouching)
         {
             TouchCount = 0;
+            lastTouchManagerCount = 0;
             lastPosition = null;
             return;
         }
 
         TouchCount += 1;
-        Vector2 CurrentPosition = touchManager.currentRawPosition;
+        int currentTouchManagerCount = touchManager.TouchCount;
+        Vector2 CurrentPosition = touchManager.GetCurrentTouch();
+
+        if (lastTouchManagerCount != currentTouchManagerCount)
+        {
+            TouchCount = 1;
+            lastTouchManagerCount = currentTouchManagerCount;
+            lastPosition = CurrentPosition;
+            return;
+        }
 
         if (TouchCount == 1)
         {

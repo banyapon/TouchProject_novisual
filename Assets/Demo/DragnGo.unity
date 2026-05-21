@@ -2210,12 +2210,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1686857499}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2ace1d5d70dc654aac13765470de2ae, type: 3}
+  m_Script: {fileID: 11500000, guid: 4f26e0adbdc9d8c449d245a51543d7ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::dragngo_improved
   touchManager: {fileID: 1963717907}
   Player: {fileID: 1686857499}
-  fireOrigin: {fileID: 1686857503}
+  RaycastOrigin: {fileID: 1686857503}
   worldRotateTarget: {fileID: 1686857503}
   lineRenderer: {fileID: 1686857504}
   targetPrefab: {fileID: 3093415857066049624, guid: ee35b5119184fe64fad81b96d465d863, type: 3}
@@ -3390,11 +3390,11 @@ MonoBehaviour:
   m_Range: {x: 0, y: 1}
   m_FlipNormals: 0
   m_Shape:
-    rid: 6199603232073056321
+    rid: 6199603392512000067
   references:
     version: 2
     RefIds:
-    - rid: 6199603232073056321
+    - rid: 6199603392512000067
       type: {class: Road, ns: UnityEngine.Splines.ExtrusionShapes, asm: Unity.Splines}
       data: 
 --- !u!23 &1963717904
@@ -3488,6 +3488,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7786613854810134f928b8a7ea0e9f06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TouchpadManager
+  IsTouching: 0
+  TouchCount: 0
 --- !u!1 &1970632728
 GameObject:
   m_ObjectHideFlags: 0

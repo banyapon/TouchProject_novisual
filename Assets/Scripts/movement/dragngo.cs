@@ -162,7 +162,7 @@ public class dragngo : MonoBehaviour
         isDraggingToTarget = false;
         hasLastRawPosition = false;
 
-        Vector2 currentRawPosition = touchManager.AverageRawPosition;
+        Vector2 currentRawPosition = touchManager.GetCurrentTouch();
         if (!hasLastTwoFingerRawPosition)
         {
             // เริ่มจำตำแหน่งสองนิ้ว
