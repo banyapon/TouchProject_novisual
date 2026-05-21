@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
 using TrackpadDll; // The namespace you defined in Visual Studio
 using RawInput.Touchpad;
 
@@ -27,23 +26,21 @@ public class TouchpadManager : MonoBehaviour
         Debug.Log("Trackpad Listener Started!");
     }
 
-    private readonly HashSet<int> _frameContactIds = new();
-
     void FixedUpdate()
     {
         bool isTouching = false;
-        _frameContactIds.Clear();
+        int contactCount = 0;
 
         while (TrackpadInterface.EventQueue.TryDequeue(out TouchpadContact contact))
         {
             isTouching = true;
-            _frameContactIds.Add(contact.ContactId);
+            contactCount++;
             PrimaryRawPosition = new Vector2(contact.X, contact.Y);
         }
 
         // Set public state outside while loop
         IsTouching = isTouching;
-        TouchCount = _frameContactIds.Count;
+        TouchCount = contactCount;
         if (!IsTouching)
         {
             PrimaryRawPosition = Vector2.zero;
