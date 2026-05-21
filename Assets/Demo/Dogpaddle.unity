@@ -136,7 +136,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &87655085
 RectTransform:
   m_ObjectHideFlags: 0
@@ -815,9 +815,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 2007233927}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 73.63199, y: -16.5925}
   m_SizeDelta: {x: 150.6274, y: 33.185}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &754342653
@@ -1654,9 +1654,9 @@ RectTransform:
   - {fileID: 1646989127}
   m_Father: {fileID: 2007233927}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 73.63199, y: -51.185}
   m_SizeDelta: {x: 160, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1577297028
@@ -3263,16 +3263,16 @@ MonoBehaviour:
   m_UpdateColliders: 1
   m_Sides: 8
   m_SegmentsPerUnit: 1
-  m_Capped: 0
+  m_Capped: 1
   m_Radius: 5
   m_Range: {x: 0, y: 1}
   m_FlipNormals: 0
   m_Shape:
-    rid: 6199603392512000000
+    rid: 6199603392512000079
   references:
     version: 2
     RefIds:
-    - rid: 6199603392512000000
+    - rid: 6199603392512000079
       type: {class: Road, ns: UnityEngine.Splines.ExtrusionShapes, asm: Unity.Splines}
       data: 
 --- !u!23 &1963717904
@@ -3366,6 +3366,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7786613854810134f928b8a7ea0e9f06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TouchpadManager
+  IsTouching: 0
+  TouchCount: 0
 --- !u!1 &1970632728
 GameObject:
   m_ObjectHideFlags: 0
@@ -3515,7 +3517,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: -23.89, y: 23.8899}
-  m_SizeDelta: {x: -128.2201, y: 0}
+  m_SizeDelta: {x: -128.2201, y: -191.02296}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2007233928
 MonoBehaviour:

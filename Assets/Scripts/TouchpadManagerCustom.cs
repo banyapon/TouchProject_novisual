@@ -16,6 +16,7 @@ public class TouchpadManagerCustom : MonoBehaviour
     [SerializeField] private GameObject cubeObject;
 
     private readonly Dictionary<int, TouchSession> sessions = new Dictionary<int, TouchSession>();
+    private readonly List<int> _expiredIds = new List<int>();
     private Vector3 cubeStartPosition;
 
     private struct TouchSession
@@ -149,32 +150,16 @@ public class TouchpadManagerCustom : MonoBehaviour
     private void CleanupExpiredSessions()
     {
         float now = Time.time;
-        List<int> expiredIds = null;
+        _expiredIds.Clear();
 
         foreach (KeyValuePair<int, TouchSession> pair in sessions)
         {
-            if (now - pair.Value.LastSeenTime < ContactTimeoutSeconds)
-            {
-                continue;
-            }
-
-            if (expiredIds == null)
-            {
-                expiredIds = new List<int>();
-            }
-
-            expiredIds.Add(pair.Key);
+            if (now - pair.Value.LastSeenTime >= ContactTimeoutSeconds)
+                _expiredIds.Add(pair.Key);
         }
 
-        if (expiredIds == null)
-        {
-            return;
-        }
-
-        foreach (int id in expiredIds)
-        {
+        foreach (int id in _expiredIds)
             sessions.Remove(id);
-        }
     }
 
     private void OnDisable()
