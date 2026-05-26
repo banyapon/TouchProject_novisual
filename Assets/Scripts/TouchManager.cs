@@ -7,8 +7,8 @@ using RawInput.Touchpad;
 public class TouchpadManager : MonoBehaviour
 {
     public static TouchpadManager Instance { get; private set; }
-    private const float ContactTimeoutSeconds = 0.1f; // Timeout for lost contacts
-    
+    private const float ContactTimeoutSeconds = 0.1f; // เกินเวลานี้ให้ถือว่า idle
+
     public bool IsTouching;
     public int TouchCount;
     public Vector2 PrimaryRawPosition { get; private set; }
@@ -27,35 +27,34 @@ public class TouchpadManager : MonoBehaviour
         Debug.Log("Trackpad Listener Started!");
     }
 
-    private readonly HashSet<int> _frameContactIds = new();
-    //private readonly List<int> _frameContactIds = new();
-
+    //วิธีที่ 2 ใช้ Hashset คือนับค่าไม่ซ้ำ private readonly HashSet<int> contactidFrame = new();
+    //วิธีที่ 1 ใช้ List แต่นับใหม่เฉพาะค่าที่ไม่ซ้ำใน while
+    private readonly List<int> contactidFrame = new();
     void FixedUpdate()
     {
         bool isTouching = false;
-        _frameContactIds.Clear();
+        contactidFrame.Clear();
 
         while (TrackpadInterface.EventQueue.TryDequeue(out TouchpadContact contact))
         {
             isTouching = true;
-            _frameContactIds.Add(contact.ContactId);
+            Debug.Log(contact);
+            //วิธีที่ 2 ใช้ Hashset คือนับค่าไม่ซ้ำ contactidFrame.Add(contact.ContactId);
+            //วิธีที่ 1 ใช้ List แต่นับใหม่เฉพาะค่าที่ไม่ซ้ำใน while ให้รับค่า contactId แล้วถ้ายังไม่มีนิ้วนี้ใน List ค่อยเพิ่ม
+            int contactId = contact.ContactId;
+            if (!contactidFrame.Contains(contactId))
+            {
+                contactidFrame.Add(contactId);
+            }
+            //จบ วิธีที่ 1
             PrimaryRawPosition = new Vector2(contact.X, contact.Y);
         }
 
-        /*
-        TouchpadContact last = default;
-        while (TrackpadInterface.EventQueue.TryDequeue(out TouchpadContact contact))
-        {
-            isTouching = true;
-            last = contact;
-            PrimaryRawPosition = new Vector2(contact.X, contact.Y);
-        }
-        if (isTouching) _frameContactIds.Add(last.ContactId);
-        */
+        
 
         // Set public state outside while loop
         IsTouching = isTouching;
-        TouchCount = _frameContactIds.Count;
+        TouchCount = contactidFrame.Count;
         if (!IsTouching)
         {
             PrimaryRawPosition = Vector2.zero;
