@@ -10,7 +10,7 @@ using UnityEngine.Splines.ExtrusionShapes;
 using UnityEditor;
 #endif
 
-/// สร้างถนนด้วย Unity Spline และเก็บ Road Graph สำหรับให้รถวิ่งข้ามถนนด้วย NodeS / NodeE / LaneS / LaneE
+/// สร้าง Spline และเก็บ Road Graph สำหรับให้รถวิ่งข้ามถนนด้วย NodeS / NodeE / LaneS / LaneE
 /// แนวคิด:
 /// - NodeS = t=0, NodeE = t=1
 /// - dir=0 วิ่งจาก NodeS ไป NodeE
@@ -514,7 +514,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         }
     }
 
-    private Vector3 EvaluateRoadForward(CarState car)
+    public Vector3 EvaluateRoadForward(CarState car)
     {
         int index = car.roadNo - 1;
         if (index < 0 || index >= RouteSegments.Length)
@@ -536,6 +536,8 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         Vector3 forward = transform.TransformDirection((b - a).normalized);
         return car.dir == 0 ? forward : -forward;
     }
+
+    public RoadData GetRoadData(int roadNo) => GetRoad(roadNo);
 
     private RoadData GetRoad(int roadNo)
     {
