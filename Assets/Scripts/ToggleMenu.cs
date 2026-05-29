@@ -14,6 +14,11 @@ public class ToggleMenu : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Q))
+        {
+            Quit();
+        }
+
         if (isMenuOpen)
         {
              menuPanel.SetActive(true);
@@ -27,6 +32,8 @@ public class ToggleMenu : MonoBehaviour
         {
             ToggleMenuPanel();
         }
+
+        
     }
 
     public void ToggleMenuPanel()
@@ -39,5 +46,14 @@ public class ToggleMenu : MonoBehaviour
         {
             isMenuOpen = true;
         }
+    }
+
+    public void Quit()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 }
