@@ -75,12 +75,19 @@ public class TouchpadManager : MonoBehaviour
             }
         }
 
-        
+
 
         // Set public state outside while loop
         IsTouching = isTouching;
         TouchCount = touchCount;
-        PrimaryRawPosition = IsTouching ? contactidFrame[0] : Vector2.zero;
+        if (IsTouching)
+        {
+            PrimaryRawPosition = contactidFrame[0];
+        }
+        else
+        {
+            PrimaryRawPosition = Vector2.zero;
+        }
     }
 
     public Vector2 GetCurrentTouch()
