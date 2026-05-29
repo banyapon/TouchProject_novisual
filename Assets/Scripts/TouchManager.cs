@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
 using TrackpadDll; // The namespace you defined in Visual Studio
 using RawInput.Touchpad;
 
@@ -13,6 +12,7 @@ public class TouchpadManager : MonoBehaviour
     public int TouchCount;
     public Vector2 PrimaryRawPosition { get; private set; }
     public Vector2 currentRawPosition => PrimaryRawPosition;
+    public Vector2[] ContactRawPositions => contactidFrame;
 
     private void Awake()
     {
@@ -27,38 +27,60 @@ public class TouchpadManager : MonoBehaviour
         Debug.Log("Trackpad Listener Started!");
     }
 
-    //วิธีที่ 2 ใช้ Hashset คือนับค่าไม่ซ้ำ private readonly HashSet<int> contactidFrame = new();
-    //วิธีที่ 1 ใช้ List แต่นับใหม่เฉพาะค่าที่ไม่ซ้ำใน while
-    private readonly List<int> contactidFrame = new();
+    private readonly int[] contactIdsFrame = new int[6];
+    private readonly Vector2[] contactidFrame = new Vector2[6];
+
     void FixedUpdate()
     {
         bool isTouching = false;
-        contactidFrame.Clear();
+        int touchCount = 0;
+
+        //ล้างข้อมูลนิ้วในเฟรมนี้
+        for (int i = 0; i < contactidFrame.Length; i++)
+        {
+            contactIdsFrame[i] = -1;
+            contactidFrame[i] = Vector2.zero;
+        }
 
         while (TrackpadInterface.EventQueue.TryDequeue(out TouchpadContact contact))
         {
             isTouching = true;
             Debug.Log(contact);
-            //วิธีที่ 2 ใช้ Hashset คือนับค่าไม่ซ้ำ contactidFrame.Add(contact.ContactId);
-            //วิธีที่ 1 ใช้ List แต่นับใหม่เฉพาะค่าที่ไม่ซ้ำใน while ให้รับค่า contactId แล้วถ้ายังไม่มีนิ้วนี้ใน List ค่อยเพิ่ม
+
             int contactId = contact.ContactId;
-            if (!contactidFrame.Contains(contactId))
+            int contactIndex = -1;
+
+            //หา contact เดิม
+            for (int i = 0; i < touchCount; i++)
             {
-                contactidFrame.Add(contactId);
+                if (contactIdsFrame[i] == contactId)
+                {
+                    contactIndex = i;
+                    break;
+                }
             }
-            //จบ วิธีที่ 1
-            PrimaryRawPosition = new Vector2(contact.X, contact.Y);
+
+            //เพิ่ม contact ใหม่
+            if (contactIndex == -1 && touchCount < contactidFrame.Length)
+            {
+                contactIndex = touchCount;
+                contactIdsFrame[contactIndex] = contactId;
+                touchCount++;
+            }
+
+            //อัปเดตตำแหน่งล่าสุด
+            if (contactIndex != -1)
+            {
+                contactidFrame[contactIndex] = new Vector2(contact.X, contact.Y);
+            }
         }
 
         
 
         // Set public state outside while loop
         IsTouching = isTouching;
-        TouchCount = contactidFrame.Count;
-        if (!IsTouching)
-        {
-            PrimaryRawPosition = Vector2.zero;
-        }
+        TouchCount = touchCount;
+        PrimaryRawPosition = IsTouching ? contactidFrame[0] : Vector2.zero;
     }
 
     public Vector2 GetCurrentTouch()
