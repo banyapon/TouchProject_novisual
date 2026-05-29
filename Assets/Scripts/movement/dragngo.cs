@@ -7,6 +7,7 @@ public class dragngo : MonoBehaviour
     private const float TwoFingerRotateDegrees = 90f;
     private const float RawVerticalDistance = 1784f;
     private const float RawHorizontalDistance = 4095f;
+    private const float DragDirectionDeadZoneRaw = 2f;
     private const float TouchPadHorizontalCmDistance = 11f;
     private const float TouchPadVerticalCmDistance = 6f;
     private const float HorizontalCmPerRaw = TouchPadHorizontalCmDistance / RawHorizontalDistance;
@@ -35,6 +36,8 @@ public class dragngo : MonoBehaviour
     private bool isTwoFingerMode;
     private bool hasTarget;
     private bool isDraggingToTarget;
+    private bool hasDragDirection;
+    private float dragDirectionY;
     private Vector3 movementStartPosition;
     private Vector3 currentTargetPosition;
 
@@ -147,10 +150,23 @@ public class dragngo : MonoBehaviour
         }
 
         float totalDragRawY = currentRawPosition.y - dragStartRawPosition.y;
-        float availableRawY = totalDragRawY >= 0f
+        if (!hasDragDirection)
+        {
+            if (Mathf.Abs(totalDragRawY) < DragDirectionDeadZoneRaw)
+            {
+                Player.transform.position = movementStartPosition;
+                return;
+            }
+
+            // จำทิศลากแรก
+            dragDirectionY = Mathf.Sign(totalDragRawY);
+            hasDragDirection = true;
+        }
+
+        float availableRawY = dragDirectionY > 0f
             ? Mathf.Max(RawVerticalDistance - dragStartRawPosition.y, 1f)
             : Mathf.Max(dragStartRawPosition.y, 1f);
-        float progress = Mathf.Clamp01(Mathf.Abs(totalDragRawY) / availableRawY);
+        float progress = Mathf.Clamp01((totalDragRawY * dragDirectionY) / availableRawY);
 
         // map ระยะลากกับระยะถึง target
         Player.transform.position = Vector3.Lerp(movementStartPosition, currentTargetPosition, progress);
@@ -339,5 +355,7 @@ public class dragngo : MonoBehaviour
         hasLastTwoFingerRawPosition = false;
         isTwoFingerMode = false;
         isDraggingToTarget = false;
+        hasDragDirection = false;
+        dragDirectionY = 0f;
     }
 }

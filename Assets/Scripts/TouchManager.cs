@@ -88,6 +88,8 @@ public class TouchpadManager : MonoBehaviour
         {
             PrimaryRawPosition = Vector2.zero;
         }
+
+        //PrimaryRawPosition = IsTouching ? contactidFrame[0] : Vector2.zero;
     }
 
     public Vector2 GetCurrentTouch()
