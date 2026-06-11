@@ -7,7 +7,7 @@ public class dragngo : MonoBehaviour
     private const float TwoFingerRotateDegrees = 90f;
     private const float RawVerticalDistance = 1784f;
     private const float RawHorizontalDistance = 4095f;
-    private const float DragDirectionDeadZoneRaw = 2f;
+    private const float DragDeadZoneRaw = 2f;
     private const float TouchPadHorizontalCmDistance = 11f;
     private const float TouchPadVerticalCmDistance = 6f;
     private const float HorizontalCmPerRaw = TouchPadHorizontalCmDistance / RawHorizontalDistance;
@@ -27,6 +27,7 @@ public class dragngo : MonoBehaviour
     [SerializeField] private Color aimingColor = Color.white;
     [SerializeField] private Color readyColor = Color.red;
     [SerializeField] private float laserWidth = 0.025f;
+    [SerializeField] private float dragForwardRawYDirection = 1f;
 
     private GameObject targetInstance;
     private Vector2 dragStartRawPosition;
@@ -36,8 +37,6 @@ public class dragngo : MonoBehaviour
     private bool isTwoFingerMode;
     private bool hasTarget;
     private bool isDraggingToTarget;
-    private bool hasDragDirection;
-    private float dragDirectionY;
     private Vector3 movementStartPosition;
     private Vector3 currentTargetPosition;
 
@@ -149,24 +148,18 @@ public class dragngo : MonoBehaviour
             return;
         }
 
-        float totalDragRawY = currentRawPosition.y - dragStartRawPosition.y;
-        if (!hasDragDirection)
+        float forwardDirection = dragForwardRawYDirection >= 0f ? 1f : -1f;
+        float totalDragRawY = (currentRawPosition.y - dragStartRawPosition.y) * forwardDirection;
+        if (Mathf.Abs(totalDragRawY) < DragDeadZoneRaw)
         {
-            if (Mathf.Abs(totalDragRawY) < DragDirectionDeadZoneRaw)
-            {
-                Player.transform.position = movementStartPosition;
-                return;
-            }
-
-            // จำทิศลากแรก
-            dragDirectionY = Mathf.Sign(totalDragRawY);
-            hasDragDirection = true;
+            Player.transform.position = movementStartPosition;
+            return;
         }
 
-        float availableRawY = dragDirectionY > 0f
+        float availableRawY = forwardDirection > 0f
             ? Mathf.Max(RawVerticalDistance - dragStartRawPosition.y, 1f)
             : Mathf.Max(dragStartRawPosition.y, 1f);
-        float progress = Mathf.Clamp01((totalDragRawY * dragDirectionY) / availableRawY);
+        float progress = Mathf.Clamp01(totalDragRawY / availableRawY);
 
         // map ระยะลากกับระยะถึง target
         Player.transform.position = Vector3.Lerp(movementStartPosition, currentTargetPosition, progress);
@@ -355,7 +348,5 @@ public class dragngo : MonoBehaviour
         hasLastTwoFingerRawPosition = false;
         isTwoFingerMode = false;
         isDraggingToTarget = false;
-        hasDragDirection = false;
-        dragDirectionY = 0f;
     }
 }
