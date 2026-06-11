@@ -1,12 +1,13 @@
 using UnityEngine;
-using TrackpadDll; // The namespace you defined in Visual Studio
+using TrackpadDll; 
 using RawInput.Touchpad;
 
 
 public class TouchpadManager : MonoBehaviour
 {
     public static TouchpadManager Instance { get; private set; }
-    private const float ContactTimeoutSeconds = 0.1f; // เกินเวลานี้ให้ถือว่า idle
+    private const float ContactTimeoutSeconds = 0.1f; 
+    // เกินเวลานี้ให้ถือว่า idle
 
     public bool IsTouching;
     public int TouchCount;
@@ -28,91 +29,79 @@ public class TouchpadManager : MonoBehaviour
         Debug.Log("Trackpad Listener Started!");
     }
 
-    private readonly int[] contactIdsFrame = new int[6];
-    private readonly Vector2[] contactidFrame = new Vector2[6];
-    private readonly string[] contactDebugActions = new string[6];
+    // ใช้ ContactId เป็น index ตรง ๆ  ห้อง i = นิ้วที่มี ContactId = i
+    private readonly Vector2[] contactidFrame = new Vector2[10];
+    private readonly bool[] contactActiveFrame = new bool[10];
+    private readonly string[] contactDebugActions = new string[10];
     private int debugEventCountFrame;
+
+    // จำว่า "นิ้วหลักตอนนี้คือห้องไหน" (-1 = ยังไม่มี)
+    private int primaryId = -1;
 
     void FixedUpdate()
     {
-        bool isTouching = false;
         int touchCount = 0;
         int eventCount = 0;
 
         //ล้างข้อมูลนิ้วในเฟรมนี้
         for (int i = 0; i < contactidFrame.Length; i++)
         {
-            contactIdsFrame[i] = -1;
+            contactActiveFrame[i] = false;
             contactidFrame[i] = Vector2.zero;
             contactDebugActions[i] = "Clear";
         }
 
+        //รับ event แบบ simple: ContactId คือ index ตรง ๆ
         while (TrackpadInterface.EventQueue.TryDequeue(out TouchpadContact contact))
         {
-            isTouching = true;
             eventCount++;
             Debug.Log(contact);
 
-            int contactId = contact.ContactId;
-            int contactIndex = -1;
+            int id = contact.ContactId;
 
-            //[1,1,2,1,3,2]
-            //รอบ contactIdsFrame, contactIndex, touchcount, contactId
-             //1 [] -1, touchcount 1, 1
-             //2 [1] 0, touchcount 1, 1
-             //3 [1] -1, touchcount 2, 2
-             //4 [1,2] 0, touchcount 2, 1
-             //5 [1,2] -1, touchcount 3, 3
-             //6 [1,2,3] 1, touchcount 3, 2
-
-            //หา contact เดิม
-            for (int i = 0; i < touchCount; i++)
+            //กัน id เกินขนาด array (บาง driver อาจส่ง id แปลก ๆ มา)
+            if (id < 0 || id >= contactidFrame.Length)
             {
-                if (contactIdsFrame[i] == contactId)
-                {
-                    contactIndex = i;
-                    break;
-                }
+                continue;
             }
 
-            //เพิ่ม contact ใหม่
-            if (contactIndex == -1 && touchCount < contactidFrame.Length)
+            //เจอห้องนี้ครั้งแรกในเฟรม = นิ้วใหม่ของเฟรมนี้
+            if (!contactActiveFrame[id])
             {
-                contactIndex = touchCount;
-                contactIdsFrame[contactIndex] = contactId;
-                contactDebugActions[contactIndex] = "Add";
+                contactActiveFrame[id] = true;
+                contactDebugActions[id] = "Add";
                 touchCount++;
+            }
+            else
+            {
+                contactDebugActions[id] = "Update";
             }
 
             //อัปเดตตำแหน่งล่าสุด
-            if (contactIndex != -1)
-            {
-                if (contactDebugActions[contactIndex] != "Add")
-                {
-                    contactDebugActions[contactIndex] = "Update";
-                }
+            contactidFrame[id] = new Vector2(contact.X, contact.Y);
+        }
 
-                contactidFrame[contactIndex] = new Vector2(contact.X, contact.Y);
+        //หานิ้วแรก หรือนิ้วหลัก
+        //ถ้านิ้วหลักเดิมยังแตะอยู่ ใช้ค่าเดิม
+        //ถ้านิ้วหลักยกไปแล้ว ให้ เดินดู 0,1,2 เจอนิ้วที่แตะอยู่ก่อนเอาอันนั้น
+        if (primaryId == -1 || !contactActiveFrame[primaryId])
+        {
+            primaryId = -1;
+            for (int i = 0; i < contactActiveFrame.Length; i++)
+            {
+                if (contactActiveFrame[i])
+                {
+                    primaryId = i;
+                    break;
+                }
             }
         }
 
-
-
         // Set public state outside while loop
-        IsTouching = isTouching;
+        IsTouching = primaryId != -1;
         TouchCount = touchCount;
-        if (IsTouching)
-        {
-            PrimaryRawPosition = contactidFrame[0];
-            //เปลี่ยนเป็นแบบ อาจารย์ ปรับใน Excel 
-        }
-        else
-        {
-            PrimaryRawPosition = Vector2.zero;
-        }
+        PrimaryRawPosition = IsTouching ? contactidFrame[primaryId] : Vector2.zero;
 
-        //PrimaryRawPosition = IsTouching ? contactidFrame[0] : Vector2.zero;
-        
         // เขียนเพิ่มมา Debug จำนวน event ในเฟรมนี้
         debugEventCountFrame = eventCount;
     }
@@ -126,14 +115,14 @@ public class TouchpadManager : MonoBehaviour
         }
 
         float debugWidth = 320f;
-        float debugHeight = 320f;
+        float debugHeight = 380f;
         float debugMargin = 10f;
         GUILayout.BeginArea(new Rect(Screen.width - debugWidth - debugMargin, debugMargin, debugWidth, debugHeight), GUI.skin.box);
         GUILayout.Label("Touch Debug");
         GUILayout.Label("IsTouching: " + IsTouching + " | TouchCount: " + TouchCount + " | Events: " + debugEventCountFrame);
-        GUILayout.Label("Primary: " + PrimaryRawPosition.x.ToString("0") + " | " + PrimaryRawPosition.y.ToString("0"));
+        GUILayout.Label("PrimaryId: " + primaryId + " | Primary: " + PrimaryRawPosition.x.ToString("0") + " | " + PrimaryRawPosition.y.ToString("0"));
         GUILayout.Space(6f);
-        GUILayout.Label("Slot | Action | ContactId | X | Y");
+        GUILayout.Label("Id | Action | Active | X | Y");
 
         for (int i = 0; i < contactidFrame.Length; i++)
         {
@@ -141,7 +130,7 @@ public class TouchpadManager : MonoBehaviour
             GUILayout.Label(
                 i + " | " +
                 contactDebugActions[i] + " | " +
-                contactIdsFrame[i] + " | " +
+                contactActiveFrame[i] + " | " +
                 position.x.ToString("0") + " | " +
                 position.y.ToString("0"));
         }
