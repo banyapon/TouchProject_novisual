@@ -1,13 +1,12 @@
 using UnityEngine;
-using TrackpadDll; 
+using TrackpadDll; // The namespace you defined in Visual Studio
 using RawInput.Touchpad;
 
 
 public class TouchpadManager : MonoBehaviour
 {
     public static TouchpadManager Instance { get; private set; }
-    private const float ContactTimeoutSeconds = 0.1f; 
-    // เกินเวลานี้ให้ถือว่า idle
+    private const float ContactTimeoutSeconds = 0.1f; // เกินเวลานี้ให้ถือว่า idle
 
     public bool IsTouching;
     public int TouchCount;
@@ -29,13 +28,13 @@ public class TouchpadManager : MonoBehaviour
         Debug.Log("Trackpad Listener Started!");
     }
 
-    // ใช้ ContactId เป็น index ตรง ๆ  ห้อง i = นิ้วที่มี ContactId = i
-    private readonly Vector2[] contactidFrame = new Vector2[10];
-    private readonly bool[] contactActiveFrame = new bool[10];
-    private readonly string[] contactDebugActions = new string[10];
+    // ใช้ ContactId เป็น index ตรง ๆ ห้อง i = นิ้วที่มี ContactId = i
+    private readonly Vector2[] contactidFrame = new Vector2[6];
+    private readonly bool[] contactActiveFrame = new bool[6];
+    private readonly string[] contactDebugActions = new string[6];
     private int debugEventCountFrame;
 
-    // จำว่า "นิ้วหลักตอนนี้คือห้องไหน" (-1 = ยังไม่มี)
+    //ตัวแปรไว้จำค่านิ้วหลักตอนนี้คือ index ห้แงไหน "-1 = ยังไม่มีการเตะ
     private int primaryId = -1;
 
     void FixedUpdate()
@@ -81,9 +80,8 @@ public class TouchpadManager : MonoBehaviour
             contactidFrame[id] = new Vector2(contact.X, contact.Y);
         }
 
-        //หานิ้วแรก หรือนิ้วหลัก
-        //ถ้านิ้วหลักเดิมยังแตะอยู่ ใช้ค่าเดิม
-        //ถ้านิ้วหลักยกไปแล้ว ให้ เดินดู 0,1,2 เจอนิ้วที่แตะอยู่ก่อนเอาอันนั้น
+        //ถ้านิ้วหลักเดิมยังแตะอยู่ ใช้ค่าเดิมต่อ (นิ้วไม่สลับไปมา)
+        //ถ้านิ้วหลักยกไปแล้ว ให้เช็คห้อง[index] 0,1,2,เจอใครก่อนเอาคนนั้น
         if (primaryId == -1 || !contactActiveFrame[primaryId])
         {
             primaryId = -1;
