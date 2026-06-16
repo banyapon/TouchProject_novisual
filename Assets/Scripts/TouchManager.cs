@@ -15,6 +15,21 @@ public class TouchpadManager : MonoBehaviour
     public Vector2[] ContactRawPositions => contactidFrame;
     [SerializeField] private bool showTouchDebug = true;
 
+    public enum TouchMode
+    {
+        None,
+        Single,
+        Rotate,           // oldTouch=true,  touching=true  → นิ่ง, รับค่า rotate
+        Translate,        // oldTouch=true,  touching=false → เคลื่อนที่, translate (เดิม)
+        ChangeTranslate,  // oldTouch=false, touching=true  → นิ่ง, changemode รับค่า translate
+        Released          // oldTouch=false, touching=false → ยกนิ้วแล้ว
+    }
+    public TouchMode CurrentMode { get; private set; }
+
+    // touching = 2+ นิ้วแตะอยู่เฟรมนี้, oldTouch = เฟรมที่แล้ว
+    private bool touching;
+    private bool oldTouch;
+
     private void Awake()
     {
         Instance = this;
@@ -39,6 +54,9 @@ public class TouchpadManager : MonoBehaviour
 
     void FixedUpdate()
     {
+        // บันทึก multi-touch state เฟรมก่อน
+        oldTouch = touching;
+
         int touchCount = 0;
         int eventCount = 0;
 
@@ -100,8 +118,31 @@ public class TouchpadManager : MonoBehaviour
         TouchCount = touchCount;
         PrimaryRawPosition = IsTouching ? contactidFrame[primaryId] : Vector2.zero;
 
-        // เขียนเพิ่มมา Debug จำนวน event ในเฟรมนี้
         debugEventCountFrame = eventCount;
+
+        //touching = true เมื่อมี 2 นิ้วแตะอยู่ในเฟรมนี้
+        touching = touchCount >= 2;
+
+        if (touchCount == 1)
+        {
+            CurrentMode = TouchMode.Single;
+        }
+        else if (touchCount > 1 || oldTouch)
+        {
+            //oldTouch = touching เฟรมก่อน, touching = เฟรมนี้
+            if (oldTouch && touching)
+                CurrentMode = TouchMode.Rotate;          //นิ่ง changemode รับค่า rotate
+            else if (oldTouch && !touching)
+                CurrentMode = TouchMode.Translate;       //เคลื่อนที่ translate (เดิม)
+            else if (!oldTouch && touching)
+                CurrentMode = TouchMode.ChangeTranslate; //นิ่ง changemode รับค่า translate
+            else
+                CurrentMode = TouchMode.Released;        //ยกนิ้ว
+        }
+        else
+        {
+            CurrentMode = TouchMode.None;
+        }
     }
 
     //เอามา Debug
@@ -118,6 +159,7 @@ public class TouchpadManager : MonoBehaviour
         GUILayout.BeginArea(new Rect(Screen.width - debugWidth - debugMargin, debugMargin, debugWidth, debugHeight), GUI.skin.box);
         GUILayout.Label("Touch Debug");
         GUILayout.Label("IsTouching: " + IsTouching + " | TouchCount: " + TouchCount + " | Events: " + debugEventCountFrame);
+        GUILayout.Label("Mode: " + CurrentMode + " | oldTouch: " + oldTouch + " | touching: " + touching);
         GUILayout.Label("PrimaryId: " + primaryId + " | Primary: " + PrimaryRawPosition.x.ToString("0") + " | " + PrimaryRawPosition.y.ToString("0"));
         GUILayout.Space(6f);
         GUILayout.Label("Id | Action | Active | X | Y");

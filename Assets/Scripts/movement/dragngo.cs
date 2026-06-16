@@ -8,8 +8,8 @@ public class dragngo : MonoBehaviour
     private const float RawVerticalDistance = 1784f;
     private const float RawHorizontalDistance = 4095f;
     private const float DragDeadZoneRaw = 2f;
-    private const float TouchPadHorizontalCmDistance = 11f;
-    private const float TouchPadVerticalCmDistance = 6f;
+    private const float TouchPadHorizontalCmDistance = 12.5f; //เครื่องเดิม 11f
+    private const float TouchPadVerticalCmDistance = 8f; //เครื่องเดิม 6f
     private const float HorizontalCmPerRaw = TouchPadHorizontalCmDistance / RawHorizontalDistance;
     private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
     private const string DefaultNavPointLayerName = "NavPoint";
@@ -34,7 +34,6 @@ public class dragngo : MonoBehaviour
     private bool hasLastRawPosition;
     private Vector2 lastTwoFingerRawPosition;
     private bool hasLastTwoFingerRawPosition;
-    private bool isTwoFingerMode;
     private bool hasTarget;
     private bool isDraggingToTarget;
     private Vector3 movementStartPosition;
@@ -100,25 +99,28 @@ public class dragngo : MonoBehaviour
 
     private void UpdateTouchInput()
     {
-        if (!touchManager.IsTouching)
+        var mode = touchManager.CurrentMode;
+
+        if (mode == TouchpadManager.TouchMode.None || mode == TouchpadManager.TouchMode.Released)
         {
             ResetTouchState();
             return;
         }
 
-        if (touchManager.TouchCount >= 2)
+        if (mode == TouchpadManager.TouchMode.Rotate || mode == TouchpadManager.TouchMode.ChangeTranslate)
         {
             RotateTwoFingerDrag();
             return;
         }
 
-        if (isTwoFingerMode)
+        if (mode == TouchpadManager.TouchMode.Translate)
         {
-            // รีเซ็ตก่อนกลับมาแตะหนึ่งนิ้ว
+            // ลดจาก 2 นิ้วเหลือ 1 → reset ก่อน
             ResetTouchState();
             return;
         }
 
+        // mode == Single
         OneFingerDrag();
     }
 
@@ -167,7 +169,6 @@ public class dragngo : MonoBehaviour
 
     private void RotateTwoFingerDrag()
     {
-        isTwoFingerMode = true;
         isDraggingToTarget = false;
         hasLastRawPosition = false;
 
@@ -346,7 +347,6 @@ public class dragngo : MonoBehaviour
     {
         hasLastRawPosition = false;
         hasLastTwoFingerRawPosition = false;
-        isTwoFingerMode = false;
         isDraggingToTarget = false;
     }
 }

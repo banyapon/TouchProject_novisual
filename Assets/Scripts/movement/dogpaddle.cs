@@ -13,7 +13,6 @@ public class dogpaddle : MonoBehaviour
     [SerializeField] private Transform worldRotateTarget;
 
     private int TouchCount = 0;
-    private int lastTouchManagerCount = 0;
     private Vector2? lastPosition = null;
 
     private void Awake()
@@ -39,26 +38,24 @@ public class dogpaddle : MonoBehaviour
         if (!touchManager.IsTouching)
         {
             TouchCount = 0;
-            lastTouchManagerCount = 0;
             lastPosition = null;
             return;
         }
 
         TouchCount += 1;
-        int currentTouchManagerCount = touchManager.TouchCount;
+        var mode = touchManager.CurrentMode;
         Vector2 CurrentPosition = touchManager.GetCurrentTouch();
 
-        if (lastTouchManagerCount != currentTouchManagerCount)
+        // เมื่อ mode เปลี่ยน (เพิ่มนิ้ว/ลดนิ้ว) ให้ reset gesture
+        if (mode == TouchpadManager.TouchMode.ChangeTranslate || mode == TouchpadManager.TouchMode.Translate)
         {
             TouchCount = 1;
-            lastTouchManagerCount = currentTouchManagerCount;
             lastPosition = CurrentPosition;
             return;
         }
 
         if (TouchCount == 1)
         {
-            // จำตำแหน่งแรก
             lastPosition = CurrentPosition;
             return;
         }
@@ -72,7 +69,7 @@ public class dogpaddle : MonoBehaviour
         Vector2 dragDelta = CurrentPosition - lastPosition.Value;
         lastPosition = CurrentPosition;
 
-        if (touchManager.TouchCount >= 2 && IsHorizontalRotateDrag(dragDelta))
+        if (mode == TouchpadManager.TouchMode.Rotate && IsHorizontalRotateDrag(dragDelta))
         {
             RotateByTwoFingerDrag(dragDelta);
             return;
