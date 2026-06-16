@@ -3,8 +3,8 @@ using UnityEngine;
 public class dogpaddle : MonoBehaviour
 {
     private const float scaleResearch = 65f / 40f;
-    private const float RawVerticalDistance = 1784f;
-    private const float TouchPadVerticalCmDistance = 6f;
+    private const float RawVerticalDistance = 912f;  //เครื่องเดิม 1784f
+    private const float TouchPadVerticalCmDistance = 8f; //เครื่องเดิม 6f
     private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
     private const float RotateDeadZoneRaw = 8f;
 
