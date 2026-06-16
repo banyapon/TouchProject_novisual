@@ -5,8 +5,8 @@ public class dragngo : MonoBehaviour
 {
     private const float ScaleResearch = 65f / 40f;
     private const float TwoFingerRotateDegrees = 90f;
-    private const float RawVerticalDistance = 1784f;
-    private const float RawHorizontalDistance = 4095f;
+    private const float RawVerticalDistance = 912f;  //เครื่องเดิม 1784f
+    private const float RawHorizontalDistance = 1452f; //เครื่องเดิม 4095f
     private const float DragDeadZoneRaw = 2f;
     private const float TouchPadHorizontalCmDistance = 12.5f; //เครื่องเดิม 11f
     private const float TouchPadVerticalCmDistance = 8f; //เครื่องเดิม 6f
