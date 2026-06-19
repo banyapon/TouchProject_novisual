@@ -18,17 +18,26 @@ public class TouchpadManager : MonoBehaviour
     public enum TouchMode
     {
         None,
-        Single,
-        Rotate,           // oldTouch=true,  touching=true  → นิ่ง, รับค่า rotate
-        Translate,        // oldTouch=true,  touching=false → เคลื่อนที่, translate (เดิม)
-        ChangeTranslate,  // oldTouch=false, touching=true  → นิ่ง, changemode รับค่า translate
-        Released          // oldTouch=false, touching=false → ยกนิ้วแล้ว
+        Translate,
+        Rotate,
+        Change
     }
     public TouchMode CurrentMode { get; private set; }
 
-    // touching = 2+ นิ้วแตะอยู่เฟรมนี้, oldTouch = เฟรมที่แล้ว
-    private bool touching;
+    public enum TouchStatus
+    {
+        None,
+        OnTouch,
+        OnDrag
+    }
+    public TouchStatus Status { get; private set; }
+
+    private int numTouch;
+    private int oldNumTouch;
     private bool oldTouch;
+    private bool newTouch;
+    private TouchMode oldMode;
+    private TouchMode newMode;
 
     private void Awake()
     {
@@ -54,8 +63,9 @@ public class TouchpadManager : MonoBehaviour
 
     void FixedUpdate()
     {
-        // บันทึก multi-touch state เฟรมก่อน
-        oldTouch = touching;
+        oldTouch = newTouch;
+        oldMode = CurrentMode;
+        oldNumTouch = numTouch;
 
         int touchCount = 0;
         int eventCount = 0;
@@ -120,29 +130,57 @@ public class TouchpadManager : MonoBehaviour
 
         debugEventCountFrame = eventCount;
 
-        //touching = true เมื่อมี 2 นิ้วแตะอยู่ในเฟรมนี้
-        touching = touchCount >= 2;
-
-        if (touchCount == 1)
+        if (touchCount <= 0)
         {
-            CurrentMode = TouchMode.Single;
+            numTouch = 0;
         }
-        else if (touchCount > 1 || oldTouch)
+        else if (touchCount == 1)
         {
-            //oldTouch = touching เฟรมก่อน, touching = เฟรมนี้
-            if (oldTouch && touching)
-                CurrentMode = TouchMode.Rotate;          //นิ่ง changemode รับค่า rotate
-            else if (oldTouch && !touching)
-                CurrentMode = TouchMode.Translate;       //เคลื่อนที่ translate (เดิม)
-            else if (!oldTouch && touching)
-                CurrentMode = TouchMode.ChangeTranslate; //นิ่ง changemode รับค่า translate
-            else
-                CurrentMode = TouchMode.Released;        //ยกนิ้ว
+            numTouch = 1;
         }
         else
         {
-            CurrentMode = TouchMode.None;
+            numTouch = 2;
         }
+
+        newTouch = numTouch > 0;
+        IsTouching = newTouch;
+
+        if (!oldTouch && newTouch)
+        {
+            Status = TouchStatus.OnTouch;
+        }
+        else if (oldTouch && newTouch)
+        {
+            Status = TouchStatus.OnDrag;
+        }
+        else
+        {
+            Status = TouchStatus.None;
+        }
+
+        if (!newTouch)
+        {
+            newMode = TouchMode.None;
+        }
+        else if (!oldTouch)
+        {
+            newMode = TouchMode.Change;
+        }
+        else if (oldNumTouch != numTouch)
+        {
+            newMode = TouchMode.Change;
+        }
+        else if (numTouch == 2)
+        {
+            newMode = TouchMode.Rotate;
+        }
+        else
+        {
+            newMode = TouchMode.Translate;
+        }
+
+        CurrentMode = newMode;
     }
 
     //เอามา Debug
@@ -159,7 +197,9 @@ public class TouchpadManager : MonoBehaviour
         GUILayout.BeginArea(new Rect(Screen.width - debugWidth - debugMargin, debugMargin, debugWidth, debugHeight), GUI.skin.box);
         GUILayout.Label("Touch Debug");
         GUILayout.Label("IsTouching: " + IsTouching + " | TouchCount: " + TouchCount + " | Events: " + debugEventCountFrame);
-        GUILayout.Label("Mode: " + CurrentMode + " | oldTouch: " + oldTouch + " | touching: " + touching);
+        GUILayout.Label("oldTouch: " + oldTouch + " | newTouch: " + newTouch + " | numTouch: " + numTouch);
+        GUILayout.Label("oldMode: " + oldMode + " | newMode: " + newMode + " | status: " + Status);
+        GUILayout.Label("Mode: " + CurrentMode);
         GUILayout.Label("PrimaryId: " + primaryId + " | Primary: " + PrimaryRawPosition.x.ToString("0") + " | " + PrimaryRawPosition.y.ToString("0"));
         GUILayout.Space(6f);
         GUILayout.Label("Id | Action | Active | X | Y");

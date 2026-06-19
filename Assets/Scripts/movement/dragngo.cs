@@ -5,11 +5,11 @@ public class dragngo : MonoBehaviour
 {
     private const float ScaleResearch = 65f / 40f;
     private const float TwoFingerRotateDegrees = 90f;
-    private const float RawVerticalDistance = 912f;  //เครื่องเดิม 1784f
-    private const float RawHorizontalDistance = 1452f; //เครื่องเดิม 4095f
+    private const float RawVerticalDistance = 912f;
+    private const float RawHorizontalDistance = 1452f;
     private const float DragDeadZoneRaw = 2f;
-    private const float TouchPadHorizontalCmDistance = 12.5f; //เครื่องเดิม 11f
-    private const float TouchPadVerticalCmDistance = 8f; //เครื่องเดิม 6f
+    private const float TouchPadHorizontalCmDistance = 12.5f;
+    private const float TouchPadVerticalCmDistance = 8f;
     private const float HorizontalCmPerRaw = TouchPadHorizontalCmDistance / RawHorizontalDistance;
     private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
     private const string DefaultNavPointLayerName = "NavPoint";
@@ -36,6 +36,7 @@ public class dragngo : MonoBehaviour
     private bool hasLastTwoFingerRawPosition;
     private bool hasTarget;
     private bool isDraggingToTarget;
+    private bool suppressNextSingleDragFrame;
     private Vector3 movementStartPosition;
     private Vector3 currentTargetPosition;
 
@@ -99,37 +100,56 @@ public class dragngo : MonoBehaviour
 
     private void UpdateTouchInput()
     {
-        var mode = touchManager.CurrentMode;
+        TouchpadManager.TouchMode mode = touchManager.CurrentMode;
+        TouchpadManager.TouchStatus status = touchManager.Status;
 
-        if (mode == TouchpadManager.TouchMode.None || mode == TouchpadManager.TouchMode.Released)
+        if (mode == TouchpadManager.TouchMode.None)
         {
             ResetTouchState();
             return;
         }
 
-        if (mode == TouchpadManager.TouchMode.Rotate || mode == TouchpadManager.TouchMode.ChangeTranslate)
+        if (status == TouchpadManager.TouchStatus.OnTouch)
         {
+            suppressNextSingleDragFrame = true;
+        }
+
+        if (mode == TouchpadManager.TouchMode.Rotate)
+        {
+            suppressNextSingleDragFrame = true;
             RotateTwoFingerDrag();
+            return;
+        }
+
+        if (mode == TouchpadManager.TouchMode.Change)
+        {
+            suppressNextSingleDragFrame = true;
+            ResetTouchState();
             return;
         }
 
         if (mode == TouchpadManager.TouchMode.Translate)
         {
-            // ลดจาก 2 นิ้วเหลือ 1 → reset ก่อน
-            ResetTouchState();
-            return;
+            OneFingerDrag();
         }
-
-        // mode == Single
-        OneFingerDrag();
     }
 
     private void OneFingerDrag()
     {
         Vector2 currentRawPosition = touchManager.PrimaryRawPosition;
+
+        if (suppressNextSingleDragFrame)
+        {
+            dragStartRawPosition = currentRawPosition;
+            hasLastRawPosition = true;
+            isDraggingToTarget = hasTarget;
+            movementStartPosition = Player.transform.position;
+            suppressNextSingleDragFrame = false;
+            return;
+        }
+
         if (!hasLastRawPosition)
         {
-            // เริ่มลากเมื่อ ray ชน NavPoint
             dragStartRawPosition = currentRawPosition;
             hasLastRawPosition = true;
             isDraggingToTarget = hasTarget;
@@ -163,7 +183,6 @@ public class dragngo : MonoBehaviour
             : Mathf.Max(dragStartRawPosition.y, 1f);
         float progress = Mathf.Clamp01(totalDragRawY / availableRawY);
 
-        // map ระยะลากกับระยะถึง target
         Player.transform.position = Vector3.Lerp(movementStartPosition, currentTargetPosition, progress);
     }
 
@@ -175,7 +194,6 @@ public class dragngo : MonoBehaviour
         Vector2 currentRawPosition = touchManager.GetCurrentTouch();
         if (!hasLastTwoFingerRawPosition)
         {
-            // เริ่มจำตำแหน่งสองนิ้ว
             lastTwoFingerRawPosition = currentRawPosition;
             hasLastTwoFingerRawPosition = true;
             return;
@@ -193,7 +211,6 @@ public class dragngo : MonoBehaviour
         float degreesPerRaw = TwoFingerRotateDegrees / RawVerticalDistance;
         float rotationDegrees = -dragDeltaX * degreesPerRaw;
 
-        // สองนิ้วซ้ายหันขวา ขวาหันซ้าย
         rotateTarget.Rotate(Vector3.up, rotationDegrees, Space.World);
         if (Player.transform != rotateTarget && !Player.transform.IsChildOf(rotateTarget))
         {
@@ -253,7 +270,6 @@ public class dragngo : MonoBehaviour
             }
         }
 
-        // เปิดเส้นและตั้งค่าพื้นฐาน
         lineRenderer.enabled = true;
         lineRenderer.useWorldSpace = true;
         lineRenderer.positionCount = 2;
