@@ -59,8 +59,6 @@ public class TouchpadManager : MonoBehaviour
     private int debugEventCountFrame;
 
     //ตัวแปรไว้จำค่านิ้วหลักตอนนี้คือ index ห้แงไหน "-1 = ยังไม่มีการเตะ
-    private int primaryId = -1;
-
     void FixedUpdate()
     {
         oldTouch = newTouch;
@@ -69,6 +67,7 @@ public class TouchpadManager : MonoBehaviour
 
         int touchCount = 0;
         int eventCount = 0;
+        Vector2 totalRawPosition = Vector2.zero;
 
         //ล้างข้อมูลนิ้วในเฟรมนี้
         for (int i = 0; i < contactidFrame.Length; i++)
@@ -110,23 +109,23 @@ public class TouchpadManager : MonoBehaviour
 
         //ถ้านิ้วหลักเดิมยังแตะอยู่ ใช้ค่าเดิมต่อ (นิ้วไม่สลับไปมา)
         //ถ้านิ้วหลักยกไปแล้ว ให้เช็คห้อง[index] 0,1,2,เจอใครก่อนเอาคนนั้น
-        if (primaryId == -1 || !contactActiveFrame[primaryId])
+        for (int i = 0; i < contactActiveFrame.Length; i++)
         {
-            primaryId = -1;
-            for (int i = 0; i < contactActiveFrame.Length; i++)
+            if (contactActiveFrame[i])
             {
-                if (contactActiveFrame[i])
-                {
-                    primaryId = i;
-                    break;
-                }
+                totalRawPosition += contactidFrame[i];
             }
         }
 
-        // Set public state outside while loop
-        IsTouching = primaryId != -1;
         TouchCount = touchCount;
-        PrimaryRawPosition = IsTouching ? contactidFrame[primaryId] : Vector2.zero;
+        if (touchCount > 0)
+        {
+            PrimaryRawPosition = totalRawPosition / touchCount;
+        }
+        else
+        {
+            PrimaryRawPosition = Vector2.zero;
+        }
 
         debugEventCountFrame = eventCount;
 
@@ -200,7 +199,7 @@ public class TouchpadManager : MonoBehaviour
         GUILayout.Label("oldTouch: " + oldTouch + " | newTouch: " + newTouch + " | numTouch: " + numTouch);
         GUILayout.Label("oldMode: " + oldMode + " | newMode: " + newMode + " | status: " + Status);
         GUILayout.Label("Mode: " + CurrentMode);
-        GUILayout.Label("PrimaryId: " + primaryId + " | Primary: " + PrimaryRawPosition.x.ToString("0") + " | " + PrimaryRawPosition.y.ToString("0"));
+        GUILayout.Label("Current: " + PrimaryRawPosition.x.ToString("0") + " | " + PrimaryRawPosition.y.ToString("0"));
         GUILayout.Space(6f);
         GUILayout.Label("Id | Action | Active | X | Y");
 

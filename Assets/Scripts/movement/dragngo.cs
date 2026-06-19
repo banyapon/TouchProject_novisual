@@ -136,7 +136,7 @@ public class dragngo : MonoBehaviour
 
     private void OneFingerDrag()
     {
-        Vector2 currentRawPosition = touchManager.PrimaryRawPosition;
+        Vector2 currentRawPosition = touchManager.GetCurrentTouch();
 
         if (suppressNextSingleDragFrame)
         {
