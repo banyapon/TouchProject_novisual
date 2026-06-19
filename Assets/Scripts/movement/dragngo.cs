@@ -5,10 +5,11 @@ public class dragngo : MonoBehaviour
 {
     private const float ScaleResearch = 65f / 40f;
     private const float TwoFingerRotateDegrees = 90f;
-    private const float RawVerticalDistance = 1784f;
-    private const float RawHorizontalDistance = 4095f;
-    private const float TouchPadHorizontalCmDistance = 11f;
-    private const float TouchPadVerticalCmDistance = 6f;
+    private const float RawVerticalDistance = 912f;
+    private const float RawHorizontalDistance = 1452f;
+    private const float DragDeadZoneRaw = 2f;
+    private const float TouchPadHorizontalCmDistance = 12.5f;
+    private const float TouchPadVerticalCmDistance = 8f;
     private const float HorizontalCmPerRaw = TouchPadHorizontalCmDistance / RawHorizontalDistance;
     private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
     private const string DefaultNavPointLayerName = "NavPoint";
@@ -26,15 +27,16 @@ public class dragngo : MonoBehaviour
     [SerializeField] private Color aimingColor = Color.white;
     [SerializeField] private Color readyColor = Color.red;
     [SerializeField] private float laserWidth = 0.025f;
+    [SerializeField] private float dragForwardRawYDirection = 1f;
 
     private GameObject targetInstance;
     private Vector2 dragStartRawPosition;
     private bool hasLastRawPosition;
     private Vector2 lastTwoFingerRawPosition;
     private bool hasLastTwoFingerRawPosition;
-    private bool isTwoFingerMode;
     private bool hasTarget;
     private bool isDraggingToTarget;
+    private bool suppressNextSingleDragFrame;
     private Vector3 movementStartPosition;
     private Vector3 currentTargetPosition;
 
@@ -98,34 +100,56 @@ public class dragngo : MonoBehaviour
 
     private void UpdateTouchInput()
     {
-        if (!touchManager.IsTouching)
+        TouchpadManager.TouchMode mode = touchManager.CurrentMode;
+        TouchpadManager.TouchStatus status = touchManager.Status;
+
+        if (mode == TouchpadManager.TouchMode.None)
         {
             ResetTouchState();
             return;
         }
 
-        if (touchManager.TouchCount >= 2)
+        if (status == TouchpadManager.TouchStatus.OnTouch)
         {
+            suppressNextSingleDragFrame = true;
+        }
+
+        if (mode == TouchpadManager.TouchMode.Rotate)
+        {
+            suppressNextSingleDragFrame = true;
             RotateTwoFingerDrag();
             return;
         }
 
-        if (isTwoFingerMode)
+        if (mode == TouchpadManager.TouchMode.Change)
         {
-            // รีเซ็ตก่อนกลับมาแตะหนึ่งนิ้ว
+            suppressNextSingleDragFrame = true;
             ResetTouchState();
             return;
         }
 
-        OneFingerDrag();
+        if (mode == TouchpadManager.TouchMode.Translate)
+        {
+            OneFingerDrag();
+        }
     }
 
     private void OneFingerDrag()
     {
-        Vector2 currentRawPosition = touchManager.PrimaryRawPosition;
+        Vector2 currentRawPosition = touchManager.GetCurrentTouch();
+
+        if (suppressNextSingleDragFrame)
+        {
+            dragStartRawPosition = currentRawPosition;
+            hasLastRawPosition = true;
+            isDraggingToTarget = hasTarget;
+            movementStartPosition = Player.transform.position;
+            suppressNextSingleDragFrame = false;
+            return;
+        }
+
         if (!hasLastRawPosition)
         {
-            // เริ่มลากเมื่อ ray ชน NavPoint
             dragStartRawPosition = currentRawPosition;
             hasLastRawPosition = true;
             isDraggingToTarget = hasTarget;
@@ -146,26 +170,30 @@ public class dragngo : MonoBehaviour
             return;
         }
 
-        float totalDragRawY = currentRawPosition.y - dragStartRawPosition.y;
-        float availableRawY = totalDragRawY >= 0f
+        float forwardDirection = dragForwardRawYDirection >= 0f ? 1f : -1f;
+        float totalDragRawY = (currentRawPosition.y - dragStartRawPosition.y) * forwardDirection;
+        if (Mathf.Abs(totalDragRawY) < DragDeadZoneRaw)
+        {
+            Player.transform.position = movementStartPosition;
+            return;
+        }
+
+        float availableRawY = forwardDirection > 0f
             ? Mathf.Max(RawVerticalDistance - dragStartRawPosition.y, 1f)
             : Mathf.Max(dragStartRawPosition.y, 1f);
-        float progress = Mathf.Clamp01(Mathf.Abs(totalDragRawY) / availableRawY);
+        float progress = Mathf.Clamp01(totalDragRawY / availableRawY);
 
-        // map ระยะลากกับระยะถึง target
         Player.transform.position = Vector3.Lerp(movementStartPosition, currentTargetPosition, progress);
     }
 
     private void RotateTwoFingerDrag()
     {
-        isTwoFingerMode = true;
         isDraggingToTarget = false;
         hasLastRawPosition = false;
 
         Vector2 currentRawPosition = touchManager.GetCurrentTouch();
         if (!hasLastTwoFingerRawPosition)
         {
-            // เริ่มจำตำแหน่งสองนิ้ว
             lastTwoFingerRawPosition = currentRawPosition;
             hasLastTwoFingerRawPosition = true;
             return;
@@ -183,7 +211,6 @@ public class dragngo : MonoBehaviour
         float degreesPerRaw = TwoFingerRotateDegrees / RawVerticalDistance;
         float rotationDegrees = -dragDeltaX * degreesPerRaw;
 
-        // สองนิ้วซ้ายหันขวา ขวาหันซ้าย
         rotateTarget.Rotate(Vector3.up, rotationDegrees, Space.World);
         if (Player.transform != rotateTarget && !Player.transform.IsChildOf(rotateTarget))
         {
@@ -243,7 +270,6 @@ public class dragngo : MonoBehaviour
             }
         }
 
-        // เปิดเส้นและตั้งค่าพื้นฐาน
         lineRenderer.enabled = true;
         lineRenderer.useWorldSpace = true;
         lineRenderer.positionCount = 2;
@@ -337,7 +363,6 @@ public class dragngo : MonoBehaviour
     {
         hasLastRawPosition = false;
         hasLastTwoFingerRawPosition = false;
-        isTwoFingerMode = false;
         isDraggingToTarget = false;
     }
 }

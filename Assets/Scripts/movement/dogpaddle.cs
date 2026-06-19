@@ -3,8 +3,8 @@ using UnityEngine;
 public class dogpaddle : MonoBehaviour
 {
     private const float scaleResearch = 65f / 40f;
-    private const float RawVerticalDistance = 1784f;
-    private const float TouchPadVerticalCmDistance = 6f;
+    private const float RawVerticalDistance = 912f;
+    private const float TouchPadVerticalCmDistance = 8f;
     private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
     private const float RotateDeadZoneRaw = 8f;
 
@@ -13,8 +13,8 @@ public class dogpaddle : MonoBehaviour
     [SerializeField] private Transform worldRotateTarget;
 
     private int TouchCount = 0;
-    private int lastTouchManagerCount = 0;
     private Vector2? lastPosition = null;
+    private bool suppressNextDragFrame;
 
     private void Awake()
     {
@@ -39,46 +39,74 @@ public class dogpaddle : MonoBehaviour
         if (!touchManager.IsTouching)
         {
             TouchCount = 0;
-            lastTouchManagerCount = 0;
             lastPosition = null;
+            suppressNextDragFrame = false;
             return;
         }
 
         TouchCount += 1;
-        int currentTouchManagerCount = touchManager.TouchCount;
-        Vector2 CurrentPosition = touchManager.GetCurrentTouch();
+        TouchpadManager.TouchMode mode = touchManager.CurrentMode;
+        TouchpadManager.TouchStatus status = touchManager.Status;
+        Vector2 currentPosition = touchManager.GetCurrentTouch();
 
-        if (lastTouchManagerCount != currentTouchManagerCount)
+        if (status == TouchpadManager.TouchStatus.OnTouch)
         {
             TouchCount = 1;
-            lastTouchManagerCount = currentTouchManagerCount;
-            lastPosition = CurrentPosition;
+            lastPosition = currentPosition;
+            suppressNextDragFrame = true;
             return;
         }
 
-        if (TouchCount == 1)
+        if (mode == TouchpadManager.TouchMode.Change)
         {
-            // จำตำแหน่งแรก
-            lastPosition = CurrentPosition;
+            TouchCount = 1;
+            lastPosition = currentPosition;
+            suppressNextDragFrame = true;
+            return;
+        }
+
+        if (status != TouchpadManager.TouchStatus.OnDrag)
+        {
+            lastPosition = currentPosition;
+            return;
+        }
+
+        if (TouchCount <= 1)
+        {
+            lastPosition = currentPosition;
             return;
         }
 
         if (lastPosition == null)
         {
-            lastPosition = CurrentPosition;
+            lastPosition = currentPosition;
             return;
         }
 
-        Vector2 dragDelta = CurrentPosition - lastPosition.Value;
-        lastPosition = CurrentPosition;
-
-        if (touchManager.TouchCount >= 2 && IsHorizontalRotateDrag(dragDelta))
+        if (suppressNextDragFrame)
         {
-            RotateByTwoFingerDrag(dragDelta);
+            lastPosition = currentPosition;
+            suppressNextDragFrame = false;
             return;
         }
 
-        MoveByOneFingerDrag(dragDelta);
+        Vector2 dragDelta = currentPosition - lastPosition.Value;
+        lastPosition = currentPosition;
+
+        if (mode == TouchpadManager.TouchMode.Rotate)
+        {
+            if (IsHorizontalRotateDrag(dragDelta))
+            {
+                RotateByTwoFingerDrag(dragDelta);
+            }
+
+            return;
+        }
+
+        if (mode == TouchpadManager.TouchMode.Translate)
+        {
+            MoveByOneFingerDrag(dragDelta);
+        }
     }
 
     private void MoveByOneFingerDrag(Vector2 dragDelta)
@@ -97,20 +125,17 @@ public class dogpaddle : MonoBehaviour
         float distance = scaleResearch * dragDeltaY;
 
         Transform moveTarget = worldRotateTarget != null ? worldRotateTarget : Player.transform;
-        // เคลื่อนที่ตามแกนลาก Y
         Player.transform.position += moveTarget.forward * distance;
     }
 
     private void RotateByTwoFingerDrag(Vector2 dragDelta)
     {
         Transform rotateTarget = worldRotateTarget != null ? worldRotateTarget : Player.transform;
-        // ซ้ายหมุนขวา ขวาหมุนซ้าย
         rotateTarget.Rotate(Vector3.up, -dragDelta.x * (90f / RawVerticalDistance), Space.World);
     }
 
     private bool IsHorizontalRotateDrag(Vector2 dragDelta)
     {
-        // กันเดินเร็วแล้วเข้า rotate
         return Mathf.Abs(dragDelta.x) > RotateDeadZoneRaw && Mathf.Abs(dragDelta.x) > Mathf.Abs(dragDelta.y);
     }
 }

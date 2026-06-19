@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections.Generic;
 using TrackpadDll; // The namespace you defined in Visual Studio
 using RawInput.Touchpad;
 
@@ -13,6 +12,32 @@ public class TouchpadManager : MonoBehaviour
     public int TouchCount;
     public Vector2 PrimaryRawPosition { get; private set; }
     public Vector2 currentRawPosition => PrimaryRawPosition;
+    public Vector2[] ContactRawPositions => contactidFrame;
+    [SerializeField] private bool showTouchDebug = true;
+
+    public enum TouchMode
+    {
+        None,
+        Translate,
+        Rotate,
+        Change
+    }
+    public TouchMode CurrentMode { get; private set; }
+
+    public enum TouchStatus
+    {
+        None,
+        OnTouch,
+        OnDrag
+    }
+    public TouchStatus Status { get; private set; }
+
+    private int numTouch;
+    private int oldNumTouch;
+    private bool oldTouch;
+    private bool newTouch;
+    private TouchMode oldMode;
+    private TouchMode newMode;
 
     private void Awake()
     {
@@ -27,38 +52,169 @@ public class TouchpadManager : MonoBehaviour
         Debug.Log("Trackpad Listener Started!");
     }
 
-    //วิธีที่ 2 ใช้ Hashset คือนับค่าไม่ซ้ำ private readonly HashSet<int> contactidFrame = new();
-    //วิธีที่ 1 ใช้ List แต่นับใหม่เฉพาะค่าที่ไม่ซ้ำใน while
-    private readonly List<int> contactidFrame = new();
+    // ใช้ ContactId เป็น index ตรง ๆ ห้อง i = นิ้วที่มี ContactId = i
+    private readonly Vector2[] contactidFrame = new Vector2[6];
+    private readonly bool[] contactActiveFrame = new bool[6];
+    private readonly string[] contactDebugActions = new string[6];
+    private int debugEventCountFrame;
+
+    //ตัวแปรไว้จำค่านิ้วหลักตอนนี้คือ index ห้แงไหน "-1 = ยังไม่มีการเตะ
     void FixedUpdate()
     {
-        bool isTouching = false;
-        contactidFrame.Clear();
+        oldTouch = newTouch;
+        oldMode = CurrentMode;
+        oldNumTouch = numTouch;
 
-        while (TrackpadInterface.EventQueue.TryDequeue(out TouchpadContact contact))
+        int touchCount = 0;
+        int eventCount = 0;
+        Vector2 totalRawPosition = Vector2.zero;
+
+        //ล้างข้อมูลนิ้วในเฟรมนี้
+        for (int i = 0; i < contactidFrame.Length; i++)
         {
-            isTouching = true;
-            Debug.Log(contact);
-            //วิธีที่ 2 ใช้ Hashset คือนับค่าไม่ซ้ำ contactidFrame.Add(contact.ContactId);
-            //วิธีที่ 1 ใช้ List แต่นับใหม่เฉพาะค่าที่ไม่ซ้ำใน while ให้รับค่า contactId แล้วถ้ายังไม่มีนิ้วนี้ใน List ค่อยเพิ่ม
-            int contactId = contact.ContactId;
-            if (!contactidFrame.Contains(contactId))
-            {
-                contactidFrame.Add(contactId);
-            }
-            //จบ วิธีที่ 1
-            PrimaryRawPosition = new Vector2(contact.X, contact.Y);
+            contactActiveFrame[i] = false;
+            contactidFrame[i] = Vector2.zero;
+            contactDebugActions[i] = "Clear";
         }
 
-        
+        //รับ event แบบ simple: ContactId คือ index ตรง ๆ
+        while (TrackpadInterface.EventQueue.TryDequeue(out TouchpadContact contact))
+        {
+            eventCount++;
+            Debug.Log(contact);
 
-        // Set public state outside while loop
-        IsTouching = isTouching;
-        TouchCount = contactidFrame.Count;
-        if (!IsTouching)
+            int id = contact.ContactId;
+
+            //กัน id เกินขนาด array (บาง driver อาจส่ง id แปลก ๆ มา)
+            if (id < 0 || id >= contactidFrame.Length)
+            {
+                continue;
+            }
+
+            //เจอห้องนี้ครั้งแรกในเฟรม = นิ้วใหม่ของเฟรมนี้
+            if (!contactActiveFrame[id])
+            {
+                contactActiveFrame[id] = true;
+                contactDebugActions[id] = "Add";
+                touchCount++;
+            }
+            else
+            {
+                contactDebugActions[id] = "Update";
+            }
+
+            //อัปเดตตำแหน่งล่าสุด
+            contactidFrame[id] = new Vector2(contact.X, contact.Y);
+        }
+
+        //ถ้านิ้วหลักเดิมยังแตะอยู่ ใช้ค่าเดิมต่อ (นิ้วไม่สลับไปมา)
+        //ถ้านิ้วหลักยกไปแล้ว ให้เช็คห้อง[index] 0,1,2,เจอใครก่อนเอาคนนั้น
+        for (int i = 0; i < contactActiveFrame.Length; i++)
+        {
+            if (contactActiveFrame[i])
+            {
+                totalRawPosition += contactidFrame[i];
+            }
+        }
+
+        TouchCount = touchCount;
+        if (touchCount > 0)
+        {
+            PrimaryRawPosition = totalRawPosition / touchCount;
+        }
+        else
         {
             PrimaryRawPosition = Vector2.zero;
         }
+
+        debugEventCountFrame = eventCount;
+
+        if (touchCount <= 0)
+        {
+            numTouch = 0;
+        }
+        else if (touchCount == 1)
+        {
+            numTouch = 1;
+        }
+        else
+        {
+            numTouch = 2;
+        }
+
+        newTouch = numTouch > 0;
+        IsTouching = newTouch;
+
+        if (!oldTouch && newTouch)
+        {
+            Status = TouchStatus.OnTouch;
+        }
+        else if (oldTouch && newTouch)
+        {
+            Status = TouchStatus.OnDrag;
+        }
+        else
+        {
+            Status = TouchStatus.None;
+        }
+
+        if (!newTouch)
+        {
+            newMode = TouchMode.None;
+        }
+        else if (!oldTouch)
+        {
+            newMode = TouchMode.Change;
+        }
+        else if (oldNumTouch != numTouch)
+        {
+            newMode = TouchMode.Change;
+        }
+        else if (numTouch == 2)
+        {
+            newMode = TouchMode.Rotate;
+        }
+        else
+        {
+            newMode = TouchMode.Translate;
+        }
+
+        CurrentMode = newMode;
+    }
+
+    //เอามา Debug
+    private void OnGUI()
+    {
+        if (!showTouchDebug)
+        {
+            return;
+        }
+
+        float debugWidth = 320f;
+        float debugHeight = 380f;
+        float debugMargin = 10f;
+        GUILayout.BeginArea(new Rect(Screen.width - debugWidth - debugMargin, debugMargin, debugWidth, debugHeight), GUI.skin.box);
+        GUILayout.Label("Touch Debug");
+        GUILayout.Label("IsTouching: " + IsTouching + " | TouchCount: " + TouchCount + " | Events: " + debugEventCountFrame);
+        GUILayout.Label("oldTouch: " + oldTouch + " | newTouch: " + newTouch + " | numTouch: " + numTouch);
+        GUILayout.Label("oldMode: " + oldMode + " | newMode: " + newMode + " | status: " + Status);
+        GUILayout.Label("Mode: " + CurrentMode);
+        GUILayout.Label("Current: " + PrimaryRawPosition.x.ToString("0") + " | " + PrimaryRawPosition.y.ToString("0"));
+        GUILayout.Space(6f);
+        GUILayout.Label("Id | Action | Active | X | Y");
+
+        for (int i = 0; i < contactidFrame.Length; i++)
+        {
+            Vector2 position = contactidFrame[i];
+            GUILayout.Label(
+                i + " | " +
+                contactDebugActions[i] + " | " +
+                contactActiveFrame[i] + " | " +
+                position.x.ToString("0") + " | " +
+                position.y.ToString("0"));
+        }
+
+        GUILayout.EndArea();
     }
 
     public Vector2 GetCurrentTouch()
