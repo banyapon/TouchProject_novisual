@@ -454,6 +454,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TouchpadManager
   IsTouching: 0
   TouchCount: 0
+  showTouchDebug: 1
 --- !u!114 &478635839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -640,7 +641,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 573001727}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 478635839}
+        m_TargetAssemblyTypeName: SwitchScene, Assembly-CSharp
+        m_MethodName: SwitchChange
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Spline
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &573001727
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1115,6 +1128,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 1
+  m_UseReflectionProbes: 0
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0

@@ -165,10 +165,8 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         }
     };
 
-    // -------------------------------------------------------------------------
-    // 2) Graph Layer: NodeS / NodeE / LaneS / LaneE
-    // -------------------------------------------------------------------------
-    private static readonly RoadData[] Roads =
+        //NodeS / NodeE / LaneS / LaneE
+       private static readonly RoadData[] Roads =
     {
         new RoadData
         {
@@ -336,9 +334,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         SnapDebugCarToRoad();
     }
 
-    /// <summary>
     /// MoveCarLoop ใช้ while เพื่อใช้ remain ข้ามได้หลายถนนในคำสั่งเดียว
-    /// </summary>
     public void MoveCarLoop(CarState car, float distance, MoveMode mode)
     {
         float remain = Mathf.Max(0f, distance);
@@ -356,9 +352,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         }
     }
 
-    /// <summary>
     /// ขยับรถภายในถนนเดียว ถ้าเกินปลายถนนจะย้ายไปถนนใหม่แล้วคืน remain
-    /// </summary>
     private float MoveCarOneRoad(CarState car, float distance, MoveMode mode)
     {
         RoadData currentRoad = GetRoad(car.roadNo);

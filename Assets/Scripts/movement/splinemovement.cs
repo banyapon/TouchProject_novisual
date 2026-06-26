@@ -1,94 +1,137 @@
+using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.Splines;
 
 [RequireComponent(typeof(Rigidbody))]
 public class splinemovement : MonoBehaviour
 {
-    [Header("References")]
-    public RoadNetworkSplineCreator roadNetwork;
+    private const float ScaleResearch = 65f / 40f;
+    private const float RawVerticalDistance = 912f;
+    private const float TouchPadVerticalCmDistance = 8f;
+    private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
+    private const float HorizontalSwipeDeadZoneRaw = 24f;
+    private const float StraightAngleThreshold = 25f;
+    private const float JunctionPreviewLength = 0.2f;
+    private const float EndpointOffsetNormalized = 0.02f;
 
-    [Header("Movement")]
-    public float baseSpeed = 6f;
-    public float maxSpeed = 18f;
-    public float fallbackDpi = 160f;
+    private enum TurnKind
+    {
+        Right,
+        Straight,
+        Left
+    }
 
-    [Header("Drag (cm)")]
-    public float dragDeadZoneCm = 0.1f;
-    public float cmToSpeedScale = 3f;
+    private struct LaneOption
+    {
+        public int LaneIndex;
+        public int NextRoadNo;
+        public int EnterNode;
+        public float SignedAngle;
+        public TurnKind TurnKind;
+        public bool IsValid;
+    }
 
-    [Header("Hold Detection")]
-    public float holdPixelThreshold = 5f;
-    public float holdTimeThreshold = 0.1f;
+    [SerializeField] private TouchpadManager touchManager;
+    [SerializeField] private RoadNetworkSplineCreator roadNetwork;
+    [SerializeField] private GameObject player;
 
-    [Header("Swipe (cm/s)")]
-    public float swipeVelocityThresholdCm = 12f;
-    public float swipeMaxDuration = 0.2f;
-    public float swipeMinDistanceCm = 2.0f;
-    public float swipeMinPixels = 50f;
-
-    [Header("Two-Finger Rotation")]
-    public bool enableTwoFingerRotation = true;
-    public float twoFingerRotateSpeed = 0.15f;
-
-    [Header("Junction Zone")]
-    [Range(0f, 0.3f)] public float junctionNormalizedRadius = 0.15f;
-
-    [Header("Rotation Animation")]
-    public float tangentRotateSpeed = 120f;
-
-    [Header("Road Highlight")]
-    public Color currentRoadColor = new Color(1f, 0.9f, 0.1f, 1f);
-    public Color nextRoadColor = new Color(0.2f, 1f, 0.4f, 1f);
-    public Color idleRoadColor = new Color(0.4f, 0.4f, 0.4f, 0.5f);
-    [Min(4)] public int lineResolution = 48;
-    public float lineWidth = 0.2f;
+    [Header("Highlight")]
+    [SerializeField] private Color highlightColor = new Color(1f, 0.9f, 0.1f, 1f);
+    [SerializeField] private float lineWidth = 0.24f;
+    [SerializeField, Min(4)] private int samplesPerRoad = 24;
+    [SerializeField] private float lineHeightOffset = 0.08f;
 
     private Rigidbody rb;
     private SplineContainer splineContainer;
     private RoadNetworkSplineCreator.CarState carState;
-    private LineRenderer[] lineRenderers;
-    private Material[] lineMaterials;
+    private Vector2? lastPosition;
+    private bool suppressNextDragFrame;
+    private bool horizontalSelectionConsumed;
+    private LineRenderer routeLine;
+    private Material routeMaterial;
+    private int cachedRoadNo = -1;
+    private int cachedLane = -1;
+    private int cachedDir = -1;
+    private float cachedPos = -1f;
 
-    private float yRotationOffset;
-    private bool isAnimatingRotation;
-    private Quaternion targetRotation;
-
-    private Vector2 touchStartPos;
-    private float touchStartTime;
-    private bool isTouching;
-    private bool touchStartedOnUI;
-    private bool isTwoFingerActive;
-    private float holdTimer;
-    private bool gestureLocked;
-    private Vector2 dragDistanceCm;
-    private float totalDragDistanceCm;
-
-    private int prevRoadNo = -1;
-    private bool prevAtJunction;
-
-    private enum GestureType { None, Hold, Drag, Swipe }
-    private GestureType currentGesture;
-
-    void Start()
+    private void Awake()
     {
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
-        rb.constraints = RigidbodyConstraints.FreezeRotation;
         rb.isKinematic = true;
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
 
-        if (roadNetwork == null)
-            roadNetwork = FindFirstObjectByType<RoadNetworkSplineCreator>();
+        ResolveReferences();
+        EnsureRouteRenderer();
+        EnsureCarState();
+    }
 
-        if (roadNetwork == null)
+    private void Start()
+    {
+        ResolveReferences();
+        EnsureCarState();
+        SnapToRoad();
+        UpdateRoutePreview(force: true);
+    }
+
+    private void FixedUpdate()
+    {
+        ResolveReferences();
+        if (touchManager == null || roadNetwork == null || splineContainer == null)
         {
-            Debug.LogError("splinemovement: RoadNetworkSplineCreator not found.");
-            enabled = false;
             return;
         }
 
-        splineContainer = roadNetwork.GetComponent<SplineContainer>();
+        EnsureCarState();
+        HandleTrackpadMovement();
+        SnapToRoad();
+        UpdateRoutePreview(force: false);
+    }
+
+    private void OnDestroy()
+    {
+        if (routeMaterial != null)
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(routeMaterial);
+            }
+            else
+            {
+                DestroyImmediate(routeMaterial);
+            }
+        }
+    }
+
+    private void ResolveReferences()
+    {
+        if (touchManager == null)
+        {
+            touchManager = TouchpadManager.Instance;
+        }
+
+        if (roadNetwork == null)
+        {
+            roadNetwork = FindFirstObjectByType<RoadNetworkSplineCreator>();
+        }
+
+        if (player == null)
+        {
+            player = gameObject;
+        }
+
+        splineContainer = roadNetwork != null
+            ? roadNetwork.GetComponent<SplineContainer>()
+            : null;
+    }
+
+    private void EnsureCarState()
+    {
+        if (carState != null)
+        {
+            return;
+        }
 
         carState = new RoadNetworkSplineCreator.CarState
         {
@@ -98,398 +141,462 @@ public class splinemovement : MonoBehaviour
             currentLane = 0
         };
 
-        ApplyDefaultLane();
-        BuildLineRenderers();
-        PlaceOnRoad(true);
-        UpdateHighlight();
+        SelectDefaultLane();
     }
 
-    void Update()
+    private void EnsureRouteRenderer()
     {
-        if (roadNetwork == null) return;
-
-        HandleTouchInput();
-
-        if (isAnimatingRotation)
+        if (routeLine != null)
         {
-            transform.rotation = Quaternion.RotateTowards(
-                transform.rotation, targetRotation,
-                tangentRotateSpeed * Time.deltaTime);
-
-            if (Quaternion.Angle(transform.rotation, targetRotation) < 0.5f)
-            {
-                transform.rotation = targetRotation;
-                isAnimatingRotation = false;
-            }
+            return;
         }
 
-        PlaceOnRoad(false);
-
-        bool atJunction = IsAtJunction();
-        if (carState.roadNo != prevRoadNo || atJunction != prevAtJunction)
+        routeLine = GetComponent<LineRenderer>();
+        if (routeLine == null)
         {
-            UpdateHighlight();
-            prevRoadNo = carState.roadNo;
-            prevAtJunction = atJunction;
+            routeLine = gameObject.AddComponent<LineRenderer>();
         }
-    }
-
-    void PlaceOnRoad(bool forceRotation)
-    {
-        Vector3 worldPos = roadNetwork.EvaluateRoadPosition(carState);
-        worldPos.y = transform.position.y;
-        rb.MovePosition(worldPos);
-
-        if (!isAnimatingRotation || forceRotation)
-        {
-            Vector3 fwd = roadNetwork.EvaluateRoadForward(carState);
-            fwd.y = 0f;
-            if (fwd.sqrMagnitude > 0.001f)
-            {
-                fwd.Normalize();
-                Quaternion rot = Quaternion.LookRotation(fwd, Vector3.up);
-                transform.rotation = Quaternion.AngleAxis(yRotationOffset, Vector3.up) * rot;
-            }
-        }
-    }
-
-    void MoveOnRoad(float frameDeltaCm_y)
-    {
-        float speedMul = baseSpeed / 5f;
-        float dist = Mathf.Clamp(
-            Mathf.Abs(frameDeltaCm_y) * cmToSpeedScale * speedMul,
-            0f, maxSpeed) * Time.deltaTime;
-
-        if (dist < 0.001f) return;
-
-        // drag down (negative y delta) = move forward, like dog-paddle stroke
-        var mode = frameDeltaCm_y < 0f
-            ? RoadNetworkSplineCreator.MoveMode.Forward
-            : RoadNetworkSplineCreator.MoveMode.Backward;
-
-        int prevRoad = carState.roadNo;
-        roadNetwork.MoveCarLoop(carState, dist, mode);
-
-        if (carState.roadNo != prevRoad)
-        {
-            ApplyDefaultLane();
-            StartRotateToCurrentRoad();
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Junction & Lane
-    // -----------------------------------------------------------------------
-
-    bool IsAtJunction()
-    {
-        var road = roadNetwork.GetRoadData(carState.roadNo);
-        if (road == null || road.length <= 0f) return false;
-
-        float t = carState.currentPos / road.length;
-
-        if (carState.dir == 0)
-            return t >= 1f - junctionNormalizedRadius && (road.laneE?.Length ?? 0) > 0;
-
-        return t <= junctionNormalizedRadius && (road.laneS?.Length ?? 0) > 0;
-    }
-
-    int GetNextSplineIndex()
-    {
-        var road = roadNetwork.GetRoadData(carState.roadNo);
-        if (road == null) return -1;
-
-        var lanes = carState.dir == 0 ? road.laneE : road.laneS;
-        if (lanes == null || lanes.Length == 0) return -1;
-
-        int idx = Mathf.Clamp(carState.currentLane, 0, lanes.Length - 1);
-        var conn = lanes[idx];
-        return conn.IsValid ? conn.roadNo - 1 : -1;
-    }
-
-    void ApplyDefaultLane()
-    {
-        var road = roadNetwork.GetRoadData(carState.roadNo);
-        if (road == null) return;
-
-        var lanes = carState.dir == 0 ? road.laneE : road.laneS;
-        int count = lanes?.Length ?? 0;
-
-        // 2 branches → left (0), 3 branches → middle (1), more → center
-        if (count <= 2)
-            carState.currentLane = 0;
-        else if (count == 3)
-            carState.currentLane = 1;
-        else
-            carState.currentLane = count / 2;
-    }
-
-    // -----------------------------------------------------------------------
-    // Rotation
-    // -----------------------------------------------------------------------
-
-    void StartRotateToCurrentRoad()
-    {
-        Vector3 fwd = roadNetwork.EvaluateRoadForward(carState);
-        fwd.y = 0f;
-        if (fwd.sqrMagnitude <= 0.001f) return;
-
-        fwd.Normalize();
-        Quaternion rot = Quaternion.LookRotation(fwd, Vector3.up);
-        targetRotation = Quaternion.AngleAxis(yRotationOffset, Vector3.up) * rot;
-        isAnimatingRotation = true;
-    }
-
-    // -----------------------------------------------------------------------
-    // Road Highlight (LineRenderers)
-    // -----------------------------------------------------------------------
-
-    void BuildLineRenderers()
-    {
-        if (splineContainer == null) return;
-
-        int count = splineContainer.Splines.Count;
-        lineRenderers = new LineRenderer[count];
-        lineMaterials = new Material[count];
 
         Shader lineShader = Shader.Find("Universal Render Pipeline/Unlit");
         if (lineShader == null) lineShader = Shader.Find("Unlit/Color");
         if (lineShader == null) lineShader = Shader.Find("Sprites/Default");
         if (lineShader == null) lineShader = Shader.Find("Standard");
 
-        for (int i = 0; i < count; i++)
+        routeMaterial = lineShader != null
+            ? new Material(lineShader)
+            : new Material(routeLine.sharedMaterial);
+
+        routeMaterial.color = highlightColor;
+        routeLine.sharedMaterial = routeMaterial;
+        routeLine.startColor = highlightColor;
+        routeLine.endColor = highlightColor;
+        routeLine.startWidth = lineWidth;
+        routeLine.endWidth = lineWidth;
+        routeLine.widthMultiplier = 1f;
+        routeLine.useWorldSpace = true;
+        routeLine.positionCount = 0;
+        routeLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        routeLine.receiveShadows = false;
+    }
+
+    private void HandleTrackpadMovement()
+    {
+        if (!touchManager.IsTouching)
         {
-            GameObject go = new GameObject($"RoadLine_{i}");
-            go.transform.SetParent(splineContainer.transform);
+            lastPosition = null;
+            suppressNextDragFrame = false;
+            horizontalSelectionConsumed = false;
+            return;
+        }
 
-            LineRenderer lr = go.AddComponent<LineRenderer>();
-            Material mat = lineShader != null
-                ? new Material(lineShader)
-                : new Material(lr.material);
-            mat.color = idleRoadColor;
-            lr.material = mat;
-            lr.startColor = idleRoadColor;
-            lr.endColor = idleRoadColor;
-            lr.startWidth = lineWidth;
-            lr.endWidth = lineWidth;
-            lr.useWorldSpace = true;
-            lr.positionCount = lineResolution;
+        TouchpadManager.TouchMode mode = touchManager.CurrentMode;
+        TouchpadManager.TouchStatus status = touchManager.Status;
+        Vector2 currentPosition = touchManager.GetCurrentTouch();
 
-            var spline = splineContainer.Splines[i];
-            for (int j = 0; j < lineResolution; j++)
+        if (status == TouchpadManager.TouchStatus.OnTouch || mode == TouchpadManager.TouchMode.Change)
+        {
+            lastPosition = currentPosition;
+            suppressNextDragFrame = true;
+            horizontalSelectionConsumed = false;
+            return;
+        }
+
+        if (status != TouchpadManager.TouchStatus.OnDrag)
+        {
+            lastPosition = currentPosition;
+            return;
+        }
+
+        if (lastPosition == null)
+        {
+            lastPosition = currentPosition;
+            return;
+        }
+
+        if (suppressNextDragFrame)
+        {
+            lastPosition = currentPosition;
+            suppressNextDragFrame = false;
+            return;
+        }
+
+        Vector2 dragDelta = currentPosition - lastPosition.Value;
+        lastPosition = currentPosition;
+
+        HandleLaneSwipe(dragDelta);
+        MoveByDogpaddle(dragDelta);
+    }
+
+    private void HandleLaneSwipe(Vector2 dragDelta)
+    {
+        if (!IsAtJunction())
+        {
+            horizontalSelectionConsumed = false;
+            return;
+        }
+
+        if (Mathf.Abs(dragDelta.x) <= HorizontalSwipeDeadZoneRaw || Mathf.Abs(dragDelta.x) <= Mathf.Abs(dragDelta.y))
+        {
+            if (Mathf.Abs(dragDelta.x) < HorizontalSwipeDeadZoneRaw * 0.5f)
             {
-                float t = (float)j / (lineResolution - 1);
-                float3 lp = spline.EvaluatePosition(t);
-                lr.SetPosition(j, splineContainer.transform.TransformPoint((Vector3)lp));
+                horizontalSelectionConsumed = false;
             }
 
-            lineRenderers[i] = lr;
-            lineMaterials[i] = mat;
-        }
-    }
-
-    void UpdateHighlight()
-    {
-        if (lineRenderers == null) return;
-
-        int curSpline = carState.roadNo - 1;
-        int nextSpline = IsAtJunction() ? GetNextSplineIndex() : -1;
-
-        for (int i = 0; i < lineRenderers.Length; i++)
-        {
-            if (lineRenderers[i] == null) continue;
-
-            Color c = i == curSpline ? currentRoadColor
-                    : i == nextSpline ? nextRoadColor
-                    : idleRoadColor;
-
-            lineMaterials[i].color = c;
-            lineRenderers[i].startColor = c;
-            lineRenderers[i].endColor = c;
-        }
-    }
-
-    // -----------------------------------------------------------------------
-    // Touch Input
-    // -----------------------------------------------------------------------
-
-    void HandleTouchInput()
-    {
-        if (Input.touchCount == 2)
-        {
-            if (isTouching) ResetState();
-            isTwoFingerActive = true;
-            HandleTwoFingerRotation();
             return;
         }
 
-        if (Input.touchCount != 1)
+        if (horizontalSelectionConsumed)
         {
-            if (isTouching) ResetState();
-            isTwoFingerActive = false;
             return;
         }
 
-        if (isTwoFingerActive)
+        if (dragDelta.x < 0f)
         {
-            isTwoFingerActive = false;
-            return;
-        }
-
-        Touch touch = Input.GetTouch(0);
-
-        if (touch.phase == TouchPhase.Began)
-            touchStartedOnUI = IsTouchOverUI(touch.fingerId);
-
-        if (touchStartedOnUI)
-        {
-            if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
-                touchStartedOnUI = false;
-            return;
-        }
-
-        switch (touch.phase)
-        {
-            case TouchPhase.Began:      OnTouchBegan(touch);    break;
-            case TouchPhase.Moved:      OnTouchMoved(touch);    break;
-            case TouchPhase.Stationary: OnTouchStationary();    break;
-            case TouchPhase.Ended:
-            case TouchPhase.Canceled:   OnTouchEnded(touch);    break;
-        }
-    }
-
-    void OnTouchBegan(Touch touch)
-    {
-        touchStartPos = touch.position;
-        touchStartTime = Time.time;
-        isTouching = true;
-        holdTimer = 0f;
-        gestureLocked = false;
-        currentGesture = GestureType.None;
-        dragDistanceCm = Vector2.zero;
-        totalDragDistanceCm = 0f;
-    }
-
-    void OnTouchMoved(Touch touch)
-    {
-        dragDistanceCm = PixelsToCm(touch.position - touchStartPos);
-        totalDragDistanceCm = dragDistanceCm.magnitude;
-
-        if (gestureLocked && currentGesture == GestureType.Hold)
-        {
-            if (totalDragDistanceCm > dragDeadZoneCm * 2f)
-                gestureLocked = false;
-            else
-                return;
-        }
-
-        if (touch.deltaPosition.magnitude < holdPixelThreshold)
-        {
-            holdTimer += Time.deltaTime;
-            if (holdTimer >= holdTimeThreshold && totalDragDistanceCm < dragDeadZoneCm)
-            {
-                currentGesture = GestureType.Hold;
-                gestureLocked = true;
-                return;
-            }
+            SelectTurn(TurnKind.Left);
         }
         else
         {
-            holdTimer = 0f;
+            SelectTurn(TurnKind.Right);
         }
 
-        if (totalDragDistanceCm < dragDeadZoneCm) return;
-
-        currentGesture = GestureType.Drag;
-
-        Vector2 frameCm = PixelsToCm(touch.deltaPosition);
-        if (Mathf.Abs(frameCm.y) > 0.001f)
-            MoveOnRoad(frameCm.y);
+        horizontalSelectionConsumed = true;
+        UpdateRoutePreview(force: true);
     }
 
-    void OnTouchStationary()
+    private void MoveByDogpaddle(Vector2 dragDelta)
     {
-        holdTimer += Time.deltaTime;
-        currentGesture = GestureType.Hold;
-        gestureLocked = true;
-    }
-
-    void OnTouchEnded(Touch touch)
-    {
-        float elapsed = Time.time - touchStartTime;
-        Vector2 finalPx = touch.position - touchStartPos;
-        Vector2 finalCm = PixelsToCm(finalPx);
-        float finalDist = finalCm.magnitude;
-        float velocity = elapsed > 0f ? finalDist / elapsed : 0f;
-
-        bool isSwipe = velocity >= swipeVelocityThresholdCm
-            && elapsed <= swipeMaxDuration
-            && finalDist >= swipeMinDistanceCm
-            && Mathf.Abs(finalPx.x) >= swipeMinPixels
-            && Mathf.Abs(finalPx.x) > Mathf.Abs(finalPx.y);
-
-        if (isSwipe && IsAtJunction())
+        if (Mathf.Approximately(dragDelta.y, 0f))
         {
-            currentGesture = GestureType.Swipe;
-            int swipeDir = finalPx.x > 0f ? 1 : -1;
-            int prevLane = carState.currentLane;
-            roadNetwork.ChangeLane(carState, swipeDir);
-            if (carState.currentLane != prevLane)
-                UpdateHighlight();
+            return;
         }
 
-        ResetState();
-    }
-
-    void HandleTwoFingerRotation()
-    {
-        if (!enableTwoFingerRotation || Input.touchCount != 2) return;
-
-        Touch t0 = Input.GetTouch(0);
-        Touch t1 = Input.GetTouch(1);
-        yRotationOffset -= (t0.deltaPosition.x + t1.deltaPosition.x) * 0.5f * twoFingerRotateSpeed;
-    }
-
-    // -----------------------------------------------------------------------
-    // Utilities
-    // -----------------------------------------------------------------------
-
-    void ResetState()
-    {
-        isTouching = false;
-        holdTimer = 0f;
-        gestureLocked = false;
-        currentGesture = GestureType.None;
-    }
-
-    bool IsTouchOverUI(int fingerId)
-    {
-        return EventSystem.current != null
-            && EventSystem.current.IsPointerOverGameObject(fingerId);
-    }
-
-    Vector2 PixelsToCm(Vector2 pixels)
-    {
-        float dpi = Screen.dpi > 0f ? Screen.dpi : fallbackDpi;
-        return pixels * (2.54f / dpi);
-    }
-
-    void OnDestroy()
-    {
-        if (lineRenderers == null) return;
-        foreach (var lr in lineRenderers)
+        float dragDeltaY = VerticalCmPerRaw * dragDelta.y;
+        float distance = Mathf.Abs(ScaleResearch * dragDeltaY);
+        if (distance <= 0f)
         {
-            if (lr != null) Destroy(lr.gameObject);
+            return;
+        }
+
+        RoadNetworkSplineCreator.MoveMode moveMode = dragDelta.y < 0f
+            ? RoadNetworkSplineCreator.MoveMode.Forward
+            : RoadNetworkSplineCreator.MoveMode.Backward;
+
+        int previousRoadNo = carState.roadNo;
+        roadNetwork.MoveCarLoop(carState, distance, moveMode);
+
+        if (carState.roadNo != previousRoadNo)
+        {
+            SelectDefaultLane();
         }
     }
 
-    // -----------------------------------------------------------------------
-    // Public accessors
-    // -----------------------------------------------------------------------
+    private void SnapToRoad()
+    {
+        if (carState == null)
+        {
+            return;
+        }
 
-    public int GetCurrentRoadNo() => carState.roadNo;
-    public float GetCurrentPos() => carState.currentPos;
-    public int GetCurrentLane() => carState.currentLane;
-    public bool IsAtJunctionPublic() => IsAtJunction();
-    public string GetGestureState() => currentGesture.ToString();
+        Vector3 worldPosition = roadNetwork.EvaluateRoadPosition(carState);
+        worldPosition.y = player.transform.position.y;
+        rb.MovePosition(worldPosition);
+    }
+
+    private bool IsAtJunction()
+    {
+        RoadNetworkSplineCreator.RoadData road = roadNetwork.GetRoadData(carState.roadNo);
+        if (road == null || road.length <= Mathf.Epsilon)
+        {
+            return false;
+        }
+
+        float normalizedPos = carState.currentPos / road.length;
+        if (carState.dir == 0)
+        {
+            return normalizedPos >= 1f - JunctionPreviewLength && GetLaneOptions().Count > 0;
+        }
+
+        return normalizedPos <= JunctionPreviewLength && GetLaneOptions().Count > 0;
+    }
+
+    private void SelectDefaultLane()
+    {
+        List<LaneOption> options = GetLaneOptions();
+        if (options.Count == 0)
+        {
+            carState.currentLane = 0;
+            return;
+        }
+
+        LaneOption best = options[0];
+        float bestAbsAngle = Mathf.Abs(best.SignedAngle);
+
+        for (int i = 1; i < options.Count; i++)
+        {
+            float absAngle = Mathf.Abs(options[i].SignedAngle);
+            if (absAngle < bestAbsAngle)
+            {
+                best = options[i];
+                bestAbsAngle = absAngle;
+            }
+        }
+
+        carState.currentLane = best.LaneIndex;
+    }
+
+    private void SelectTurn(TurnKind desiredTurn)
+    {
+        List<LaneOption> options = GetLaneOptions();
+        if (options.Count == 0)
+        {
+            return;
+        }
+
+        LaneOption? selected = null;
+
+        for (int i = 0; i < options.Count; i++)
+        {
+            if (options[i].TurnKind == desiredTurn)
+            {
+                if (selected == null)
+                {
+                    selected = options[i];
+                    continue;
+                }
+
+                bool shouldReplace =
+                    Mathf.Abs(options[i].SignedAngle) < Mathf.Abs(selected.Value.SignedAngle);
+
+                if (shouldReplace)
+                {
+                    selected = options[i];
+                }
+            }
+        }
+
+        if (selected == null && desiredTurn != TurnKind.Straight)
+        {
+            for (int i = 0; i < options.Count; i++)
+            {
+                if (options[i].TurnKind == TurnKind.Straight)
+                {
+                    selected = options[i];
+                    break;
+                }
+            }
+        }
+
+        if (selected != null)
+        {
+            carState.currentLane = selected.Value.LaneIndex;
+        }
+    }
+
+    private List<LaneOption> GetLaneOptions()
+    {
+        List<LaneOption> options = new List<LaneOption>();
+        RoadNetworkSplineCreator.RoadData road = roadNetwork.GetRoadData(carState.roadNo);
+        if (road == null)
+        {
+            return options;
+        }
+
+        RoadNetworkSplineCreator.RoadConnection[] lanes = carState.dir == 0 ? road.laneE : road.laneS;
+        if (lanes == null)
+        {
+            return options;
+        }
+
+        Vector3 currentForward = roadNetwork.EvaluateRoadForward(carState);
+        currentForward.y = 0f;
+        if (currentForward.sqrMagnitude <= 0.001f)
+        {
+            return options;
+        }
+
+        currentForward.Normalize();
+
+        for (int i = 0; i < lanes.Length; i++)
+        {
+            RoadNetworkSplineCreator.RoadConnection connection = lanes[i];
+            if (!connection.IsValid)
+            {
+                continue;
+            }
+
+            Vector3 nextForward = EvaluateConnectionForward(connection);
+            nextForward.y = 0f;
+            if (nextForward.sqrMagnitude <= 0.001f)
+            {
+                continue;
+            }
+
+            nextForward.Normalize();
+            float signedAngle = Vector3.SignedAngle(currentForward, nextForward, Vector3.up);
+
+            options.Add(new LaneOption
+            {
+                LaneIndex = i,
+                NextRoadNo = connection.roadNo,
+                EnterNode = connection.enterNode,
+                SignedAngle = signedAngle,
+                TurnKind = ClassifyTurn(signedAngle),
+                IsValid = true
+            });
+        }
+
+        return options;
+    }
+
+    private TurnKind ClassifyTurn(float signedAngle)
+    {
+        if (signedAngle > StraightAngleThreshold)
+        {
+            return TurnKind.Left;
+        }
+
+        if (signedAngle < -StraightAngleThreshold)
+        {
+            return TurnKind.Right;
+        }
+
+        return TurnKind.Straight;
+    }
+
+    private Vector3 EvaluateConnectionForward(RoadNetworkSplineCreator.RoadConnection connection)
+    {
+        RoadNetworkSplineCreator.RoadData nextRoad = roadNetwork.GetRoadData(connection.roadNo);
+        if (nextRoad == null)
+        {
+            return Vector3.zero;
+        }
+
+        RoadNetworkSplineCreator.CarState nextState = new RoadNetworkSplineCreator.CarState
+        {
+            roadNo = connection.roadNo,
+            dir = connection.enterNode == 0 ? 0 : 1,
+            currentLane = 0,
+            currentPos = connection.enterNode == 0
+                ? Mathf.Max(nextRoad.length * EndpointOffsetNormalized, 0.01f)
+                : Mathf.Max(nextRoad.length * (1f - EndpointOffsetNormalized), 0.01f)
+        };
+
+        return roadNetwork.EvaluateRoadForward(nextState);
+    }
+
+    private void UpdateRoutePreview(bool force)
+    {
+        if (routeLine == null || splineContainer == null || carState == null)
+        {
+            return;
+        }
+
+        if (!force
+            && cachedRoadNo == carState.roadNo
+            && cachedLane == carState.currentLane
+            && cachedDir == carState.dir
+            && Mathf.Abs(cachedPos - carState.currentPos) < 0.05f)
+        {
+            return;
+        }
+
+        List<Vector3> points = BuildPreviewPoints();
+        routeLine.positionCount = points.Count;
+        for (int i = 0; i < points.Count; i++)
+        {
+            routeLine.SetPosition(i, points[i]);
+        }
+
+        cachedRoadNo = carState.roadNo;
+        cachedLane = carState.currentLane;
+        cachedDir = carState.dir;
+        cachedPos = carState.currentPos;
+    }
+
+    private List<Vector3> BuildPreviewPoints()
+    {
+        List<Vector3> points = new List<Vector3>();
+        AppendRoadSegment(points, carState.roadNo, GetCurrentRoadStartT(), GetCurrentRoadEndT());
+
+        LaneOption? selectedLane = GetSelectedLaneOption();
+        if (selectedLane != null)
+        {
+            float startT = selectedLane.Value.EnterNode == 0 ? 0f : 1f;
+            float endT = selectedLane.Value.EnterNode == 0 ? 1f : 0f;
+            AppendRoadSegment(points, selectedLane.Value.NextRoadNo, startT, endT);
+        }
+
+        if (points.Count == 0)
+        {
+            Vector3 fallback = roadNetwork.EvaluateRoadPosition(carState);
+            fallback.y += lineHeightOffset;
+            points.Add(fallback);
+        }
+
+        return points;
+    }
+
+    private LaneOption? GetSelectedLaneOption()
+    {
+        if (!IsAtJunction())
+        {
+            return null;
+        }
+
+        List<LaneOption> options = GetLaneOptions();
+        for (int i = 0; i < options.Count; i++)
+        {
+            if (options[i].LaneIndex == carState.currentLane)
+            {
+                return options[i];
+            }
+        }
+
+        return null;
+    }
+
+    private float GetCurrentRoadStartT()
+    {
+        RoadNetworkSplineCreator.RoadData road = roadNetwork.GetRoadData(carState.roadNo);
+        if (road == null || road.length <= Mathf.Epsilon)
+        {
+            return 0f;
+        }
+
+        float currentT = Mathf.Clamp01(carState.currentPos / road.length);
+        return currentT;
+    }
+
+    private float GetCurrentRoadEndT()
+    {
+        return carState.dir == 0 ? 1f : 0f;
+    }
+
+    private void AppendRoadSegment(List<Vector3> points, int roadNo, float startT, float endT)
+    {
+        int splineIndex = roadNo - 1;
+        if (splineIndex < 0 || splineIndex >= splineContainer.Splines.Count)
+        {
+            return;
+        }
+
+        Spline spline = splineContainer.Splines[splineIndex];
+        int steps = Mathf.Max(2, samplesPerRoad);
+
+        for (int i = 0; i < steps; i++)
+        {
+            float lerp = i / (float)(steps - 1);
+            float t = Mathf.Lerp(startT, endT, lerp);
+            float3 localPoint = spline.EvaluatePosition(t);
+            Vector3 worldPoint = splineContainer.transform.TransformPoint((Vector3)localPoint);
+            worldPoint.y += lineHeightOffset;
+
+            if (points.Count > 0 && Vector3.Distance(points[points.Count - 1], worldPoint) < 0.01f)
+            {
+                continue;
+            }
+
+            points.Add(worldPoint);
+        }
+    }
 }

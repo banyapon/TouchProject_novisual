@@ -180,6 +180,18 @@ public class TouchpadManager : MonoBehaviour
         }
 
         CurrentMode = newMode;
+
+        if(Input.GetKey(KeyCode.Tab))
+        {
+            if(showTouchDebug)
+            {
+                showTouchDebug = false;
+            }
+            else
+            {
+                showTouchDebug = true;
+            }
+        }
     }
 
     //เอามา Debug

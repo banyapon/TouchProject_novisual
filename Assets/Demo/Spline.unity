@@ -1316,7 +1316,7 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1092970206}
   m_Enabled: 1
-  serializedVersion: 12
+  serializedVersion: 13
   m_Type: 1
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
@@ -1368,7 +1368,7 @@ Light:
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
-  m_ShadowRadius: 0
+  m_ShapeRadius: 0
   m_ShadowAngle: 0
   m_LightUnit: 1
   m_LuxAtDistance: 1
@@ -2084,7 +2084,7 @@ Transform:
   m_GameObject: {fileID: 1686857499}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: -15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -2103,27 +2103,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26681206c0536ea4a9a4e0c9b2c5b81e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::splinemovement
-  roadNetwork: {fileID: 1963717908}
-  baseSpeed: 6
-  maxSpeed: 18
-  fallbackDpi: 160
-  dragDeadZoneCm: 0.1
-  cmToSpeedScale: 3
-  holdPixelThreshold: 5
-  holdTimeThreshold: 0.1
-  swipeVelocityThresholdCm: 12
-  swipeMaxDuration: 0.2
-  swipeMinDistanceCm: 2
-  swipeMinPixels: 50
-  enableTwoFingerRotation: 1
-  twoFingerRotateSpeed: 0.15
-  junctionNormalizedRadius: 0.15
-  tangentRotateSpeed: 120
-  currentRoadColor: {r: 1, g: 0.9, b: 0.1, a: 1}
-  nextRoadColor: {r: 0.2, g: 1, b: 0.4, a: 1}
-  idleRoadColor: {r: 0.4, g: 0.4, b: 0.4, a: 0.5}
-  lineResolution: 48
-  lineWidth: 0.2
+  touchManager: {fileID: 0}
+  roadNetwork: {fileID: 0}
+  player: {fileID: 0}
+  highlightColor: {r: 1, g: 0.9, b: 0.1, a: 1}
+  lineWidth: 0.24
+  samplesPerRoad: 24
+  lineHeightOffset: 0.08
 --- !u!54 &1686857505
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2972,16 +2958,16 @@ MonoBehaviour:
   m_UpdateColliders: 1
   m_Sides: 8
   m_SegmentsPerUnit: 1
-  m_Capped: 0
+  m_Capped: 1
   m_Radius: 5
   m_Range: {x: 0, y: 1}
   m_FlipNormals: 0
   m_Shape:
-    rid: 6199603501303857230
+    rid: 8027038010933510211
   references:
     version: 2
     RefIds:
-    - rid: 6199603501303857230
+    - rid: 8027038010933510211
       type: {class: Road, ns: UnityEngine.Splines.ExtrusionShapes, asm: Unity.Splines}
       data: 
 --- !u!23 &1963717904
@@ -3077,6 +3063,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TouchpadManager
   IsTouching: 0
   TouchCount: 0
+  showTouchDebug: 1
 --- !u!114 &1963717908
 MonoBehaviour:
   m_ObjectHideFlags: 0
