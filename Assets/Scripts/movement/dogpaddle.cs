@@ -5,7 +5,8 @@ public class dogpaddle : MonoBehaviour
     private const float scaleResearch = 65f / 40f;
     private const float RawVerticalDistance = 912f;
     private const float TouchPadVerticalCmDistance = 8f;
-    private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
+    private const float RawHorizontalDistance = 1452f;
+    private const float TouchPadHorizontalCmDistance = 12.5f;
     private const float RotateDeadZoneRaw = 8f;
 
     [SerializeField] private TouchpadManager touchManager;
@@ -15,9 +16,12 @@ public class dogpaddle : MonoBehaviour
     private int TouchCount = 0;
     private Vector2? lastPosition = null;
     private bool suppressNextDragFrame;
+    private TouchCalibrationSettings.Values calibration;
 
     private void Awake()
     {
+        calibration = TouchCalibrationSettings.Load();
+
         if (touchManager == null)
         {
             touchManager = TouchpadManager.Instance;
@@ -121,8 +125,8 @@ public class dogpaddle : MonoBehaviour
 
     private void MoveForwardBackward(float dragY)
     {
-        float dragDeltaY = VerticalCmPerRaw * dragY;
-        float distance = scaleResearch * dragDeltaY;
+        float dragDeltaY = calibration.VerticalCmPerRaw * dragY;
+        float distance = calibration.ScaleResearch * dragDeltaY;
 
         Transform moveTarget = worldRotateTarget != null ? worldRotateTarget : Player.transform;
         Player.transform.position += moveTarget.forward * distance;
@@ -131,7 +135,7 @@ public class dogpaddle : MonoBehaviour
     private void RotateByTwoFingerDrag(Vector2 dragDelta)
     {
         Transform rotateTarget = worldRotateTarget != null ? worldRotateTarget : Player.transform;
-        rotateTarget.Rotate(Vector3.up, -dragDelta.x * (90f / RawVerticalDistance), Space.World);
+        rotateTarget.Rotate(Vector3.up, -dragDelta.x * (90f / calibration.RawVerticalDistance), Space.World);
     }
 
     private bool IsHorizontalRotateDrag(Vector2 dragDelta)

@@ -10,7 +10,9 @@ public class splinemovement : MonoBehaviour
     private const float RawVerticalDistance = 912f;
     private const float TouchPadVerticalCmDistance = 8f;
     private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
-    private const float HorizontalSwipeDeadZoneRaw = 24f;
+    private const float SwipeDeadZoneRaw = 24f;
+    private const float RotateDeadZoneRaw = 8f;
+    private const float TwoFingerRotateDegrees = 90f;
     private const float StraightAngleThreshold = 25f;
     private const float JunctionPreviewLength = 0.2f;
     private const float EndpointOffsetNormalized = 0.02f;
@@ -20,6 +22,15 @@ public class splinemovement : MonoBehaviour
         Right,
         Straight,
         Left
+    }
+
+    public enum SwipeState
+    {
+        None,
+        Up,
+        Down,
+        Left,
+        Right
     }
 
     private struct LaneOption
@@ -35,6 +46,7 @@ public class splinemovement : MonoBehaviour
     [SerializeField] private TouchpadManager touchManager;
     [SerializeField] private RoadNetworkSplineCreator roadNetwork;
     [SerializeField] private GameObject player;
+    [SerializeField] private Transform worldRotateTarget;
 
     [Header("Highlight")]
     [SerializeField] private Color highlightColor = new Color(1f, 0.9f, 0.1f, 1f);
@@ -45,15 +57,23 @@ public class splinemovement : MonoBehaviour
     private Rigidbody rb;
     private SplineContainer splineContainer;
     private RoadNetworkSplineCreator.CarState carState;
-    private Vector2? lastPosition;
-    private bool suppressNextDragFrame;
-    private bool horizontalSelectionConsumed;
+    private Vector2? lastOneFingerPosition;
+    private Vector2? lastTwoFingerPosition;
+    private Vector2? swipeStartPosition;
+    private bool suppressNextOneFingerDragFrame;
+    private bool suppressNextTwoFingerDragFrame;
+    private SwipeState consumedJunctionSwipe = SwipeState.None;
+    private int swipeDirection;
+    private SwipeState swipeDebugState = SwipeState.None;
     private LineRenderer routeLine;
     private Material routeMaterial;
     private int cachedRoadNo = -1;
     private int cachedLane = -1;
     private int cachedDir = -1;
     private float cachedPos = -1f;
+
+    public int SwipeDirection => swipeDirection;
+    public SwipeState CurrentSwipeState => swipeDebugState;
 
     private void Awake()
     {
@@ -183,9 +203,7 @@ public class splinemovement : MonoBehaviour
     {
         if (!touchManager.IsTouching)
         {
-            lastPosition = null;
-            suppressNextDragFrame = false;
-            horizontalSelectionConsumed = false;
+            ResetTouchState();
             return;
         }
 
@@ -195,72 +213,185 @@ public class splinemovement : MonoBehaviour
 
         if (status == TouchpadManager.TouchStatus.OnTouch || mode == TouchpadManager.TouchMode.Change)
         {
-            lastPosition = currentPosition;
-            suppressNextDragFrame = true;
-            horizontalSelectionConsumed = false;
+            lastOneFingerPosition = currentPosition;
+            lastTwoFingerPosition = currentPosition;
+            swipeStartPosition = currentPosition;
+            suppressNextOneFingerDragFrame = true;
+            suppressNextTwoFingerDragFrame = true;
+            consumedJunctionSwipe = SwipeState.None;
+            SetSwipeDebugState(SwipeState.None);
             return;
         }
 
         if (status != TouchpadManager.TouchStatus.OnDrag)
         {
-            lastPosition = currentPosition;
             return;
         }
 
-        if (lastPosition == null)
+        if (mode == TouchpadManager.TouchMode.Rotate)
         {
-            lastPosition = currentPosition;
+            SetSwipeDebugState(SwipeState.None);
+            HandleTwoFingerRotation(currentPosition);
             return;
         }
 
-        if (suppressNextDragFrame)
+        if (mode == TouchpadManager.TouchMode.Translate && touchManager.TouchCount == 1)
         {
-            lastPosition = currentPosition;
-            suppressNextDragFrame = false;
+            HandleOneFingerMovement(currentPosition);
             return;
         }
 
-        Vector2 dragDelta = currentPosition - lastPosition.Value;
-        lastPosition = currentPosition;
+        lastOneFingerPosition = null;
+        swipeStartPosition = null;
+        suppressNextOneFingerDragFrame = true;
+        SetSwipeDebugState(SwipeState.None);
+    }
 
-        HandleLaneSwipe(dragDelta);
+    private void HandleOneFingerMovement(Vector2 currentPosition)
+    {
+        lastTwoFingerPosition = null;
+        suppressNextTwoFingerDragFrame = true;
+
+        if (lastOneFingerPosition == null)
+        {
+            lastOneFingerPosition = currentPosition;
+            return;
+        }
+
+        if (suppressNextOneFingerDragFrame)
+        {
+            lastOneFingerPosition = currentPosition;
+            suppressNextOneFingerDragFrame = false;
+            return;
+        }
+
+        Vector2 dragDelta = currentPosition - lastOneFingerPosition.Value;
+        lastOneFingerPosition = currentPosition;
+
+        UpdateSwipeDebugState(currentPosition);
+        HandleJunctionSwipe(dragDelta);
         MoveByDogpaddle(dragDelta);
     }
 
-    private void HandleLaneSwipe(Vector2 dragDelta)
+    private void UpdateSwipeDebugState(Vector2 currentPosition)
     {
-        if (!IsAtJunction())
+        if (swipeStartPosition == null)
         {
-            horizontalSelectionConsumed = false;
+            swipeStartPosition = currentPosition;
             return;
         }
 
-        if (Mathf.Abs(dragDelta.x) <= HorizontalSwipeDeadZoneRaw || Mathf.Abs(dragDelta.x) <= Mathf.Abs(dragDelta.y))
-        {
-            if (Mathf.Abs(dragDelta.x) < HorizontalSwipeDeadZoneRaw * 0.5f)
-            {
-                horizontalSelectionConsumed = false;
-            }
+        Vector2 swipeDelta = currentPosition - swipeStartPosition.Value;
+        SwipeState detectedState = DetectSwipeState(swipeDelta);
 
-            return;
-        }
-
-        if (horizontalSelectionConsumed)
+        if (detectedState == SwipeState.Left || detectedState == SwipeState.Right)
         {
-            return;
-        }
-
-        if (dragDelta.x < 0f)
-        {
-            SelectTurn(TurnKind.Left);
+            SetSwipeDebugState(detectedState);
         }
         else
         {
-            SelectTurn(TurnKind.Right);
+            SetSwipeDebugState(SwipeState.None);
+        }
+    }
+
+    private void SetSwipeDebugState(SwipeState newState)
+    {
+        int newDirection = 0;
+        if (newState == SwipeState.Left)
+        {
+            newDirection = -1;
+        }
+        else if (newState == SwipeState.Right)
+        {
+            newDirection = 1;
         }
 
-        horizontalSelectionConsumed = true;
-        UpdateRoutePreview(force: true);
+        if (swipeDebugState == newState && swipeDirection == newDirection)
+        {
+            return;
+        }
+
+        swipeDebugState = newState;
+        swipeDirection = newDirection;
+        Debug.Log($"Swipe Detect: {swipeDebugState} | Direction={swipeDirection}");
+    }
+
+    private void HandleTwoFingerRotation(Vector2 currentPosition)
+    {
+        lastOneFingerPosition = null;
+        suppressNextOneFingerDragFrame = true;
+
+        if (lastTwoFingerPosition == null)
+        {
+            lastTwoFingerPosition = currentPosition;
+            return;
+        }
+
+        if (suppressNextTwoFingerDragFrame)
+        {
+            lastTwoFingerPosition = currentPosition;
+            suppressNextTwoFingerDragFrame = false;
+            return;
+        }
+
+        Vector2 dragDelta = currentPosition - lastTwoFingerPosition.Value;
+        lastTwoFingerPosition = currentPosition;
+
+        if (Mathf.Abs(dragDelta.x) <= RotateDeadZoneRaw || Mathf.Abs(dragDelta.x) <= Mathf.Abs(dragDelta.y))
+        {
+            return;
+        }
+
+        Transform rotateTarget = worldRotateTarget != null ? worldRotateTarget : player.transform;
+        float rotationDegrees = -dragDelta.x * (TwoFingerRotateDegrees / RawVerticalDistance);
+        rotateTarget.Rotate(Vector3.up, rotationDegrees, Space.World);
+
+        if (player.transform != rotateTarget && !player.transform.IsChildOf(rotateTarget))
+        {
+            player.transform.Rotate(Vector3.up, rotationDegrees, Space.World);
+        }
+    }
+
+    private void HandleJunctionSwipe(Vector2 dragDelta)
+    {
+        if (!IsAtJunction())
+        {
+            consumedJunctionSwipe = SwipeState.None;
+            return;
+        }
+
+        SwipeState swipeState = DetectSwipeState(dragDelta);
+        if (swipeState == SwipeState.None)
+        {
+            consumedJunctionSwipe = SwipeState.None;
+            return;
+        }
+
+        if (consumedJunctionSwipe == swipeState)
+        {
+            return;
+        }
+
+        if (SelectLaneBySwipe(swipeState))
+        {
+            consumedJunctionSwipe = swipeState;
+            UpdateRoutePreview(force: true);
+        }
+    }
+
+    private SwipeState DetectSwipeState(Vector2 dragDelta)
+    {
+        if (dragDelta.magnitude < SwipeDeadZoneRaw)
+        {
+            return SwipeState.None;
+        }
+
+        if (Mathf.Abs(dragDelta.x) > Mathf.Abs(dragDelta.y))
+        {
+            return dragDelta.x < 0f ? SwipeState.Left : SwipeState.Right;
+        }
+
+        return dragDelta.y < 0f ? SwipeState.Up : SwipeState.Down;
     }
 
     private void MoveByDogpaddle(Vector2 dragDelta)
@@ -277,7 +408,7 @@ public class splinemovement : MonoBehaviour
             return;
         }
 
-        RoadNetworkSplineCreator.MoveMode moveMode = dragDelta.y < 0f
+        RoadNetworkSplineCreator.MoveMode moveMode = dragDelta.y > 0f
             ? RoadNetworkSplineCreator.MoveMode.Forward
             : RoadNetworkSplineCreator.MoveMode.Backward;
 
@@ -286,8 +417,20 @@ public class splinemovement : MonoBehaviour
 
         if (carState.roadNo != previousRoadNo)
         {
+            Debug.Log($"Spline changed: Road {previousRoadNo} -> Road {carState.roadNo}");
             SelectDefaultLane();
         }
+    }
+
+    private void ResetTouchState()
+    {
+        lastOneFingerPosition = null;
+        lastTwoFingerPosition = null;
+        swipeStartPosition = null;
+        suppressNextOneFingerDragFrame = false;
+        suppressNextTwoFingerDragFrame = false;
+        consumedJunctionSwipe = SwipeState.None;
+        SetSwipeDebugState(SwipeState.None);
     }
 
     private void SnapToRoad()
@@ -342,6 +485,88 @@ public class splinemovement : MonoBehaviour
         }
 
         carState.currentLane = best.LaneIndex;
+    }
+
+    private bool SelectLaneBySwipe(SwipeState swipeState)
+    {
+        List<LaneOption> options = GetLaneOptions();
+        if (options.Count == 0)
+        {
+            return false;
+        }
+
+        if (options.Count == 1)
+        {
+            carState.currentLane = options[0].LaneIndex;
+            return true;
+        }
+
+        LaneOption selected;
+        switch (swipeState)
+        {
+            case SwipeState.Left:
+                selected = GetLeftMostOption(options);
+                break;
+            case SwipeState.Right:
+                selected = GetRightMostOption(options);
+                break;
+            case SwipeState.Down:
+            case SwipeState.Up:
+                selected = GetStraightestOption(options);
+                break;
+            default:
+                return false;
+        }
+
+        carState.currentLane = selected.LaneIndex;
+        Debug.Log($"Junction swipe {swipeState}: lane={selected.LaneIndex}, nextRoad={selected.NextRoadNo}, angle={selected.SignedAngle:0.0}");
+        return true;
+    }
+
+    private LaneOption GetLeftMostOption(List<LaneOption> options)
+    {
+        LaneOption selected = options[0];
+        for (int i = 1; i < options.Count; i++)
+        {
+            if (options[i].SignedAngle > selected.SignedAngle)
+            {
+                selected = options[i];
+            }
+        }
+
+        return selected;
+    }
+
+    private LaneOption GetRightMostOption(List<LaneOption> options)
+    {
+        LaneOption selected = options[0];
+        for (int i = 1; i < options.Count; i++)
+        {
+            if (options[i].SignedAngle < selected.SignedAngle)
+            {
+                selected = options[i];
+            }
+        }
+
+        return selected;
+    }
+
+    private LaneOption GetStraightestOption(List<LaneOption> options)
+    {
+        LaneOption selected = options[0];
+        float bestAbsAngle = Mathf.Abs(selected.SignedAngle);
+
+        for (int i = 1; i < options.Count; i++)
+        {
+            float absAngle = Mathf.Abs(options[i].SignedAngle);
+            if (absAngle < bestAbsAngle)
+            {
+                selected = options[i];
+                bestAbsAngle = absAngle;
+            }
+        }
+
+        return selected;
     }
 
     private void SelectTurn(TurnKind desiredTurn)

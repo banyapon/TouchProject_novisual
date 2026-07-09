@@ -10,8 +10,6 @@ public class dragngo : MonoBehaviour
     private const float DragDeadZoneRaw = 2f;
     private const float TouchPadHorizontalCmDistance = 12.5f;
     private const float TouchPadVerticalCmDistance = 8f;
-    private const float HorizontalCmPerRaw = TouchPadHorizontalCmDistance / RawHorizontalDistance;
-    private const float VerticalCmPerRaw = TouchPadVerticalCmDistance / RawVerticalDistance;
     private const string DefaultNavPointLayerName = "NavPoint";
 
     [SerializeField] private TouchpadManager touchManager;
@@ -39,9 +37,11 @@ public class dragngo : MonoBehaviour
     private bool suppressNextSingleDragFrame;
     private Vector3 movementStartPosition;
     private Vector3 currentTargetPosition;
+    private TouchCalibrationSettings.Values calibration;
 
     private void Awake()
     {
+        calibration = TouchCalibrationSettings.Load();
         EnsureSceneObjects();
     }
 
@@ -179,7 +179,7 @@ public class dragngo : MonoBehaviour
         }
 
         float availableRawY = forwardDirection > 0f
-            ? Mathf.Max(RawVerticalDistance - dragStartRawPosition.y, 1f)
+            ? Mathf.Max(calibration.RawVerticalDistance - dragStartRawPosition.y, 1f)
             : Mathf.Max(dragStartRawPosition.y, 1f);
         float progress = Mathf.Clamp01(totalDragRawY / availableRawY);
 
@@ -208,7 +208,7 @@ public class dragngo : MonoBehaviour
         }
 
         Transform rotateTarget = worldRotateTarget != null ? worldRotateTarget : Player.transform;
-        float degreesPerRaw = TwoFingerRotateDegrees / RawVerticalDistance;
+        float degreesPerRaw = TwoFingerRotateDegrees / calibration.RawVerticalDistance;
         float rotationDegrees = -dragDeltaX * degreesPerRaw;
 
         rotateTarget.Rotate(Vector3.up, rotationDegrees, Space.World);

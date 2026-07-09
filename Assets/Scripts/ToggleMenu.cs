@@ -1,6 +1,6 @@
 using System;
-using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ToggleMenu : MonoBehaviour
 {
@@ -8,6 +8,7 @@ public class ToggleMenu : MonoBehaviour
     bool isMenuOpen = false;
     void Start()
     {
+        AddCalibrateButton();
         menuPanel.SetActive(false); // Ensure the menu is hidden at the start
     }
 
@@ -55,5 +56,40 @@ public class ToggleMenu : MonoBehaviour
 #else
         Application.Quit();
 #endif
+    }
+
+    private void AddCalibrateButton()
+    {
+        if (menuPanel == null || menuPanel.transform.childCount == 0)
+        {
+            return;
+        }
+
+        Transform buttonRoot = menuPanel.transform.GetChild(0);
+        if (buttonRoot.Find("Button (Calibrate)") != null)
+        {
+            return;
+        }
+
+        Button template = buttonRoot.GetComponentInChildren<Button>(true);
+        SwitchScene switchScene = FindObjectOfType<SwitchScene>();
+        if (template == null || switchScene == null)
+        {
+            return;
+        }
+
+        GameObject buttonObject = Instantiate(template.gameObject, buttonRoot);
+        buttonObject.name = "Button (Calibrate)";
+        buttonObject.transform.SetSiblingIndex(0);
+
+        Text label = buttonObject.GetComponentInChildren<Text>(true);
+        if (label != null)
+        {
+            label.text = "CALIBRATE";
+        }
+
+        Button button = buttonObject.GetComponent<Button>();
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(() => switchScene.SwitchChange("Calibrate"));
     }
 }

@@ -181,7 +181,7 @@ public class TouchpadManager : MonoBehaviour
 
         CurrentMode = newMode;
 
-        if(Input.GetKey(KeyCode.Tab))
+        if(Input.GetKeyDown(KeyCode.Tab))
         {
             if(showTouchDebug)
             {
