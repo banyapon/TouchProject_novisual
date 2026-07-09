@@ -30,7 +30,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     [Serializable]
     public struct RoadConnection
     {
-        [Tooltip("หมายเลขถนนปลายทาง ใช้แบบ 1-based เช่น Road 1, Road 2")]
+        [Tooltip("หมายเลขถนนปลายทาง ใช้ Road 1, Road 2")]
         public int roadNo;
 
         [Tooltip("0 = เข้า NodeS ของถนนปลายทาง, 1 = เข้า NodeE ของถนนปลายทาง")]
@@ -72,7 +72,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     [Serializable]
     public class CarState
     {
-        [Tooltip("หมายเลขถนนปัจจุบัน ใช้แบบ 1-based")]
+        [Tooltip("หมายเลขถนนปัจจุบัน")]
         public int roadNo = 1;
 
         [Tooltip("ตำแหน่งบนถนน วัดจาก NodeS เสมอ")]
@@ -116,130 +116,217 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         BindingFlags.Instance | BindingFlags.NonPublic);
 
     // -------------------------------------------------------------------------
-    // 1) Geometry Layer: จุด spline ของถนนแต่ละเส้น
+    // จุด spline ของถนนแต่ละเส้น: สี่แยกกลางเมือง
+    //
+    //                 | Road 3 (เหนือ)
+    //                 |
+    //          7 ~~ N ~~ 8
+    //   Road 1 ---- W-+-E ---- Road 2
+    //         10 ~~ S ~~ 9
+    //                 |
+    //                 | Road 4 (ใต้)
+    //
+    // - Road 1-4  = แขนถนนจากขอบแผนที่มาจบที่ปากแยก (W/E/N/S)
+    // - Road 5-6  = ทางตรงวิ่งข้ามแยก (W->E และ N->S)
+    // - Road 7-10 = โค้ง Bezier มุมแยก ใช้จุดกลางแยกเป็น control point
     // -------------------------------------------------------------------------
+    private const float ArmLength = 100f;
+    private const float JunctionRadius = 12f;
+    private const int JunctionCurveSamples = 12;
+
+    private static readonly Vector3 JunctionCenter = Point(0f, 0f, 0f);
+    private static readonly Vector3 WestInner = Point(-JunctionRadius, 0f, 0f);
+    private static readonly Vector3 EastInner = Point(JunctionRadius, 0f, 0f);
+    private static readonly Vector3 NorthInner = Point(0f, 0f, JunctionRadius);
+    private static readonly Vector3 SouthInner = Point(0f, 0f, -JunctionRadius);
+
     private static readonly Vector3[][] RouteSegments =
     {
-        // Road 1: ถนนกลางเมือง ซ้าย -> ขวา
-        new[]
-        {
-            Point(-50f, 0f, 0f),
-            Point(0f, 0f, 0f),
-            Point(50f, 0f, 0f)
-        },
+        // Road 1: แขนตะวันตก NodeS = ขอบแผนที่, NodeE = ปากแยก
+        new[] { Point(-ArmLength, 0f, 0f), WestInner },
 
-        // Road 2: ต่อจาก Road 1 ไปทางขวา
-        new[]
-        {
-            Point(50f, 0f, 0f),
-            Point(120f, 0f, 0f)
-        },
+        // Road 2: แขนตะวันออก NodeS = ปากแยก, NodeE = ขอบแผนที่
+        new[] { EastInner, Point(ArmLength, 0f, 0f) },
 
-        // Road 3: ต่อจาก Road 1 ไปทางซ้าย
-        new[]
-        {
-            Point(-50f, 0f, 0f),
-            Point(-120f, 0f, 0f)
-        },
+        // Road 3: แขนเหนือ NodeS = ปากแยก, NodeE = ขอบแผนที่
+        new[] { NorthInner, Point(0f, 0f, ArmLength) },
 
-        // Road 4: ถนนโค้งด้านขวาบน
-        new[]
-        {
-            Point(120f, 0f, 0f),
-            Point(120f, 0f, 70f),
-            Point(50f, 0f, 70f)
-        },
+        // Road 4: แขนใต้ NodeS = ปากแยก, NodeE = ขอบแผนที่
+        new[] { SouthInner, Point(0f, 0f, -ArmLength) },
 
-        // Road 5: ถนนลงล่างจากกลางเมือง
-        new[]
-        {
-            Point(0f, 0f, 0f),
-            Point(0f, 0f, -80f)
-        },
+        // Road 5: ทางตรงข้ามแยก ตะวันตก -> ตะวันออก
+        new[] { WestInner, EastInner },
 
-        // Road 6: ถนนขึ้นบนจากกลางเมือง
-        new[]
-        {
-            Point(0f, 0f, 0f),
-            Point(0f, 0f, 90f)
-        }
+        // Road 6: ทางตรงข้ามแยก เหนือ -> ใต้
+        new[] { NorthInner, SouthInner },
+
+        // Road 7: โค้ง Bezier ตะวันตก <-> เหนือ
+        BezierCurvePoints(WestInner, JunctionCenter, NorthInner),
+
+        // Road 8: โค้ง Bezier เหนือ <-> ตะวันออก
+        BezierCurvePoints(NorthInner, JunctionCenter, EastInner),
+
+        // Road 9: โค้ง Bezier ตะวันออก <-> ใต้
+        BezierCurvePoints(EastInner, JunctionCenter, SouthInner),
+
+        // Road 10: โค้ง Bezier ใต้ <-> ตะวันตก
+        BezierCurvePoints(SouthInner, JunctionCenter, WestInner)
     };
 
-        //NodeS / NodeE / LaneS / LaneE
-       private static readonly RoadData[] Roads =
+    // เส้นที่ sample จาก Bezier มาแล้ว ไม่ต้อง round corner ซ้ำตอนสร้าง spline
+    private static readonly bool[] PreSampledCurves =
     {
-        new RoadData
-        {
-            id = 1,
-            length = 100f,
-            nodeS = new[] { new RoadConnection(3, 0) },
-            nodeE = new[] { new RoadConnection(2, 0), new RoadConnection(4, 0) },
-            laneS = new[] { new RoadConnection(3, 0) },
-            laneE = new[] { new RoadConnection(2, 0), new RoadConnection(4, 0) },
-            defaultLaneS = 0,
-            defaultLaneE = 0
-        },
-
-        new RoadData
-        {
-            id = 2,
-            length = 70f,
-            nodeS = new[] { new RoadConnection(1, 1) },
-            nodeE = new[] { new RoadConnection(4, 0) },
-            laneS = new[] { new RoadConnection(1, 1) },
-            laneE = new[] { new RoadConnection(4, 0) },
-            defaultLaneS = 0,
-            defaultLaneE = 0
-        },
-
-        new RoadData
-        {
-            id = 3,
-            length = 70f,
-            nodeS = Array.Empty<RoadConnection>(),
-            nodeE = new[] { new RoadConnection(1, 0) },
-            laneS = Array.Empty<RoadConnection>(),
-            laneE = new[] { new RoadConnection(1, 0) },
-            defaultLaneS = 0,
-            defaultLaneE = 0
-        },
-
-        new RoadData
-        {
-            id = 4,
-            length = 140f,
-            nodeS = new[] { new RoadConnection(2, 1), new RoadConnection(1, 1) },
-            nodeE = new[] { new RoadConnection(6, 1) },
-            laneS = new[] { new RoadConnection(2, 1), new RoadConnection(1, 1) },
-            laneE = new[] { new RoadConnection(6, 1) },
-            defaultLaneS = 0,
-            defaultLaneE = 0
-        },
-
-        new RoadData
-        {
-            id = 5,
-            length = 80f,
-            nodeS = new[] { new RoadConnection(1, 0) },
-            nodeE = Array.Empty<RoadConnection>(),
-            laneS = new[] { new RoadConnection(1, 0) },
-            laneE = Array.Empty<RoadConnection>(),
-            defaultLaneS = 0,
-            defaultLaneE = 0
-        },
-
-        new RoadData
-        {
-            id = 6,
-            length = 90f,
-            nodeS = new[] { new RoadConnection(1, 0) },
-            nodeE = new[] { new RoadConnection(4, 1) },
-            laneS = new[] { new RoadConnection(1, 0) },
-            laneE = new[] { new RoadConnection(4, 1) },
-            defaultLaneS = 0,
-            defaultLaneE = 0
-        }
+        false, false, false, false, false, false, true, true, true, true
     };
+
+    //NodeS / NodeE / LaneS / LaneE
+    private static readonly RoadData[] Roads = BuildRoads();
+
+    private static RoadData[] BuildRoads()
+    {
+        RoadData[] roads =
+        {
+            // Road 1: แขนตะวันตก เข้าแยกที่ NodeE เลือกได้ ตรง/เลี้ยวเหนือ/เลี้ยวใต้
+            new RoadData
+            {
+                id = 1,
+                nodeS = Array.Empty<RoadConnection>(),
+                nodeE = new[] { new RoadConnection(5, 0), new RoadConnection(7, 0), new RoadConnection(10, 1) },
+                laneS = Array.Empty<RoadConnection>(),
+                laneE = new[] { new RoadConnection(5, 0), new RoadConnection(7, 0), new RoadConnection(10, 1) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 2: แขนตะวันออก เข้าแยกที่ NodeS เลือกได้ ตรง/เลี้ยวใต้/เลี้ยวเหนือ
+            new RoadData
+            {
+                id = 2,
+                nodeS = new[] { new RoadConnection(5, 1), new RoadConnection(9, 0), new RoadConnection(8, 1) },
+                nodeE = Array.Empty<RoadConnection>(),
+                laneS = new[] { new RoadConnection(5, 1), new RoadConnection(9, 0), new RoadConnection(8, 1) },
+                laneE = Array.Empty<RoadConnection>(),
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 3: แขนเหนือ เข้าแยกที่ NodeS เลือกได้ ตรง/เลี้ยวตะวันออก/เลี้ยวตะวันตก
+            new RoadData
+            {
+                id = 3,
+                nodeS = new[] { new RoadConnection(6, 0), new RoadConnection(8, 0), new RoadConnection(7, 1) },
+                nodeE = Array.Empty<RoadConnection>(),
+                laneS = new[] { new RoadConnection(6, 0), new RoadConnection(8, 0), new RoadConnection(7, 1) },
+                laneE = Array.Empty<RoadConnection>(),
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 4: แขนใต้ เข้าแยกที่ NodeS เลือกได้ ตรง/เลี้ยวตะวันออก/เลี้ยวตะวันตก
+            new RoadData
+            {
+                id = 4,
+                nodeS = new[] { new RoadConnection(6, 1), new RoadConnection(9, 1), new RoadConnection(10, 0) },
+                nodeE = Array.Empty<RoadConnection>(),
+                laneS = new[] { new RoadConnection(6, 1), new RoadConnection(9, 1), new RoadConnection(10, 0) },
+                laneE = Array.Empty<RoadConnection>(),
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 5: ทางตรงข้ามแยก W->E ปลายทางออกแขนตะวันตก/ตะวันออก
+            new RoadData
+            {
+                id = 5,
+                nodeS = new[] { new RoadConnection(1, 1) },
+                nodeE = new[] { new RoadConnection(2, 0) },
+                laneS = new[] { new RoadConnection(1, 1) },
+                laneE = new[] { new RoadConnection(2, 0) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 6: ทางตรงข้ามแยก N->S ปลายทางออกแขนเหนือ/ใต้
+            new RoadData
+            {
+                id = 6,
+                nodeS = new[] { new RoadConnection(3, 0) },
+                nodeE = new[] { new RoadConnection(4, 0) },
+                laneS = new[] { new RoadConnection(3, 0) },
+                laneE = new[] { new RoadConnection(4, 0) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 7: โค้ง W<->N
+            new RoadData
+            {
+                id = 7,
+                nodeS = new[] { new RoadConnection(1, 1) },
+                nodeE = new[] { new RoadConnection(3, 0) },
+                laneS = new[] { new RoadConnection(1, 1) },
+                laneE = new[] { new RoadConnection(3, 0) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 8: โค้ง N<->E
+            new RoadData
+            {
+                id = 8,
+                nodeS = new[] { new RoadConnection(3, 0) },
+                nodeE = new[] { new RoadConnection(2, 0) },
+                laneS = new[] { new RoadConnection(3, 0) },
+                laneE = new[] { new RoadConnection(2, 0) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 9: โค้ง E<->S
+            new RoadData
+            {
+                id = 9,
+                nodeS = new[] { new RoadConnection(2, 0) },
+                nodeE = new[] { new RoadConnection(4, 0) },
+                laneS = new[] { new RoadConnection(2, 0) },
+                laneE = new[] { new RoadConnection(4, 0) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 10: โค้ง S<->W
+            new RoadData
+            {
+                id = 10,
+                nodeS = new[] { new RoadConnection(4, 0) },
+                nodeE = new[] { new RoadConnection(1, 1) },
+                laneS = new[] { new RoadConnection(4, 0) },
+                laneE = new[] { new RoadConnection(1, 1) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            }
+        };
+
+        // ความยาวถนนคำนวณจากรูปเส้นจริง จะได้ไม่หลุด sync กับ geometry
+        for (int i = 0; i < roads.Length; i++)
+        {
+            roads[i].length = GetPolylineLength(RouteSegments[i]);
+        }
+
+        return roads;
+    }
+
+    /// สุ่มจุดตาม Quadratic Bezier ให้ทั้ง mesh ถนนและการวิ่งของรถใช้เส้นโค้งเดียวกัน
+    private static Vector3[] BezierCurvePoints(Vector3 start, Vector3 control, Vector3 end)
+    {
+        Vector3[] points = new Vector3[JunctionCurveSamples + 1];
+        for (int i = 0; i <= JunctionCurveSamples; i++)
+        {
+            points[i] = QuadraticBezier(start, control, end, i / (float)JunctionCurveSamples);
+        }
+
+        return points;
+    }
 
     private void Awake()
     {
@@ -313,7 +400,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         List<Spline> splines = new List<Spline>(RouteSegments.Length);
         for (int i = 0; i < RouteSegments.Length; i++)
         {
-            splines.Add(CreateSpline(RouteSegments[i]));
+            splines.Add(CreateSpline(RouteSegments[i], PreSampledCurves[i]));
         }
 
         splineContainer.Splines = splines;
@@ -376,7 +463,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
                 return 0f;
             }
 
-            EnterNewRoad(car, next, remain);
+            EnterNewRoad(car, next, remain, mode);
             return remain;
         }
 
@@ -391,7 +478,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
                 return 0f;
             }
 
-            EnterNewRoad(car, next, remain);
+            EnterNewRoad(car, next, remain, mode);
             return remain;
         }
 
@@ -424,7 +511,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         return lanes[index];
     }
 
-    private void EnterNewRoad(CarState car, RoadConnection connection, float remain)
+    private void EnterNewRoad(CarState car, RoadConnection connection, float remain, MoveMode mode)
     {
         RoadData nextRoad = GetRoad(connection.roadNo);
         if (nextRoad == null)
@@ -435,20 +522,25 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
         car.roadNo = connection.roadNo;
 
-        if (connection.enterNode == 0)
+        car.currentPos = connection.enterNode == 0
+            ? Mathf.Clamp(remain, 0f, nextRoad.length)
+            : Mathf.Clamp(nextRoad.length - remain, 0f, nextRoad.length);
+
+        // เดินหน้าข้าม node = หันออกจาก node ที่เข้า, ถอยหลังข้าม node = ยังหันเข้าหา node ที่เข้า
+        int facingDir = connection.enterNode == 0 ? 0 : 1;
+        if (mode == MoveMode.Backward)
         {
-            car.currentPos = Mathf.Clamp(remain, 0f, nextRoad.length);
-            car.dir = 0;
-            car.currentLane = Mathf.Clamp(nextRoad.defaultLaneE, 0, Mathf.Max(0, nextRoad.laneE.Length - 1));
-        }
-        else
-        {
-            car.currentPos = Mathf.Clamp(nextRoad.length - remain, 0f, nextRoad.length);
-            car.dir = 1;
-            car.currentLane = Mathf.Clamp(nextRoad.defaultLaneS, 0, Mathf.Max(0, nextRoad.laneS.Length - 1));
+            facingDir = 1 - facingDir;
         }
 
-        Debug.Log($"Enter {connection}. pos={car.currentPos:0.00}, dir={car.dir}, lane={car.currentLane}");
+        car.dir = facingDir;
+
+        // เลือกเลน default ตามฝั่งที่รถหันไป
+        car.currentLane = car.dir == 0
+            ? Mathf.Clamp(nextRoad.defaultLaneE, 0, Mathf.Max(0, nextRoad.laneE.Length - 1))
+            : Mathf.Clamp(nextRoad.defaultLaneS, 0, Mathf.Max(0, nextRoad.laneS.Length - 1));
+
+        Debug.Log($"Enter {connection}. pos={car.currentPos:0.00}, dir={car.dir}, lane={car.currentLane}, mode={mode}");
     }
 
     public void ChangeLane(CarState car, int delta)
@@ -544,9 +636,11 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         return Roads[index];
     }
 
-    private Spline CreateSpline(IReadOnlyList<Vector3> points)
+    private Spline CreateSpline(IReadOnlyList<Vector3> points, bool preSampledCurve = false)
     {
-        List<Vector3> renderPoints = BuildRenderPoints(points);
+        List<Vector3> renderPoints = preSampledCurve
+            ? new List<Vector3>(points)
+            : BuildRenderPoints(points);
         Spline spline = new Spline(renderPoints.Count, false);
 
         for (int i = 0; i < renderPoints.Count; i++)

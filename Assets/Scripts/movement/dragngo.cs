@@ -93,7 +93,7 @@ public class dragngo : MonoBehaviour
 
         EnsureLineRenderer();
 
-        ResolveNavPointLayerMask();
+        ResolveNavPointLayerMask(); //เอาไว้ตอนแรกจะหา Layer NavPoint เอง
         EnsureTargetInstance();
         SetLaserColor(aimingColor);
     }

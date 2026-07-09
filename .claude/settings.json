@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(dotnet build \"d:\\\\GitHub\\\\TouchProject_novisual\\\\Assembly-CSharp.csproj\" -v q --nologo 2>$null)"
+    ]
+  }
+}
