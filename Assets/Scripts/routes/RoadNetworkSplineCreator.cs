@@ -69,8 +69,6 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         public int defaultLaneE;
     }
 
-    /// หนึ่ง entry ต่อการเข้าราง 1 ครั้ง — เก็บ enterNode/dir ด้วย เพราะ railId เดี่ยวๆ
-    /// แยกแยะไม่ได้เมื่อรางเดิมถูกผ่านซ้ำในเส้นทางวนลูป
     [Serializable]
     public class RouteHistoryEntry
     {
@@ -165,7 +163,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     //                 |
     //                 | Road 4 (ใต้)
     //
-    // - Road 1-4  = แขนถนนจากขอบแผนที่มาจบที่ปากแยก (W/E/N/S)
+    // - Road 1-4  = ทิศถนนจากขอบแผนที่มาจบที่ปากแยก (W/E/N/S)
     // - Road 5-6  = ทางตรงวิ่งข้ามแยก (W->E และ N->S)
     // - Road 7-10 = โค้ง Bezier มุมแยก ใช้จุดกลางแยกเป็น control point
     // -------------------------------------------------------------------------
@@ -181,16 +179,16 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
     private static readonly Vector3[][] RouteSegments =
     {
-        // Road 1: แขนตะวันตก NodeS = ขอบแผนที่, NodeE = ปากแยก
+        // Road 1: ทิศตะวันตก NodeS = ขอบแผนที่, NodeE = ปากแยก
         new[] { Point(-ArmLength, 0f, 0f), WestInner },
 
-        // Road 2: แขนตะวันออก NodeS = ปากแยก, NodeE = ขอบแผนที่
+        // Road 2: ทิศตะวันออก NodeS = ปากแยก, NodeE = ขอบแผนที่
         new[] { EastInner, Point(ArmLength, 0f, 0f) },
 
-        // Road 3: แขนเหนือ NodeS = ปากแยก, NodeE = ขอบแผนที่
+        // Road 3: ทิศเหนือ NodeS = ปากแยก, NodeE = ขอบแผนที่
         new[] { NorthInner, Point(0f, 0f, ArmLength) },
 
-        // Road 4: แขนใต้ NodeS = ปากแยก, NodeE = ขอบแผนที่
+        // Road 4: ทิศใต้ NodeS = ปากแยก, NodeE = ขอบแผนที่
         new[] { SouthInner, Point(0f, 0f, -ArmLength) },
 
         // Road 5: ทางตรงข้ามแยก ตะวันตก -> ตะวันออก
@@ -199,20 +197,20 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         // Road 6: ทางตรงข้ามแยก เหนือ -> ใต้
         new[] { NorthInner, SouthInner },
 
-        // Road 7: โค้ง Bezier ตะวันตก <-> เหนือ
+        // Road 7: โค้ง เชื่อม ตะวันตก <-> เหนือ
         BezierCurvePoints(WestInner, JunctionCenter, NorthInner),
 
-        // Road 8: โค้ง Bezier เหนือ <-> ตะวันออก
+        // Road 8: โค้ง เชื่อม เหนือ <-> ตะวันออก
         BezierCurvePoints(NorthInner, JunctionCenter, EastInner),
 
-        // Road 9: โค้ง Bezier ตะวันออก <-> ใต้
+        // Road 9: โค้ง เชื่อม ตะวันออก <-> ใต้
         BezierCurvePoints(EastInner, JunctionCenter, SouthInner),
 
-        // Road 10: โค้ง Bezier ใต้ <-> ตะวันตก
+        // Road 10: โค้ง เชื่อม ใต้ <-> ตะวันตก
         BezierCurvePoints(SouthInner, JunctionCenter, WestInner)
     };
 
-    // เส้นที่ sample จาก Bezier มาแล้ว ไม่ต้อง round corner ซ้ำตอนสร้าง spline
+    // เส้นที่ sample จาก เชื่อม มาแล้ว ไม่ต้อง round corner ซ้ำตอนสร้าง spline
     private static readonly bool[] PreSampledCurves =
     {
         false, false, false, false, false, false, true, true, true, true
@@ -225,7 +223,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     {
         RoadData[] roads =
         {
-            // Road 1: แขนตะวันตก เข้าแยกที่ NodeE เลือกได้ ตรง/เลี้ยวเหนือ/เลี้ยวใต้
+            // Road 1: ทิศตะวันตก เข้าแยกที่ NodeE เลือกได้ ตรง/เลี้ยวเหนือ/เลี้ยวใต้
             new RoadData
             {
                 id = 1,
@@ -237,7 +235,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
                 defaultLaneE = 0
             },
 
-            // Road 2: แขนตะวันออก เข้าแยกที่ NodeS เลือกได้ ตรง/เลี้ยวใต้/เลี้ยวเหนือ
+            // Road 2: ทิศตะวันออก เข้าแยกที่ NodeS เลือกได้ ตรง/เลี้ยวใต้/เลี้ยวเหนือ
             new RoadData
             {
                 id = 2,
@@ -249,7 +247,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
                 defaultLaneE = 0
             },
 
-            // Road 3: แขนเหนือ เข้าแยกที่ NodeS เลือกได้ ตรง/เลี้ยวตะวันออก/เลี้ยวตะวันตก
+            // Road 3: ทิศเหนือ เข้าแยกที่ NodeS เลือกได้ ตรง/เลี้ยวตะวันออก/เลี้ยวตะวันตก
             new RoadData
             {
                 id = 3,
@@ -261,7 +259,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
                 defaultLaneE = 0
             },
 
-            // Road 4: แขนใต้ เข้าแยกที่ NodeS เลือกได้ ตรง/เลี้ยวตะวันออก/เลี้ยวตะวันตก
+            // Road 4: ทิศใต้ เข้าแยกที่ NodeS เลือกได้ ตรง/เลี้ยวตะวันออก/เลี้ยวตะวันตก
             new RoadData
             {
                 id = 4,
@@ -273,7 +271,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
                 defaultLaneE = 0
             },
 
-            // Road 5: ทางตรงข้ามแยก W->E ปลายทางออกแขนตะวันตก/ตะวันออก
+            // Road 5: ทางตรงข้ามแยก W->E ปลายทางออกทิศตะวันตก/ตะวันออก
             new RoadData
             {
                 id = 5,
@@ -285,7 +283,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
                 defaultLaneE = 0
             },
 
-            // Road 6: ทางตรงข้ามแยก N->S ปลายทางออกแขนเหนือ/ใต้
+            // Road 6: ทางตรงข้ามแยก N->S ปลายทางออกทิศเหนือ/ใต้
             new RoadData
             {
                 id = 6,
@@ -346,7 +344,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
             }
         };
 
-        // ความยาวถนนคำนวณจากรูปเส้นจริง จะได้ไม่หลุด sync กับ geometry
+        // ความยาวถนน
         for (int i = 0; i < roads.Length; i++)
         {
             roads[i].length = GetPolylineLength(RouteSegments[i]);
@@ -355,7 +353,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         return roads;
     }
 
-    /// สุ่มจุดตาม Quadratic Bezier ให้ทั้ง mesh ถนนและการวิ่งของรถใช้เส้นโค้งเดียวกัน
+    /// สุ่มจุดตาม Quadratic Bezier
     private static Vector3[] BezierCurvePoints(Vector3 start, Vector3 control, Vector3 end)
     {
         Vector3[] points = new Vector3[JunctionCurveSamples + 1];
@@ -476,7 +474,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
         if (safety >= 32)
         {
-            Debug.LogWarning("MoveCarLoop stopped by safety limit. Check road graph for circular zero-length routes.");
+            Debug.LogWarning("MoveCarLoop stopped limit.");
         }
     }
 
@@ -531,11 +529,9 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         return remain;
     }
 
-    // ------------------------------------------------------------------
-    // Route History
-    // ------------------------------------------------------------------
+    // History
 
-    /// เริ่มต้น history ด้วยรางปัจจุบันเป็น entry แรก (เรียกซ้ำได้ ปลอดภัย)
+    /// เริ่มต้น history ด้วยรางปัจจุบันเป็น entry แรก
     public void EnsureHistory(CarState car)
     {
         if (car.history == null)
@@ -551,7 +547,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         }
     }
 
-    /// History entry ถัดไปด้านหน้า (null ถ้าปัจจุบันคือปลายประวัติ)
+    /// History entry ถัดไปด้านหน้า (null ถ้าไม่มีเ)
     public RouteHistoryEntry GetForwardHistory(CarState car)
     {
         if (car.history == null || car.historyIndex < 0 || car.historyIndex + 1 >= car.history.Count)
@@ -570,8 +566,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         car.routeChoiceChanged = false;
     }
 
-    /// ลำดับความสำคัญตอนเดินหน้าข้ามทางแยก:
-    /// 1) pending จากการ swipe  2) history ด้านหน้า  3) เลนที่เลือก/default
+    /// ลำดับความสำคัญตอนเดินหน้าข้ามทางแยก 1 pending จากการ swipe  2 history ด้านหน้า  3 เลนที่เลือก/default
     private RoadConnection ResolveForwardConnection(CarState car, RoadData road, bool towardNodeE)
     {
         if (car.hasPendingSelection && car.pendingNextRoad > 0)
@@ -589,8 +584,8 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     }
 
     /// Commit ตอนข้ามเข้ารางใหม่จริงเท่านั้น:
-    /// - ตรงกับ history ด้านหน้า → เลื่อน index (ไม่เพิ่ม/ไม่ลบ entry)
-    /// - ต่างจาก history → ลบเฉพาะ entry หลัง index แล้ว append รางใหม่
+    /// - ตรงกับ history ด้านหน้า  เลื่อน index (ไม่เพิ่ม/ไม่ลบ entry)
+    /// - ต่างจาก history  ลบเฉพาะ entry หลัง index แล้ว append รางใหม่
     private void CommitForwardHistory(CarState car, RoadConnection next)
     {
         RouteHistoryEntry forward = GetForwardHistory(car);
@@ -651,8 +646,8 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         return remain;
     }
 
-    /// ตั้ง currentLane ให้ชี้ตาม history ด้านหน้าถ้ามี (history สำคัญกว่า default)
-    /// ไม่มี history ด้านหน้าจึงค่อยใช้เลน default — ใช้แทนการ reset default ทุกครั้ง
+    /// ตั้ง currentLane ให้ชี้ตาม history ด้านหน้าถ้ามี (เตือนเผื่อ อ.ถาม history สำคัญกว่า default)
+    /// ไม่มี history ด้านหน้าจึงค่อยใช้เลน default ใช้แทนการ reset default ทุกครั้ง
     public void SyncLaneWithForwardHistory(CarState car)
     {
         RoadData road = GetRoad(car.roadNo);

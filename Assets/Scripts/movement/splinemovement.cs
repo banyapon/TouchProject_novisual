@@ -42,7 +42,7 @@ public class splinemovement : MonoBehaviour
     [SerializeField] private Vector3 startPosition = new Vector3(0f, 0f, -25f);
     [SerializeField] private Vector3 startEulerAngles = Vector3.zero;
     [SerializeField, Min(1)] private int startRoadNo = 4;
-    [SerializeField, Min(0f)] private float startRoadPosition = 3f;
+    [SerializeField, Min(0f)] private float startRoadPosition = 13f;
     [SerializeField, Range(0, 1)] private int startDirection = 1;
 
     [Header("Rotation")]
@@ -142,7 +142,7 @@ public class splinemovement : MonoBehaviour
         }
     }
 
-    /// Debug swipe มุมซ้ายล่างของจอ บอกสถานะการปัด
+    /// Debug swipe มุมซ้ายล่างของจอ บอกสถานะการปัดนิ้ว
     private void OnGUI()
     {
         if (!showSwipeDebug || carState == null || roadNetwork == null)
@@ -167,7 +167,7 @@ public class splinemovement : MonoBehaviour
                       + (atJunction ? "  [JUNCTION]" : "");
         GUI.Label(new Rect(16f, Screen.height - 84f, 900f, 40f), text, debugStyle);
 
-        // บรรทัด 2: สถานะ Route History
+        // บรรทัด 2สถานะ Route History
         List<RoadNetworkSplineCreator.RouteHistoryEntry> history = carState.history;
         int historyCount = history != null ? history.Count : 0;
         string prevRail = carState.historyIndex > 0 && history != null
@@ -252,7 +252,7 @@ public class splinemovement : MonoBehaviour
         TouchpadManager.TouchMode mode = touchManager.CurrentMode;
         Vector2 position = touchManager.GetCurrentTouch();
 
-        // เริ่มแตะใหม่ หรือเปลี่ยนจำนวนนิ้ว: ตั้งต้นตำแหน่งใหม่ กันค่ากระโดด
+        // เริ่มแตะใหม่ หรือเปลี่ยนจำนวนนิ้ว
         if (touchManager.Status == TouchpadManager.TouchStatus.OnTouch || mode != lastMode)
         {
             lastMode = mode;
