@@ -14,7 +14,7 @@ public class splinemovement : MonoBehaviour
     private const float SwipeDeadZoneRaw = 24f;
     private const float RotateDeadZoneRaw = 8f;
     private const float TwoFingerRotateDegrees = 90f;
-    private const float JunctionPreviewLength = 0.2f;
+    private const float JunctionPreviewLength = 0.1f;
 
     public enum SwipeState
     {
@@ -443,7 +443,7 @@ public class splinemovement : MonoBehaviour
             ? normalizedPos >= 1f - JunctionPreviewLength
             : normalizedPos <= JunctionPreviewLength;
 
-        return nearEnd && GetLaneOptions().Count > 0;
+        return nearEnd && GetLaneOptions().Count > 1;
     }
 
     /// ค่าเริ่มต้นเลือกทางที่ตรงที่สุด (มุมเลี้ยวน้อยสุด)
