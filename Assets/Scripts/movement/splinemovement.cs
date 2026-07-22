@@ -38,16 +38,28 @@ public class splinemovement : MonoBehaviour
     [SerializeField] private GameObject player;
     [SerializeField] private Transform worldRotateTarget;
 
-    [Header("Driving")]
-    [Tooltip("หมุน Player ให้หันตามทิศทาง spline กล้องที่เป็นลูกของ Player จะได้มุมมองแบบขับรถ")]
+    [Header("Start")]
+    [SerializeField] private Vector3 startPosition = new Vector3(0f, 0f, -25f);
+    [SerializeField] private Vector3 startEulerAngles = Vector3.zero;
+    [SerializeField, Min(1)] private int startRoadNo = 4;
+    [SerializeField, Min(0f)] private float startRoadPosition = 13f;
+    [SerializeField, Range(0, 1)] private int startDirection = 1;
+
+    [Header("Rotation")]
     [SerializeField] private bool alignToRoadForward = true;
     [SerializeField] private float headingTurnSpeed = 240f;
+    [SerializeField, Range(0f, 180f)] private float maxTwoFingerYaw = 180f;
 
     [Header("Highlight")]
     [SerializeField] private Color highlightColor = new Color(1f, 0.9f, 0.1f, 1f);
     [SerializeField] private float lineWidth = 0.24f;
     [SerializeField, Min(4)] private int samplesPerRoad = 24;
     [SerializeField] private float lineHeightOffset = 0.08f;
+
+    [Header("Another Routes")]
+    [Tooltip("สีเส้นทางเลือกที่ไม่ได้เลือก (ขาวจางๆ บนถนน)")]
+    [SerializeField] private Color alternativeColor = new Color(1f, 1f, 1f, 0.55f);
+    [SerializeField] private float alternativeLineWidth = 0.18f;
 
     [Header("Debug")]
     [SerializeField] private bool showSwipeDebug = true;
@@ -60,9 +72,12 @@ public class splinemovement : MonoBehaviour
     private Vector2? lastDragPosition;
     private Vector2? swipeStartPosition;
     private SwipeState currentSwipe = SwipeState.None;
+    private float twoFingerYawOffset;
 
     private LineRenderer routeLine;
     private Material routeMaterial;
+    private Material alternativeMaterial;
+    private readonly List<LineRenderer> alternativeLines = new List<LineRenderer>();
     private GUIStyle debugStyle;
     private int cachedRoadNo = -1;
     private int cachedLane = -1;
@@ -77,6 +92,7 @@ public class splinemovement : MonoBehaviour
         rb.constraints = RigidbodyConstraints.FreezeRotation;
 
         ResolveReferences();
+        ApplyStartTransform();
         EnsureRouteRenderer();
         EnsureCarState();
     }
@@ -105,20 +121,28 @@ public class splinemovement : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (routeMaterial != null)
+        DestroyRuntimeObject(routeMaterial);
+        DestroyRuntimeObject(alternativeMaterial);
+    }
+
+    private static void DestroyRuntimeObject(Object obj)
+    {
+        if (obj == null)
         {
-            if (Application.isPlaying)
-            {
-                Destroy(routeMaterial);
-            }
-            else
-            {
-                DestroyImmediate(routeMaterial);
-            }
+            return;
+        }
+
+        if (Application.isPlaying)
+        {
+            Destroy(obj);
+        }
+        else
+        {
+            DestroyImmediate(obj);
         }
     }
 
-    /// Debug swipe มุมซ้ายล่างของจอ บอกสถานะการปัด
+    /// Debug swipe มุมซ้ายล่างของจอ บอกสถานะการปัดนิ้ว
     private void OnGUI()
     {
         if (!showSwipeDebug || carState == null || roadNetwork == null)
@@ -138,9 +162,25 @@ public class splinemovement : MonoBehaviour
         bool atJunction = IsAtJunction();
         debugStyle.normal.textColor = atJunction ? Color.yellow : Color.white;
 
-        string text = $"Swipe: {currentSwipe}  |  Road {carState.roadNo}  Lane {carState.currentLane}"
+        string text = $"Swipe: {currentSwipe}  |  Rail {carState.roadNo}  Pos {carState.currentPos:0.0}"
+                      + $"  Dir {carState.dir}  Lane {carState.currentLane}"
                       + (atJunction ? "  [JUNCTION]" : "");
-        GUI.Label(new Rect(16f, Screen.height - 48f, 800f, 40f), text, debugStyle);
+        GUI.Label(new Rect(16f, Screen.height - 84f, 900f, 40f), text, debugStyle);
+
+        // บรรทัด 2สถานะ Route History
+        List<RoadNetworkSplineCreator.RouteHistoryEntry> history = carState.history;
+        int historyCount = history != null ? history.Count : 0;
+        string prevRail = carState.historyIndex > 0 && history != null
+            ? history[carState.historyIndex - 1].roadNo.ToString()
+            : "-";
+        RoadNetworkSplineCreator.RouteHistoryEntry forward = roadNetwork.GetForwardHistory(carState);
+        string storedNext = forward != null ? forward.roadNo.ToString() : "-";
+        string pendingNext = carState.hasPendingSelection ? carState.pendingNextRoad.ToString() : "-";
+
+        string historyText = $"History {carState.historyIndex}/{historyCount}"
+                             + $"  Prev {prevRail}  StoredNext {storedNext}  Pending {pendingNext}"
+                             + $"  Changed {(carState.routeChoiceChanged ? "YES" : "no")}";
+        GUI.Label(new Rect(16f, Screen.height - 48f, 900f, 40f), historyText, debugStyle);
     }
 
     private void ResolveReferences()
@@ -174,13 +214,30 @@ public class splinemovement : MonoBehaviour
 
         carState = new RoadNetworkSplineCreator.CarState
         {
-            roadNo = 1,
-            currentPos = 0f,
-            dir = 0,
+            roadNo = startRoadNo,
+            currentPos = startRoadPosition,
+            dir = startDirection,
             currentLane = 0
         };
 
+        if (roadNetwork != null)
+        {
+            roadNetwork.EnsureHistory(carState);
+        }
+
         SelectDefaultLane();
+    }
+
+    private void ApplyStartTransform()
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+        player.transform.SetPositionAndRotation(
+            startPosition,
+            Quaternion.Euler(startEulerAngles));
     }
 
 //Input TouchPad
@@ -195,7 +252,7 @@ public class splinemovement : MonoBehaviour
         TouchpadManager.TouchMode mode = touchManager.CurrentMode;
         Vector2 position = touchManager.GetCurrentTouch();
 
-        // เริ่มแตะใหม่ หรือเปลี่ยนจำนวนนิ้ว: ตั้งต้นตำแหน่งใหม่ กันค่ากระโดด
+        // เริ่มแตะใหม่ หรือเปลี่ยนจำนวนนิ้ว
         if (touchManager.Status == TouchpadManager.TouchStatus.OnTouch || mode != lastMode)
         {
             lastMode = mode;
@@ -290,8 +347,8 @@ public class splinemovement : MonoBehaviour
 
         if (carState.roadNo != previousRoadNo)
         {
+            // ห้ามเรียก SelectDefaultLane ตรงนี้ — MoveCarLoop sync เลนกับ history ให้แล้ว
             Debug.Log($"Spline changed: Road {previousRoadNo} -> Road {carState.roadNo}");
-            SelectDefaultLane();
         }
     }
 
@@ -303,9 +360,25 @@ public class splinemovement : MonoBehaviour
             return;
         }
 
-        Transform rotateTarget = worldRotateTarget != null ? worldRotateTarget : player.transform;
         float rotationDegrees = -dragDelta.x * (TwoFingerRotateDegrees / RawVerticalDistance);
-        rotateTarget.Rotate(Vector3.up, rotationDegrees, Space.World);
+        float previousYaw = twoFingerYawOffset;
+        twoFingerYawOffset = Mathf.Clamp(
+            twoFingerYawOffset + rotationDegrees,
+            -maxTwoFingerYaw,
+            maxTwoFingerYaw);
+
+        float appliedRotation = twoFingerYawOffset - previousYaw;
+        if (Mathf.Abs(appliedRotation) <= Mathf.Epsilon)
+        {
+            return;
+        }
+
+        bool rotatePlayer = worldRotateTarget == null || worldRotateTarget == player.transform;
+        if (!rotatePlayer || !alignToRoadForward)
+        {
+            Transform rotateTarget = worldRotateTarget != null ? worldRotateTarget : player.transform;
+            rotateTarget.Rotate(Vector3.up, appliedRotation, Space.World);
+        }
     }
 
     private void SnapToRoad()
@@ -336,6 +409,11 @@ public class splinemovement : MonoBehaviour
         }
 
         Quaternion targetRotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
+        bool rotatePlayer = worldRotateTarget == null || worldRotateTarget == player.transform;
+        if (rotatePlayer)
+        {
+            targetRotation *= Quaternion.Euler(0f, twoFingerYawOffset, 0f);
+        }
         Quaternion nextRotation = Quaternion.RotateTowards(
             player.transform.rotation,
             targetRotation,
@@ -369,8 +447,15 @@ public class splinemovement : MonoBehaviour
     }
 
     /// ค่าเริ่มต้นเลือกทางที่ตรงที่สุด (มุมเลี้ยวน้อยสุด)
+    /// ใช้เฉพาะเมื่อไม่มี history ด้านหน้า — ห้าม default ทับเส้นทางที่เคยเลือก
     private void SelectDefaultLane()
     {
+        if (roadNetwork != null && roadNetwork.GetForwardHistory(carState) != null)
+        {
+            roadNetwork.SyncLaneWithForwardHistory(carState);
+            return;
+        }
+
         List<LaneOption> options = GetLaneOptions();
         if (options.Count == 0)
         {
@@ -421,8 +506,23 @@ public class splinemovement : MonoBehaviour
 
         LaneOption selected = options[newIndex];
         carState.currentLane = selected.LaneIndex;
-        Debug.Log($"Junction swipe {swipe}: lane={selected.LaneIndex}, nextRoad={selected.NextRoadNo}, angle={selected.SignedAngle:0.0}");
+        SetPendingSelection(selected);
+        Debug.Log($"Junction swipe {swipe}: lane={selected.LaneIndex}, nextRoad={selected.NextRoadNo}, "
+                  + $"angle={selected.SignedAngle:0.0}, changed={carState.routeChoiceChanged}");
         return true;
+    }
+
+    /// Swipe = Preview เท่านั้น ยังไม่ commit ลง history จนกว่าจะข้ามเข้ารางใหม่จริง
+    private void SetPendingSelection(LaneOption selected)
+    {
+        carState.pendingNextRoad = selected.NextRoadNo;
+        carState.pendingEnterNode = selected.EnterNode;
+        carState.hasPendingSelection = true;
+
+        // เปลี่ยนเส้นทางจริงหรือไม่ = pending ต่างจาก history ด้านหน้าที่เคยเลือกไว้
+        RoadNetworkSplineCreator.RouteHistoryEntry forward = roadNetwork.GetForwardHistory(carState);
+        carState.routeChoiceChanged = forward != null
+            && (forward.roadNo != selected.NextRoadNo || forward.enterNode != selected.EnterNode);
     }
 
     /// ทางเลือกทั้งหมดที่ปลายถนนปัจจุบัน พร้อมมุมเลี้ยวเทียบทิศรถ
@@ -515,10 +615,7 @@ public class splinemovement : MonoBehaviour
             routeLine = gameObject.AddComponent<LineRenderer>();
         }
 
-        Shader lineShader = Shader.Find("Universal Render Pipeline/Unlit");
-        if (lineShader == null) lineShader = Shader.Find("Unlit/Color");
-        if (lineShader == null) lineShader = Shader.Find("Sprites/Default");
-        if (lineShader == null) lineShader = Shader.Find("Standard");
+        Shader lineShader = FindLineShader();
 
         routeMaterial = lineShader != null
             ? new Material(lineShader)
@@ -535,6 +632,91 @@ public class splinemovement : MonoBehaviour
         routeLine.positionCount = 0;
         routeLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         routeLine.receiveShadows = false;
+
+        EnsureAlternativeMaterial(lineShader);
+    }
+
+    private static Shader FindLineShader()
+    {
+        Shader lineShader = Shader.Find("Universal Render Pipeline/Unlit");
+        if (lineShader == null) lineShader = Shader.Find("Unlit/Color");
+        if (lineShader == null) lineShader = Shader.Find("Sprites/Default");
+        if (lineShader == null) lineShader = Shader.Find("Standard");
+        return lineShader;
+    }
+
+    /// วัสดุโปร่งแสงสำหรับเส้นทางเลือกสีขาวจางๆ
+    private void EnsureAlternativeMaterial(Shader lineShader)
+    {
+        if (alternativeMaterial != null)
+        {
+            return;
+        }
+
+        alternativeMaterial = lineShader != null
+            ? new Material(lineShader)
+            : new Material(routeMaterial);
+
+        alternativeMaterial.color = alternativeColor;
+        MakeMaterialTransparent(alternativeMaterial);
+    }
+
+    /// ตั้งค่า blend ให้ alpha ทำงาน (รองรับทั้ง URP Unlit และ shader legacy)
+    private static void MakeMaterialTransparent(Material material)
+    {
+        if (material.HasProperty("_Surface"))
+        {
+            // URP Unlit: Surface Type = Transparent
+            material.SetFloat("_Surface", 1f);
+            material.SetFloat("_Blend", 0f);
+            material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+        }
+
+        if (material.HasProperty("_SrcBlend"))
+        {
+            material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        }
+
+        if (material.HasProperty("_ZWrite"))
+        {
+            material.SetInt("_ZWrite", 0);
+        }
+
+        material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+    }
+
+    /// LineRenderer สำหรับเส้นทางเลือกลำดับที่ index (สร้างเพิ่มเมื่อไม่พอ)
+    private LineRenderer GetAlternativeLine(int index)
+    {
+        while (alternativeLines.Count <= index)
+        {
+            GameObject lineObject = new GameObject($"AlternativeRoute_{alternativeLines.Count}");
+            lineObject.transform.SetParent(transform, false);
+
+            LineRenderer line = lineObject.AddComponent<LineRenderer>();
+            line.sharedMaterial = alternativeMaterial;
+            line.startColor = alternativeColor;
+            line.endColor = alternativeColor;
+            line.startWidth = alternativeLineWidth;
+            line.endWidth = alternativeLineWidth;
+            line.widthMultiplier = 1f;
+            line.useWorldSpace = true;
+            line.positionCount = 0;
+            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            line.receiveShadows = false;
+            alternativeLines.Add(line);
+        }
+
+        return alternativeLines[index];
+    }
+
+    private void HideAlternativeLines(int fromIndex)
+    {
+        for (int i = fromIndex; i < alternativeLines.Count; i++)
+        {
+            alternativeLines[i].positionCount = 0;
+        }
     }
 
     private void UpdateRoutePreview(bool force)
@@ -553,6 +735,15 @@ public class splinemovement : MonoBehaviour
             return;
         }
 
+        // Keep every guide hidden until only the final 20% before a junction remains.
+        if (!IsAtJunction())
+        {
+            routeLine.positionCount = 0;
+            HideAlternativeLines(0);
+            CachePreviewState();
+            return;
+        }
+
         List<Vector3> points = BuildPreviewPoints();
         routeLine.positionCount = points.Count;
         for (int i = 0; i < points.Count; i++)
@@ -560,6 +751,13 @@ public class splinemovement : MonoBehaviour
             routeLine.SetPosition(i, points[i]);
         }
 
+        UpdateAlternativePreviews();
+
+        CachePreviewState();
+    }
+
+    private void CachePreviewState()
+    {
         cachedRoadNo = carState.roadNo;
         cachedLane = carState.currentLane;
         cachedDir = carState.dir;
@@ -586,6 +784,48 @@ public class splinemovement : MonoBehaviour
         }
 
         return points;
+    }
+
+    /// วาดทางเลือกที่ไม่ได้เลือกเป็นเส้นขาวจางๆ (แสดงเฉพาะตอนอยู่ทางแยก)
+    private void UpdateAlternativePreviews()
+    {
+        if (!IsAtJunction())
+        {
+            HideAlternativeLines(0);
+            return;
+        }
+
+        List<LaneOption> options = GetLaneOptions();
+        int usedLines = 0;
+
+        for (int i = 0; i < options.Count; i++)
+        {
+            if (options[i].LaneIndex == carState.currentLane)
+            {
+                continue; // ทางที่เลือกอยู่แล้ว วาดด้วยเส้นเหลืองหลัก
+            }
+
+            List<Vector3> points = new List<Vector3>();
+            float startT = options[i].EnterNode == 0 ? 0f : 1f;
+            // ยกต่ำกว่าเส้นเหลืองเล็กน้อย กัน z-fighting ตรงจุดที่เส้นตัดกัน
+            AppendRoadSegment(points, options[i].NextRoadNo, startT, 1f - startT, lineHeightOffset * 0.5f);
+
+            if (points.Count < 2)
+            {
+                continue;
+            }
+
+            LineRenderer line = GetAlternativeLine(usedLines);
+            line.positionCount = points.Count;
+            for (int p = 0; p < points.Count; p++)
+            {
+                line.SetPosition(p, points[p]);
+            }
+
+            usedLines++;
+        }
+
+        HideAlternativeLines(usedLines);
     }
 
     private LaneOption? GetSelectedLaneOption()
@@ -618,7 +858,7 @@ public class splinemovement : MonoBehaviour
         return Mathf.Clamp01(carState.currentPos / road.length);
     }
 
-    private void AppendRoadSegment(List<Vector3> points, int roadNo, float startT, float endT)
+    private void AppendRoadSegment(List<Vector3> points, int roadNo, float startT, float endT, float? heightOffset = null)
     {
         int splineIndex = roadNo - 1;
         if (splineIndex < 0 || splineIndex >= splineContainer.Splines.Count)
@@ -628,13 +868,14 @@ public class splinemovement : MonoBehaviour
 
         Spline spline = splineContainer.Splines[splineIndex];
         int steps = Mathf.Max(2, samplesPerRoad);
+        float yOffset = heightOffset ?? lineHeightOffset;
 
         for (int i = 0; i < steps; i++)
         {
             float t = Mathf.Lerp(startT, endT, i / (float)(steps - 1));
             float3 localPoint = spline.EvaluatePosition(t);
             Vector3 worldPoint = splineContainer.transform.TransformPoint((Vector3)localPoint);
-            worldPoint.y += lineHeightOffset;
+            worldPoint.y += yOffset;
 
             if (points.Count > 0 && Vector3.Distance(points[points.Count - 1], worldPoint) < 0.01f)
             {
