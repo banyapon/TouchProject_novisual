@@ -14,7 +14,7 @@ public class splinemovement : MonoBehaviour
     private const float SwipeDeadZoneRaw = 24f;
     private const float RotateDeadZoneRaw = 8f;
     private const float TwoFingerRotateDegrees = 90f;
-    private const float JunctionPreviewLength = 0.2f;
+    private const float JunctionPreviewLength = 0.05f;
 
     public enum SwipeState
     {
@@ -77,6 +77,7 @@ public class splinemovement : MonoBehaviour
     private LineRenderer routeLine;
     private Material routeMaterial;
     private Material alternativeMaterial;
+    private LineRenderer lookaheadLine;
     private readonly List<LineRenderer> alternativeLines = new List<LineRenderer>();
     private GUIStyle debugStyle;
     private int cachedRoadNo = -1;
@@ -429,7 +430,7 @@ public class splinemovement : MonoBehaviour
         }
     }
 
-    /// อยู่ในช่วงท้ายถนน (20%) และมีทางให้เลือกไหม
+    /// อยู่ในช่วงท้ายถนน (5%) และมีทางให้เลือกจริง (มากกว่า 1 ทาง) ไหม
     private bool IsAtJunction()
     {
         RoadNetworkSplineCreator.RoadData road = roadNetwork.GetRoadData(carState.roadNo);
@@ -443,7 +444,7 @@ public class splinemovement : MonoBehaviour
             ? normalizedPos >= 1f - JunctionPreviewLength
             : normalizedPos <= JunctionPreviewLength;
 
-        return nearEnd && GetLaneOptions().Count > 0;
+        return nearEnd && GetLaneOptions().Count > 1;
     }
 
     /// ค่าเริ่มต้นเลือกทางที่ตรงที่สุด (มุมเลี้ยวน้อยสุด)
@@ -528,20 +529,67 @@ public class splinemovement : MonoBehaviour
     /// ทางเลือกทั้งหมดที่ปลายถนนปัจจุบัน พร้อมมุมเลี้ยวเทียบทิศรถ
     private List<LaneOption> GetLaneOptions()
     {
+        Vector3 currentForward = roadNetwork.EvaluateRoadForward(carState);
+        return BuildLaneOptions(carState.roadNo, carState.dir, currentForward);
+    }
+
+    /// ทางเลือกที่ปลายถนน roadNo (ทิศ dir) โดยไม่ต้องอิงกับ carState ปัจจุบัน ใช้ดูล่วงหน้า
+    private List<LaneOption> GetLaneOptionsFor(int roadNo, int dir)
+    {
+        RoadNetworkSplineCreator.RoadData road = roadNetwork.GetRoadData(roadNo);
+        if (road == null || road.length <= Mathf.Epsilon)
+        {
+            return new List<LaneOption>();
+        }
+
+        RoadNetworkSplineCreator.CarState midState = new RoadNetworkSplineCreator.CarState
+        {
+            roadNo = roadNo,
+            dir = dir,
+            currentLane = 0,
+            currentPos = Mathf.Max(road.length * 0.5f, 0.01f)
+        };
+
+        Vector3 currentForward = roadNetwork.EvaluateRoadForward(midState);
+        return BuildLaneOptions(roadNo, dir, currentForward);
+    }
+
+    /// ทางที่ตรงที่สุด (มุมเลี้ยวน้อยสุด) ในบรรดาทางเลือกที่ปลายถนน roadNo (ทิศ dir)
+    private LaneOption? GetDefaultLaneOptionFor(int roadNo, int dir)
+    {
+        List<LaneOption> options = GetLaneOptionsFor(roadNo, dir);
+        if (options.Count == 0)
+        {
+            return null;
+        }
+
+        LaneOption best = options[0];
+        for (int i = 1; i < options.Count; i++)
+        {
+            if (Mathf.Abs(options[i].SignedAngle) < Mathf.Abs(best.SignedAngle))
+            {
+                best = options[i];
+            }
+        }
+
+        return best;
+    }
+
+    private List<LaneOption> BuildLaneOptions(int roadNo, int dir, Vector3 currentForward)
+    {
         List<LaneOption> options = new List<LaneOption>();
-        RoadNetworkSplineCreator.RoadData road = roadNetwork.GetRoadData(carState.roadNo);
+        RoadNetworkSplineCreator.RoadData road = roadNetwork.GetRoadData(roadNo);
         if (road == null)
         {
             return options;
         }
 
-        RoadNetworkSplineCreator.RoadConnection[] lanes = carState.dir == 0 ? road.laneE : road.laneS;
+        RoadNetworkSplineCreator.RoadConnection[] lanes = dir == 0 ? road.laneE : road.laneS;
         if (lanes == null)
         {
             return options;
         }
 
-        Vector3 currentForward = roadNetwork.EvaluateRoadForward(carState);
         currentForward.y = 0f;
         if (currentForward.sqrMagnitude <= 0.001f)
         {
@@ -634,6 +682,31 @@ public class splinemovement : MonoBehaviour
         routeLine.receiveShadows = false;
 
         EnsureAlternativeMaterial(lineShader);
+        EnsureLookaheadLine();
+    }
+
+    /// เส้นสีขาวบอกทางล่วงหน้าถัดจากเส้นเหลือง เปลี่ยนเป็นสีเหลืองเองเมื่อ avatar ข้ามเข้าไปจริง
+    private void EnsureLookaheadLine()
+    {
+        if (lookaheadLine != null)
+        {
+            return;
+        }
+
+        GameObject lineObject = new GameObject("LookaheadRoute");
+        lineObject.transform.SetParent(transform, false);
+
+        lookaheadLine = lineObject.AddComponent<LineRenderer>();
+        lookaheadLine.sharedMaterial = alternativeMaterial;
+        lookaheadLine.startColor = alternativeColor;
+        lookaheadLine.endColor = alternativeColor;
+        lookaheadLine.startWidth = alternativeLineWidth;
+        lookaheadLine.endWidth = alternativeLineWidth;
+        lookaheadLine.widthMultiplier = 1f;
+        lookaheadLine.useWorldSpace = true;
+        lookaheadLine.positionCount = 0;
+        lookaheadLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        lookaheadLine.receiveShadows = false;
     }
 
     private static Shader FindLineShader()
@@ -735,16 +808,7 @@ public class splinemovement : MonoBehaviour
             return;
         }
 
-        // Keep every guide hidden until only the final 20% before a junction remains.
-        if (!IsAtJunction())
-        {
-            routeLine.positionCount = 0;
-            HideAlternativeLines(0);
-            CachePreviewState();
-            return;
-        }
-
-        List<Vector3> points = BuildPreviewPoints();
+        List<Vector3> points = BuildPreviewPoints(out int endRoadNo, out int endDir);
         routeLine.positionCount = points.Count;
         for (int i = 0; i < points.Count; i++)
         {
@@ -752,6 +816,7 @@ public class splinemovement : MonoBehaviour
         }
 
         UpdateAlternativePreviews();
+        UpdateLookaheadPreview(endRoadNo, endDir);
 
         CachePreviewState();
     }
@@ -764,16 +829,35 @@ public class splinemovement : MonoBehaviour
         cachedPos = carState.currentPos;
     }
 
-    private List<Vector3> BuildPreviewPoints()
+    private List<Vector3> BuildPreviewPoints(out int endRoadNo, out int endDir)
     {
         List<Vector3> points = new List<Vector3>();
         AppendRoadSegment(points, carState.roadNo, GetCurrentRoadStartT(), carState.dir == 0 ? 1f : 0f);
+        endRoadNo = carState.roadNo;
+        endDir = carState.dir;
 
         LaneOption? selectedLane = GetSelectedLaneOption();
+        int historyStart = carState.historyIndex + 1;
         if (selectedLane != null)
         {
             float startT = selectedLane.Value.EnterNode == 0 ? 0f : 1f;
             AppendRoadSegment(points, selectedLane.Value.NextRoadNo, startT, 1f - startT);
+            endRoadNo = selectedLane.Value.NextRoadNo;
+            endDir = selectedLane.Value.EnterNode == 0 ? 0 : 1;
+            historyStart++;
+        }
+
+        // เลนที่เลือกยัง pending ต่างจาก history เดิม เส้นทางถัดจากนี้ยังไม่แน่นอน จึงไม่วาดต่อ
+        if (!carState.routeChoiceChanged && carState.history != null)
+        {
+            for (int i = historyStart; i < carState.history.Count; i++)
+            {
+                RoadNetworkSplineCreator.RouteHistoryEntry entry = carState.history[i];
+                float startT = entry.enterNode == 0 ? 0f : 1f;
+                AppendRoadSegment(points, entry.roadNo, startT, 1f - startT);
+                endRoadNo = entry.roadNo;
+                endDir = entry.dirOnEnter;
+            }
         }
 
         if (points.Count == 0)
@@ -826,6 +910,28 @@ public class splinemovement : MonoBehaviour
         }
 
         HideAlternativeLines(usedLines);
+    }
+
+    /// เส้นสีขาวบอกทางล่วงหน้าถัดจากปลายเส้นเหลือง (ทางที่ตรงที่สุด) เมื่อ avatar ข้ามเข้าไปแล้ว
+    /// ถนนนั้นจะกลายเป็นส่วนหนึ่งของเส้นเหลืองเองผ่าน BuildPreviewPoints
+    private void UpdateLookaheadPreview(int endRoadNo, int endDir)
+    {
+        LaneOption? lookahead = GetDefaultLaneOptionFor(endRoadNo, endDir);
+        if (lookahead == null)
+        {
+            lookaheadLine.positionCount = 0;
+            return;
+        }
+
+        List<Vector3> points = new List<Vector3>();
+        float startT = lookahead.Value.EnterNode == 0 ? 0f : 1f;
+        AppendRoadSegment(points, lookahead.Value.NextRoadNo, startT, 1f - startT, lineHeightOffset * 0.5f);
+
+        lookaheadLine.positionCount = points.Count;
+        for (int i = 0; i < points.Count; i++)
+        {
+            lookaheadLine.SetPosition(i, points[i]);
+        }
     }
 
     private LaneOption? GetSelectedLaneOption()
