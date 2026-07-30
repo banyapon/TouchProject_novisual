@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,7 +8,7 @@ public class ToggleMenu : MonoBehaviour
     void Start()
     {
         AddCalibrateButton();
-        menuPanel.SetActive(false); // Ensure the menu is hidden at the start
+        CloseMenu();
     }
 
     // Update is called once per frame
@@ -18,15 +17,6 @@ public class ToggleMenu : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Q))
         {
             Quit();
-        }
-
-        if (isMenuOpen)
-        {
-             menuPanel.SetActive(true);
-        }
-        else
-        {
-             menuPanel.SetActive(false);
         }
 
         if(Input.GetKeyDown(KeyCode.Escape))
@@ -39,13 +29,20 @@ public class ToggleMenu : MonoBehaviour
 
     public void ToggleMenuPanel()
     {
-        if (isMenuOpen)
+        SetMenuOpen(!isMenuOpen);
+    }
+
+    public void CloseMenu()
+    {
+        SetMenuOpen(false);
+    }
+
+    private void SetMenuOpen(bool open)
+    {
+        isMenuOpen = open;
+        if (menuPanel != null)
         {
-            isMenuOpen = false;
-        }
-        else
-        {
-            isMenuOpen = true;
+            menuPanel.SetActive(open);
         }
     }
 
@@ -72,7 +69,7 @@ public class ToggleMenu : MonoBehaviour
         }
 
         Button template = buttonRoot.GetComponentInChildren<Button>(true);
-        SwitchScene switchScene = FindObjectOfType<SwitchScene>();
+        SwitchScene switchScene = FindAnyObjectByType<SwitchScene>();
         if (template == null || switchScene == null)
         {
             return;

@@ -53,6 +53,12 @@ public class SplineCreator : MonoBehaviour
 
         // Spline 1: junction branch to the right side.
         new[] { Point(0f, 0f, 100f), Point(100f, 0f, 100f) },
+
+        // Spline 2: junction at the starting destination.
+        new[] { Point(-100f, 0f, 0f), Point(0f, 0f, 0f), Point(100f, 0f, 0f) },
+
+        // Spline 3: connects the new lower road to the ending destination.
+        new[] { Point(100f, 0f, 0f), Point(100f, 0f, 100f) },
     };
 
     private void Awake()
