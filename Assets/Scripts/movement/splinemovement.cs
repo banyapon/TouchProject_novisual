@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Splines;
@@ -16,6 +17,7 @@ public class splinemovement : MonoBehaviour
     private const float RotateDeadZoneRaw = 8f;
     private const float TwoFingerRotateDegrees = 90f;
     private const string JunctionHighlightSliderName = "Junction Highlight Slider";
+    private const string JunctionHighlightOffsetTextName = "Text (Offset)";
 
     public enum SwipeState
     {
@@ -56,6 +58,7 @@ public class splinemovement : MonoBehaviour
     [Tooltip("Normalized progress where route highlights become visible near a junction.")]
     [SerializeField, Range(0f, 1f)] private float junctionHighlightStart = 0.8f;
     [SerializeField] private Slider junctionHighlightSlider;
+    [SerializeField] private TMP_Text junctionHighlightOffsetText;
     [SerializeField] private float lineWidth = 0.24f;
     [SerializeField, Min(4)] private int samplesPerRoad = 24;
     [SerializeField] private float lineHeightOffset = 0.08f;
@@ -479,6 +482,12 @@ public class splinemovement : MonoBehaviour
         junctionHighlightSlider.minValue = 0f;
         junctionHighlightSlider.maxValue = 1f;
         junctionHighlightSlider.wholeNumbers = false;
+
+        if (junctionHighlightOffsetText == null)
+        {
+            junctionHighlightOffsetText = FindJunctionHighlightOffsetText();
+        }
+
         junctionHighlightSlider.SetValueWithoutNotify(junctionHighlightStart);
         junctionHighlightSlider.onValueChanged.RemoveListener(SetJunctionHighlightStart);
         junctionHighlightSlider.onValueChanged.AddListener(SetJunctionHighlightStart);
@@ -493,6 +502,27 @@ public class splinemovement : MonoBehaviour
             if (sliders[i].name == JunctionHighlightSliderName)
             {
                 return sliders[i];
+            }
+        }
+
+        return null;
+    }
+
+    private TMP_Text FindJunctionHighlightOffsetText()
+    {
+        if (junctionHighlightSlider == null)
+        {
+            return null;
+        }
+
+        TMP_Text[] textComponents =
+            junctionHighlightSlider.GetComponentsInChildren<TMP_Text>(true);
+
+        for (int i = 0; i < textComponents.Length; i++)
+        {
+            if (textComponents[i].name == JunctionHighlightOffsetTextName)
+            {
+                return textComponents[i];
             }
         }
 
@@ -634,6 +664,14 @@ public class splinemovement : MonoBehaviour
         {
             label.text = $"Junction Highlight  {junctionHighlightStart:0.00}";
         }
+
+        if (junctionHighlightOffsetText != null)
+        {
+            float minimum = junctionHighlightSlider.minValue;
+            float maximum = junctionHighlightSlider.maxValue;
+            junctionHighlightOffsetText.text =
+                $"Min {minimum:0.00}   Value {junctionHighlightStart:0.00}   Max {maximum:0.00}";
+        }
     }
 
     /// ค่าเริ่มต้นเลือกทางที่ตรงที่สุด (มุมเลี้ยวน้อยสุด)
@@ -685,7 +723,7 @@ public class splinemovement : MonoBehaviour
         return true;
     }
 
-    /// Swipe = Preview เท่านั้น ยังไม่ commit ลง history จนกว่าจะข้ามเข้ารางใหม่จริง
+    // Swipe = Preview เท่านั้น ยังไม่ commit ลง history จนกว่าจะข้ามเข้าถนนมหม่
     private void SetPendingSelection(LaneOption selected)
     {
         carState.pendingNextRoad = selected.NextRoadNo;
@@ -698,14 +736,14 @@ public class splinemovement : MonoBehaviour
             && (forward.roadNo != selected.NextRoadNo || forward.enterNode != selected.EnterNode);
     }
 
-    /// ทางเลือกทั้งหมดที่ปลายถนนปัจจุบัน พร้อมมุมเลี้ยวเทียบทิศรถ
+    //ทางเลือกทั้งหมดที่ปลายถนนปัจจุบัน พร้อมมุมเลี้ยวเทียบทิศรถ
     private List<LaneOption> GetLaneOptions()
     {
         Vector3 currentForward = roadNetwork.EvaluateRoadForward(carState);
         return BuildLaneOptions(carState.roadNo, carState.dir, currentForward);
     }
 
-    /// ทางเลือกที่ปลายถนน roadNo (ทิศ dir) โดยไม่ต้องอิงกับ carState ปัจจุบัน ใช้ดูล่วงหน้า
+    //ทางเลือกที่ปลายถนน roadNo (ทิศ dir) โดยไม่ต้องอิงกับ carState ปัจจุบัน ใช้ดูล่วงหน้า
     private List<LaneOption> GetLaneOptionsFor(int roadNo, int dir)
     {
         RoadNetworkSplineCreator.RoadData road = roadNetwork.GetRoadData(roadNo);
@@ -726,7 +764,7 @@ public class splinemovement : MonoBehaviour
         return BuildLaneOptions(roadNo, dir, currentForward);
     }
 
-    /// ทางที่ตรงที่สุด (มุมเลี้ยวน้อยสุด) ในบรรดาทางเลือกที่ปลายถนน roadNo (ทิศ dir)
+    // ทางที่ตรงที่สุด (มุมเลี้ยวน้อยสุด) ในบรรดาทางเลือกที่ปลายถนน roadNo (ทิศ dir)
     private LaneOption? GetDefaultLaneOptionFor(int roadNo, int dir)
     {
         List<LaneOption> options = GetLaneOptionsFor(roadNo, dir);
@@ -813,16 +851,14 @@ public class splinemovement : MonoBehaviour
             roadNo = connection.roadNo,
             dir = connection.enterNode == 0 ? 0 : 1,
             currentLane = 0,
-            // อ่านทิศทางที่กลางถนนถัดไป เพราะช่วงต้นของโค้ง Bezier ยังชี้ขนานกับทางตรง
+            // อ่านทิศทางที่กลางถนนถัดไป
             currentPos = Mathf.Max(nextRoad.length * 0.5f, 0.01f)
         };
 
         return roadNetwork.EvaluateRoadForward(nextState);
     }
 
-    // ------------------------------------------------------------------
     // Route highlight: ระบายเส้นทางที่จะไป
-    // ------------------------------------------------------------------
     private void EnsureRouteRenderer()
     {
         if (routeLine != null)
@@ -866,7 +902,7 @@ public class splinemovement : MonoBehaviour
         return lineShader;
     }
 
-    /// วัสดุโปร่งแสงสำหรับเส้นทางเลือกสีขาวจางๆ
+    // Mat โปร่งแสงสำหรับเส้นทางเลือกสีขาวจางๆ
     private void EnsureAlternativeMaterial(Shader lineShader)
     {
         if (alternativeMaterial != null)
@@ -882,12 +918,12 @@ public class splinemovement : MonoBehaviour
         MakeMaterialTransparent(alternativeMaterial);
     }
 
-    /// ตั้งค่า blend ให้ alpha ทำงาน (รองรับทั้ง URP Unlit และ shader legacy)
+    // ตั้งค่า blend ให้ alpha ทำงาน 
     private static void MakeMaterialTransparent(Material material)
     {
         if (material.HasProperty("_Surface"))
         {
-            // URP Unlit: Surface Type = Transparent
+            //Surface Type = Transparent
             material.SetFloat("_Surface", 1f);
             material.SetFloat("_Blend", 0f);
             material.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
@@ -907,7 +943,7 @@ public class splinemovement : MonoBehaviour
         material.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
     }
 
-    /// LineRenderer สำหรับเส้นทางเลือกลำดับที่ index (สร้างเพิ่มเมื่อไม่พอ)
+    // LineRenderer สำหรับเส้นทางเลือกลำดับที่ index
     private LineRenderer GetAlternativeLine(int index)
     {
         while (alternativeLines.Count <= index)
@@ -988,16 +1024,14 @@ public class splinemovement : MonoBehaviour
     {
         List<Vector3> points = new List<Vector3>();
 
-        // Current road: draw only from the car toward the node ahead.
+        // Current road
         AppendRoadSegment(
             points,
             carState.roadNo,
             GetCurrentRoadStartT(),
             carState.dir == 0 ? 1f : 0f);
 
-        // Draw exactly one selected road after the junction. Extending through
-        // history/lookahead can make a later road appear to converge from the
-        // opposite side of the current junction.
+        // Draw exactly one selected road after the junction. 
         LaneOption? selectedLane = GetSelectedLaneOption();
         if (selectedLane != null)
         {
@@ -1018,13 +1052,11 @@ public class splinemovement : MonoBehaviour
 
         return points;
     }
-
-    // Kept as a reference for the history UI, but route highlighting now uses
-    // the forward-only method above.
+    // the forward-only.
     private List<Vector3> BuildPreviewPointsWithHistory()
     {
         List<Vector3> points = new List<Vector3>();
-        // Preview starts at the car and only follows its forward direction.
+
         AppendRoadSegment(points, carState.roadNo, GetCurrentRoadStartT(), carState.dir == 0 ? 1f : 0f);
         int endRoadNo = carState.roadNo;
         int endDir = carState.dir;
@@ -1040,10 +1072,7 @@ public class splinemovement : MonoBehaviour
             historyStart++;
         }
 
-        // เลนที่เลือกยัง pending ต่างจาก history เดิม เส้นทางถัดจากนี้ยังไม่แน่นอน จึงไม่วาดต่อ
-        // Do not append later history/lookahead here. Those roads can approach
-        // the next junction from another side and look like a converging route.
-        // The immediate selected road above is the only forward preview needed.
+        // ปิดเลนไว้ก่อน 
         if (!carState.routeChoiceChanged && carState.history != null)
         {
             for (int i = historyStart; i < carState.history.Count; i++)
@@ -1055,7 +1084,7 @@ public class splinemovement : MonoBehaviour
                 endDir = entry.dirOnEnter;
             }
 
-            // ต่อเส้นทางที่ตรงที่สุดถัดจากปลายที่รู้จัก ให้เส้นเหลืองยาวต่อกันไปเลยแทนที่จะหยุดรอ
+            // ต่อเส้นทางที่ตรงที่สุดถัดจากปลายที่รู้จัก ให้เส้นฟ้ายาวต่อกันไปเลยแทนที่จะหยุด
             LaneOption? lookahead = GetDefaultLaneOptionFor(endRoadNo, endDir);
             if (lookahead != null)
             {
@@ -1074,7 +1103,7 @@ public class splinemovement : MonoBehaviour
         return points;
     }
 
-    /// วาดทางเลือกที่ไม่ได้เลือกเป็นเส้นขาวจางๆ (แสดงเฉพาะตอนอยู่ทางแยก)
+    // วาดทางเลือกที่ไม่ได้เลือกเป็นเส้นขาวจางๆ ตอนอยู่ทางแยก
     private void UpdateAlternativePreviews()
     {
         if (!IsAtJunction())
@@ -1090,12 +1119,12 @@ public class splinemovement : MonoBehaviour
         {
             if (options[i].LaneIndex == carState.currentLane)
             {
-                continue; // ทางที่เลือกอยู่แล้ว วาดด้วยเส้นเหลืองหลัก
+                continue; // ทางที่เลือกอยู่แล้ว วาดด้วยเส้นฟ้าหลัก
             }
 
             List<Vector3> points = new List<Vector3>();
             float startT = options[i].EnterNode == 0 ? 0f : 1f;
-            // ยกต่ำกว่าเส้นเหลืองเล็กน้อย กัน z-fighting ตรงจุดที่เส้นตัดกัน
+            // ยกต่ำกว่าเส้นฟ้าเล็กน้อย กัน z-fighting ตรงจุดที่เส้นตัดกัน
             AppendRoadSegment(points, options[i].NextRoadNo, startT, 1f - startT, lineHeightOffset * 0.5f);
 
             if (points.Count < 2)
