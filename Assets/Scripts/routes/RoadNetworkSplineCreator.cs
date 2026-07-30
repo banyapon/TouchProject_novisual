@@ -67,6 +67,26 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         [Header("Default Lane")]
         public int defaultLaneS;
         public int defaultLaneE;
+
+        [Header("Default Road")]
+        public int defaultRoadS;
+        public int defaultRoadE;
+    }
+
+    [Serializable]
+    private class RoadNetworkJson
+    {
+        public RoadJson[] roads = Array.Empty<RoadJson>();
+    }
+
+    [Serializable]
+    private class RoadJson
+    {
+        public int id;
+        public RoadConnection[] nodeS = Array.Empty<RoadConnection>();
+        public RoadConnection[] nodeE = Array.Empty<RoadConnection>();
+        public int defaultRoadS;
+        public int defaultRoadE;
     }
 
     [Serializable]
@@ -123,8 +143,19 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     }
 
     [Header("Auto Route")]
+    [SerializeField] private string roadDataResourcePath = "data/road_data";
+    [SerializeField] private TextAsset roadDataJson;
+    [SerializeField] private bool generateConnectionsFromSpline = true;
     [SerializeField] private bool rebuildOnStart = true;
     [SerializeField] private bool rebuildInEditor = true;
+
+    [Header("Road Model Fitting")]
+    [SerializeField] private bool fitToRoadModel = true;
+    [SerializeField] private Transform roadModel;
+    [SerializeField] private string roadModelObjectName = "FBXRoad";
+    [SerializeField, Min(0f)] private float roadEdgeInset = 3.5f;
+    [Tooltip("Additional offset after fitting to the road model, in this object's local X/Z axes.")]
+    [SerializeField] private Vector2 routeOffset;
     [SerializeField] private float routeScale = 1f;
     [SerializeField] private bool roundCorners = true;
     [SerializeField] private float cornerRadius = 8f;
@@ -170,26 +201,39 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     private const float ArmLength = 100f;
     private const float JunctionRadius = 12f;
     private const int JunctionCurveSamples = 12;
+    private const float DestinationCornerRadius = 16f;
+    private const float InnerLoopHalfSize = 50f;
+    private const float NewJunctionRadius = 8f;
+    private const float InnerCornerRadius = 8f;
+    private const float EndpointMatchSqrDistance = 0.0001f;
 
     private static readonly Vector3 JunctionCenter = Point(0f, 0f, 0f);
+    private static readonly Vector3 WestJunction = Point(-InnerLoopHalfSize, 0f, 0f);
+    private static readonly Vector3 NorthJunction = Point(0f, 0f, InnerLoopHalfSize);
+    private static readonly Vector3 EastJunction = Point(InnerLoopHalfSize, 0f, 0f);
+    private static readonly Vector3 SouthJunction = Point(0f, 0f, -InnerLoopHalfSize);
     private static readonly Vector3 WestInner = Point(-JunctionRadius, 0f, 0f);
     private static readonly Vector3 EastInner = Point(JunctionRadius, 0f, 0f);
     private static readonly Vector3 NorthInner = Point(0f, 0f, JunctionRadius);
     private static readonly Vector3 SouthInner = Point(0f, 0f, -JunctionRadius);
+    private static readonly Vector3 WestDestination = Point(-ArmLength, 0f, 0f);
+    private static readonly Vector3 EastDestination = Point(ArmLength, 0f, 0f);
+    private static readonly Vector3 NorthDestination = Point(0f, 0f, ArmLength);
+    private static readonly Vector3 SouthDestination = Point(0f, 0f, -ArmLength);
 
-    private static readonly Vector3[][] RouteSegments =
+    private static readonly Vector3[][] LegacyRouteSegments =
     {
         // Road 1: ทิศตะวันตก NodeS = ขอบแผนที่, NodeE = ปากแยก
-        new[] { Point(-ArmLength, 0f, 0f), WestInner },
+        new[] { WestDestination, WestInner },
 
         // Road 2: ทิศตะวันออก NodeS = ปากแยก, NodeE = ขอบแผนที่
-        new[] { EastInner, Point(ArmLength, 0f, 0f) },
+        new[] { EastInner, EastDestination },
 
         // Road 3: ทิศเหนือ NodeS = ปากแยก, NodeE = ขอบแผนที่
-        new[] { NorthInner, Point(0f, 0f, ArmLength) },
+        new[] { NorthInner, NorthDestination },
 
         // Road 4: ทิศใต้ NodeS = ปากแยก, NodeE = ขอบแผนที่
-        new[] { SouthInner, Point(0f, 0f, -ArmLength) },
+        new[] { SouthInner, SouthDestination },
 
         // Road 5: ทางตรงข้ามแยก ตะวันตก -> ตะวันออก
         new[] { WestInner, EastInner },
@@ -207,19 +251,101 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         BezierCurvePoints(EastInner, JunctionCenter, SouthInner),
 
         // Road 10: โค้ง เชื่อม ใต้ <-> ตะวันตก
-        BezierCurvePoints(SouthInner, JunctionCenter, WestInner)
+        BezierCurvePoints(SouthInner, JunctionCenter, WestInner),
+
+        // Outer loop: every destination becomes a real junction.
+        RoundedCornerPoints(
+            WestDestination,
+            Point(-ArmLength, 0f, ArmLength),
+            NorthDestination,
+            DestinationCornerRadius),
+        RoundedCornerPoints(
+            NorthDestination,
+            Point(ArmLength, 0f, ArmLength),
+            EastDestination,
+            DestinationCornerRadius),
+        RoundedCornerPoints(
+            EastDestination,
+            Point(ArmLength, 0f, -ArmLength),
+            SouthDestination,
+            DestinationCornerRadius),
+        RoundedCornerPoints(
+            SouthDestination,
+            Point(-ArmLength, 0f, -ArmLength),
+            WestDestination,
+            DestinationCornerRadius)
     };
 
     // เส้นที่ sample จาก เชื่อม มาแล้ว ไม่ต้อง round corner ซ้ำตอนสร้าง spline
-    private static readonly bool[] PreSampledCurves =
+    private static readonly bool[] LegacyPreSampledCurves =
     {
-        false, false, false, false, false, false, true, true, true, true
+        false, false, false, false, false, false, true, true, true, true,
+        true, true, true, true
     };
 
-    //NodeS / NodeE / LaneS / LaneE
-    private static readonly RoadData[] Roads = BuildRoads();
+    // 1-14 retain their previous meaning. Roads 15-22 add the inner
+    // radial/loop segments, and Roads 23-46 add four complete junctions.
+    private static readonly Vector3[][] RouteSegments = BuildRouteSegments();
+    private static readonly bool[] PreSampledCurves = BuildPreSampledCurves();
 
-    private static RoadData[] BuildRoads()
+    //NodeS / NodeE / LaneS / LaneE
+    private RoadData[] roads;
+    private Vector3[][] activeRouteSegments;
+
+    private RoadData[] BuildRoads()
+    {
+        Vector3[][] routes = GetActiveRouteSegments();
+        RoadData[] generatedRoads = new RoadData[routes.Length];
+
+        for (int routeIndex = 0; routeIndex < routes.Length; routeIndex++)
+        {
+            generatedRoads[routeIndex] = new RoadData
+            {
+                id = routeIndex + 1,
+                nodeS = FindEndpointConnections(routes, routeIndex, 0),
+                nodeE = FindEndpointConnections(routes, routeIndex, 1)
+            };
+        }
+
+        PrepareRoads(generatedRoads);
+        return generatedRoads;
+    }
+
+    private static RoadConnection[] FindEndpointConnections(
+        Vector3[][] routes,
+        int sourceRouteIndex,
+        int sourceNode)
+    {
+        Vector3[] sourceRoute = routes[sourceRouteIndex];
+        Vector3 endpoint = sourceNode == 0
+            ? sourceRoute[0]
+            : sourceRoute[sourceRoute.Length - 1];
+        List<RoadConnection> connections = new List<RoadConnection>();
+
+        for (int targetRouteIndex = 0; targetRouteIndex < routes.Length; targetRouteIndex++)
+        {
+            if (targetRouteIndex == sourceRouteIndex)
+            {
+                continue;
+            }
+
+            Vector3[] targetRoute = routes[targetRouteIndex];
+            if ((targetRoute[0] - endpoint).sqrMagnitude <= EndpointMatchSqrDistance)
+            {
+                connections.Add(new RoadConnection(targetRouteIndex + 1, 0));
+            }
+
+            if ((targetRoute[targetRoute.Length - 1] - endpoint).sqrMagnitude
+                <= EndpointMatchSqrDistance)
+            {
+                connections.Add(new RoadConnection(targetRouteIndex + 1, 1));
+            }
+        }
+
+        return connections.ToArray();
+    }
+
+    private RoadData[] BuildLegacyRoads()
     {
         RoadData[] roads =
         {
@@ -227,9 +353,9 @@ public class RoadNetworkSplineCreator : MonoBehaviour
             new RoadData
             {
                 id = 1,
-                nodeS = Array.Empty<RoadConnection>(),
+                nodeS = new[] { new RoadConnection(11, 0), new RoadConnection(14, 1) },
                 nodeE = new[] { new RoadConnection(5, 0), new RoadConnection(7, 0), new RoadConnection(10, 1) },
-                laneS = Array.Empty<RoadConnection>(),
+                laneS = new[] { new RoadConnection(11, 0), new RoadConnection(14, 1) },
                 laneE = new[] { new RoadConnection(5, 0), new RoadConnection(7, 0), new RoadConnection(10, 1) },
                 defaultLaneS = 0,
                 defaultLaneE = 0
@@ -240,9 +366,9 @@ public class RoadNetworkSplineCreator : MonoBehaviour
             {
                 id = 2,
                 nodeS = new[] { new RoadConnection(5, 1), new RoadConnection(9, 0), new RoadConnection(8, 1) },
-                nodeE = Array.Empty<RoadConnection>(),
+                nodeE = new[] { new RoadConnection(12, 1), new RoadConnection(13, 0) },
                 laneS = new[] { new RoadConnection(5, 1), new RoadConnection(9, 0), new RoadConnection(8, 1) },
-                laneE = Array.Empty<RoadConnection>(),
+                laneE = new[] { new RoadConnection(12, 1), new RoadConnection(13, 0) },
                 defaultLaneS = 0,
                 defaultLaneE = 0
             },
@@ -252,9 +378,9 @@ public class RoadNetworkSplineCreator : MonoBehaviour
             {
                 id = 3,
                 nodeS = new[] { new RoadConnection(6, 0), new RoadConnection(8, 0), new RoadConnection(7, 1) },
-                nodeE = Array.Empty<RoadConnection>(),
+                nodeE = new[] { new RoadConnection(11, 1), new RoadConnection(12, 0) },
                 laneS = new[] { new RoadConnection(6, 0), new RoadConnection(8, 0), new RoadConnection(7, 1) },
-                laneE = Array.Empty<RoadConnection>(),
+                laneE = new[] { new RoadConnection(11, 1), new RoadConnection(12, 0) },
                 defaultLaneS = 0,
                 defaultLaneE = 0
             },
@@ -264,9 +390,9 @@ public class RoadNetworkSplineCreator : MonoBehaviour
             {
                 id = 4,
                 nodeS = new[] { new RoadConnection(6, 1), new RoadConnection(9, 1), new RoadConnection(10, 0) },
-                nodeE = Array.Empty<RoadConnection>(),
+                nodeE = new[] { new RoadConnection(13, 1), new RoadConnection(14, 0) },
                 laneS = new[] { new RoadConnection(6, 1), new RoadConnection(9, 1), new RoadConnection(10, 0) },
-                laneE = Array.Empty<RoadConnection>(),
+                laneE = new[] { new RoadConnection(13, 1), new RoadConnection(14, 0) },
                 defaultLaneS = 0,
                 defaultLaneE = 0
             },
@@ -341,19 +467,499 @@ public class RoadNetworkSplineCreator : MonoBehaviour
                 laneE = new[] { new RoadConnection(1, 1) },
                 defaultLaneS = 0,
                 defaultLaneE = 0
+            },
+
+            // Road 11: west destination <-> north destination.
+            new RoadData
+            {
+                id = 11,
+                nodeS = new[] { new RoadConnection(1, 0), new RoadConnection(14, 1) },
+                nodeE = new[] { new RoadConnection(3, 1), new RoadConnection(12, 0) },
+                laneS = new[] { new RoadConnection(1, 0), new RoadConnection(14, 1) },
+                laneE = new[] { new RoadConnection(3, 1), new RoadConnection(12, 0) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 12: north destination <-> east destination.
+            new RoadData
+            {
+                id = 12,
+                nodeS = new[] { new RoadConnection(3, 1), new RoadConnection(11, 1) },
+                nodeE = new[] { new RoadConnection(2, 1), new RoadConnection(13, 0) },
+                laneS = new[] { new RoadConnection(3, 1), new RoadConnection(11, 1) },
+                laneE = new[] { new RoadConnection(2, 1), new RoadConnection(13, 0) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 13: east destination <-> south destination.
+            new RoadData
+            {
+                id = 13,
+                nodeS = new[] { new RoadConnection(2, 1), new RoadConnection(12, 1) },
+                nodeE = new[] { new RoadConnection(4, 1), new RoadConnection(14, 0) },
+                laneS = new[] { new RoadConnection(2, 1), new RoadConnection(12, 1) },
+                laneE = new[] { new RoadConnection(4, 1), new RoadConnection(14, 0) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
+            },
+
+            // Road 14: south destination <-> west destination.
+            new RoadData
+            {
+                id = 14,
+                nodeS = new[] { new RoadConnection(4, 1), new RoadConnection(13, 1) },
+                nodeE = new[] { new RoadConnection(1, 0), new RoadConnection(11, 0) },
+                laneS = new[] { new RoadConnection(4, 1), new RoadConnection(13, 1) },
+                laneE = new[] { new RoadConnection(1, 0), new RoadConnection(11, 0) },
+                defaultLaneS = 0,
+                defaultLaneE = 0
             }
         };
 
         // ความยาวถนน
+        int[] defaultRoadS = { 11, 5, 6, 6, 1, 3, 1, 3, 2, 4, 14, 11, 12, 13 };
+        int[] defaultRoadE = { 5, 13, 12, 14, 2, 4, 3, 2, 4, 1, 12, 13, 14, 11 };
         for (int i = 0; i < roads.Length; i++)
         {
-            roads[i].length = GetPolylineLength(RouteSegments[i]);
+            roads[i].defaultRoadS = defaultRoadS[i];
+            roads[i].defaultRoadE = defaultRoadE[i];
         }
+
+        PrepareRoads(roads);
 
         return roads;
     }
 
     /// สุ่มจุดตาม Quadratic Bezier
+    [ContextMenu("Reload Road Data")]
+    public void LoadRoadData()
+    {
+        RebuildActiveRouteSegments();
+        roads = generateConnectionsFromSpline
+            ? BuildRoads()
+            : TryLoadRoadDataFromJson();
+        if (roads == null)
+        {
+            roads = BuildRoads();
+        }
+    }
+
+    private RoadData[] TryLoadRoadDataFromJson()
+    {
+        if (string.IsNullOrWhiteSpace(roadDataResourcePath))
+        {
+            return null;
+        }
+
+        TextAsset jsonAsset = roadDataJson != null
+            ? roadDataJson
+            : Resources.Load<TextAsset>(roadDataResourcePath);
+        if (jsonAsset == null)
+        {
+            Debug.LogWarning(
+                $"Road data was not found at Resources/{roadDataResourcePath}.json. Using built-in data.",
+                this);
+            return null;
+        }
+
+        RoadNetworkJson json;
+        try
+        {
+            json = JsonUtility.FromJson<RoadNetworkJson>(jsonAsset.text);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning($"Invalid road data JSON: {exception.Message}. Using built-in data.", this);
+            return null;
+        }
+
+        if (json == null || json.roads == null || json.roads.Length != RouteSegments.Length)
+        {
+            Debug.LogWarning(
+                $"Road data must contain exactly {RouteSegments.Length} roads. Using built-in data.",
+                this);
+            return null;
+        }
+
+        RoadData[] loadedRoads = new RoadData[RouteSegments.Length];
+        for (int i = 0; i < json.roads.Length; i++)
+        {
+            RoadJson source = json.roads[i];
+            int index = source.id - 1;
+            if (index < 0 || index >= loadedRoads.Length || loadedRoads[index] != null)
+            {
+                Debug.LogWarning($"Road data has an invalid or duplicate id: {source.id}. Using built-in data.", this);
+                return null;
+            }
+
+            loadedRoads[index] = new RoadData
+            {
+                id = source.id,
+                nodeS = source.nodeS ?? Array.Empty<RoadConnection>(),
+                nodeE = source.nodeE ?? Array.Empty<RoadConnection>(),
+                defaultRoadS = source.defaultRoadS,
+                defaultRoadE = source.defaultRoadE
+            };
+        }
+
+        if (!ValidateConnections(loadedRoads))
+        {
+            Debug.LogWarning("Road data contains an invalid or non-reciprocal connection. Using built-in data.", this);
+            return null;
+        }
+
+        PrepareRoads(loadedRoads);
+        return loadedRoads;
+    }
+
+    private static bool ValidateConnections(RoadData[] loadedRoads)
+    {
+        for (int roadIndex = 0; roadIndex < loadedRoads.Length; roadIndex++)
+        {
+            RoadData road = loadedRoads[roadIndex];
+            if (road == null || road.id != roadIndex + 1)
+            {
+                return false;
+            }
+
+            if (!ValidateNodeConnections(loadedRoads, road, road.nodeS, 0)
+                || !ValidateNodeConnections(loadedRoads, road, road.nodeE, 1))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static bool ValidateNodeConnections(
+        RoadData[] loadedRoads,
+        RoadData sourceRoad,
+        RoadConnection[] connections,
+        int sourceNode)
+    {
+        for (int i = 0; i < connections.Length; i++)
+        {
+            RoadConnection connection = connections[i];
+            if (!connection.IsValid || connection.roadNo > loadedRoads.Length)
+            {
+                return false;
+            }
+
+            RoadData targetRoad = loadedRoads[connection.roadNo - 1];
+            if (targetRoad == null)
+            {
+                return false;
+            }
+
+            RoadConnection[] reciprocalConnections = connection.enterNode == 0
+                ? targetRoad.nodeS
+                : targetRoad.nodeE;
+            bool foundReciprocal = false;
+            for (int reciprocalIndex = 0;
+                 reciprocalIndex < reciprocalConnections.Length;
+                 reciprocalIndex++)
+            {
+                RoadConnection reciprocal = reciprocalConnections[reciprocalIndex];
+                if (reciprocal.roadNo == sourceRoad.id && reciprocal.enterNode == sourceNode)
+                {
+                    foundReciprocal = true;
+                    break;
+                }
+            }
+
+            if (!foundReciprocal)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void PrepareRoads(RoadData[] roadData)
+    {
+        Vector3[][] routeSegments = GetActiveRouteSegments();
+        for (int i = 0; i < roadData.Length; i++)
+        {
+            RoadData road = roadData[i];
+            road.length = GetPolylineLength(routeSegments[i]);
+            road.laneS = SortConnectionsLeftToRight(road.id, false, road.nodeS);
+            road.laneE = SortConnectionsLeftToRight(road.id, true, road.nodeE);
+            road.defaultLaneS = GetDefaultLaneIndex(
+                road.id,
+                false,
+                road.laneS,
+                road.defaultRoadS);
+            road.defaultLaneE = GetDefaultLaneIndex(
+                road.id,
+                true,
+                road.laneE,
+                road.defaultRoadE);
+
+            // A junction maneuver must leave the junction through an external
+            // connector. Chaining directly into another junction maneuver can
+            // create a loop back into the intersection.
+            if (IsJunctionTraversalRoad(road.id))
+            {
+                road.defaultLaneS = GetJunctionExitLane(
+                    road.laneS,
+                    road.defaultLaneS);
+                road.defaultLaneE = GetJunctionExitLane(
+                    road.laneE,
+                    road.defaultLaneE);
+            }
+
+            road.defaultRoadS = GetRoadNoAtLane(road.laneS, road.defaultLaneS);
+            road.defaultRoadE = GetRoadNoAtLane(road.laneE, road.defaultLaneE);
+        }
+    }
+
+    private int GetJunctionExitLane(RoadConnection[] lanes, int fallbackLane)
+    {
+        if (lanes == null || lanes.Length == 0)
+        {
+            return 0;
+        }
+
+        for (int i = 0; i < lanes.Length; i++)
+        {
+            if (!IsJunctionTraversalRoad(lanes[i].roadNo))
+            {
+                return i;
+            }
+        }
+
+        return Mathf.Clamp(fallbackLane, 0, lanes.Length - 1);
+    }
+
+    private static int GetRoadNoAtLane(RoadConnection[] lanes, int laneIndex)
+    {
+        return lanes != null && laneIndex >= 0 && laneIndex < lanes.Length
+            ? lanes[laneIndex].roadNo
+            : 0;
+    }
+
+    private RoadConnection[] SortConnectionsLeftToRight(
+        int roadNo,
+        bool towardNodeE,
+        RoadConnection[] connections)
+    {
+        RoadConnection[] sorted = connections != null
+            ? (RoadConnection[])connections.Clone()
+            : Array.Empty<RoadConnection>();
+        Vector3 currentForward = GetTravelDirection(roadNo, towardNodeE);
+
+        Array.Sort(sorted, (a, b) =>
+        {
+            float angleA = Vector3.SignedAngle(
+                currentForward,
+                GetConnectionExitDirection(a),
+                Vector3.up);
+            float angleB = Vector3.SignedAngle(
+                currentForward,
+                GetConnectionExitDirection(b),
+                Vector3.up);
+            return angleA.CompareTo(angleB);
+        });
+
+        return sorted;
+    }
+
+    private Vector3 GetTravelDirection(int roadNo, bool towardNodeE)
+    {
+        Vector3[] points = GetActiveRouteSegments()[roadNo - 1];
+        if (towardNodeE)
+        {
+            return (points[points.Length - 1] - points[points.Length - 2]).normalized;
+        }
+
+        return (points[0] - points[1]).normalized;
+    }
+
+    private Vector3 GetConnectionExitDirection(RoadConnection connection)
+    {
+        return GetTravelDirection(connection.roadNo, connection.enterNode == 0);
+    }
+
+    private int GetDefaultLaneIndex(
+        int roadNo,
+        bool towardNodeE,
+        RoadConnection[] lanes,
+        int preferredRoadNo)
+    {
+        if (lanes == null || lanes.Length <= 1)
+        {
+            return 0;
+        }
+
+        if (preferredRoadNo > 0)
+        {
+            for (int i = 0; i < lanes.Length; i++)
+            {
+                if (lanes[i].roadNo == preferredRoadNo)
+                {
+                    return i;
+                }
+            }
+        }
+
+        Vector3 forward = GetTravelDirection(roadNo, towardNodeE);
+        int bestIndex = 0;
+        float bestAngle = float.PositiveInfinity;
+        for (int i = 0; i < lanes.Length; i++)
+        {
+            float angle = Mathf.Abs(Vector3.SignedAngle(
+                forward,
+                GetConnectionExitDirection(lanes[i]),
+                Vector3.up));
+            if (angle < bestAngle)
+            {
+                bestAngle = angle;
+                bestIndex = i;
+            }
+        }
+
+        return bestIndex;
+    }
+
+    private static Vector3[][] BuildRouteSegments()
+    {
+        Vector3 centerW = JunctionPort(JunctionCenter, -1f, 0f);
+        Vector3 centerE = JunctionPort(JunctionCenter, 1f, 0f);
+        Vector3 centerN = JunctionPort(JunctionCenter, 0f, 1f);
+        Vector3 centerS = JunctionPort(JunctionCenter, 0f, -1f);
+
+        Vector3 westW = JunctionPort(WestJunction, -1f, 0f);
+        Vector3 westE = JunctionPort(WestJunction, 1f, 0f);
+        Vector3 westN = JunctionPort(WestJunction, 0f, 1f);
+        Vector3 westS = JunctionPort(WestJunction, 0f, -1f);
+
+        Vector3 northW = JunctionPort(NorthJunction, -1f, 0f);
+        Vector3 northE = JunctionPort(NorthJunction, 1f, 0f);
+        Vector3 northN = JunctionPort(NorthJunction, 0f, 1f);
+        Vector3 northS = JunctionPort(NorthJunction, 0f, -1f);
+
+        Vector3 eastW = JunctionPort(EastJunction, -1f, 0f);
+        Vector3 eastE = JunctionPort(EastJunction, 1f, 0f);
+        Vector3 eastN = JunctionPort(EastJunction, 0f, 1f);
+        Vector3 eastS = JunctionPort(EastJunction, 0f, -1f);
+
+        Vector3 southW = JunctionPort(SouthJunction, -1f, 0f);
+        Vector3 southE = JunctionPort(SouthJunction, 1f, 0f);
+        Vector3 southN = JunctionPort(SouthJunction, 0f, 1f);
+        Vector3 southS = JunctionPort(SouthJunction, 0f, -1f);
+
+        List<Vector3[]> routes = new List<Vector3[]>
+        {
+            // Roads 1-4: from the outer loop to the nearest inner junction.
+            new[] { WestDestination, westW },
+            new[] { eastE, EastDestination },
+            new[] { northN, NorthDestination },
+            new[] { southS, SouthDestination },
+
+            // Roads 5-10: center junction, including two straight defaults.
+            new[] { centerW, centerE },
+            new[] { centerN, centerS },
+            BezierCurvePoints(centerW, JunctionCenter, centerN),
+            BezierCurvePoints(centerN, JunctionCenter, centerE),
+            BezierCurvePoints(centerE, JunctionCenter, centerS),
+            BezierCurvePoints(centerS, JunctionCenter, centerW),
+
+            // Roads 11-14: outer loop.
+            RoundedCornerPoints(
+                WestDestination,
+                Point(-ArmLength, 0f, ArmLength),
+                NorthDestination,
+                DestinationCornerRadius),
+            RoundedCornerPoints(
+                NorthDestination,
+                Point(ArmLength, 0f, ArmLength),
+                EastDestination,
+                DestinationCornerRadius),
+            RoundedCornerPoints(
+                EastDestination,
+                Point(ArmLength, 0f, -ArmLength),
+                SouthDestination,
+                DestinationCornerRadius),
+            RoundedCornerPoints(
+                SouthDestination,
+                Point(-ArmLength, 0f, -ArmLength),
+                WestDestination,
+                DestinationCornerRadius),
+
+            // Roads 15-18: center-to-inner-junction radial segments.
+            new[] { westE, centerW },
+            new[] { centerE, eastW },
+            new[] { centerN, northS },
+            new[] { centerS, southN },
+
+            // Roads 19-22: rounded inner loop.
+            RoundedCornerPoints(
+                westN,
+                Point(-InnerLoopHalfSize, 0f, InnerLoopHalfSize),
+                northW,
+                InnerCornerRadius),
+            RoundedCornerPoints(
+                northE,
+                Point(InnerLoopHalfSize, 0f, InnerLoopHalfSize),
+                eastN,
+                InnerCornerRadius),
+            RoundedCornerPoints(
+                eastS,
+                Point(InnerLoopHalfSize, 0f, -InnerLoopHalfSize),
+                southE,
+                InnerCornerRadius),
+            RoundedCornerPoints(
+                southW,
+                Point(-InnerLoopHalfSize, 0f, -InnerLoopHalfSize),
+                westS,
+                InnerCornerRadius)
+        };
+
+        AddJunctionRoutes(routes, WestJunction);
+        AddJunctionRoutes(routes, NorthJunction);
+        AddJunctionRoutes(routes, EastJunction);
+        AddJunctionRoutes(routes, SouthJunction);
+        return routes.ToArray();
+    }
+
+    private static void AddJunctionRoutes(List<Vector3[]> routes, Vector3 center)
+    {
+        Vector3 west = JunctionPort(center, -1f, 0f);
+        Vector3 east = JunctionPort(center, 1f, 0f);
+        Vector3 north = JunctionPort(center, 0f, 1f);
+        Vector3 south = JunctionPort(center, 0f, -1f);
+
+        routes.Add(new[] { west, east });
+        routes.Add(new[] { north, south });
+        routes.Add(BezierCurvePoints(west, center, north));
+        routes.Add(BezierCurvePoints(north, center, east));
+        routes.Add(BezierCurvePoints(east, center, south));
+        routes.Add(BezierCurvePoints(south, center, west));
+    }
+
+    private static bool[] BuildPreSampledCurves()
+    {
+        bool[] curves = new bool[RouteSegments.Length];
+        for (int i = 0; i < RouteSegments.Length; i++)
+        {
+            curves[i] = RouteSegments[i].Length > 2;
+        }
+
+        return curves;
+    }
+
+    private static Vector3 JunctionPort(Vector3 center, float xDirection, float zDirection)
+    {
+        return center + Point(
+            xDirection * NewJunctionRadius,
+            0f,
+            zDirection * NewJunctionRadius);
+    }
+
     private static Vector3[] BezierCurvePoints(Vector3 start, Vector3 control, Vector3 end)
     {
         Vector3[] points = new Vector3[JunctionCurveSamples + 1];
@@ -365,9 +971,39 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         return points;
     }
 
+    private static Vector3[] RoundedCornerPoints(
+        Vector3 start,
+        Vector3 corner,
+        Vector3 end,
+        float radius)
+    {
+        Vector3 incomingDirection = (corner - start).normalized;
+        Vector3 outgoingDirection = (end - corner).normalized;
+        float incomingLength = Vector3.Distance(start, corner);
+        float outgoingLength = Vector3.Distance(corner, end);
+        float trim = Mathf.Min(radius, incomingLength * 0.45f, outgoingLength * 0.45f);
+        Vector3 curveStart = corner - incomingDirection * trim;
+        Vector3 curveEnd = corner + outgoingDirection * trim;
+
+        Vector3[] points = new Vector3[JunctionCurveSamples + 3];
+        points[0] = start;
+        for (int i = 0; i <= JunctionCurveSamples; i++)
+        {
+            points[i + 1] = QuadraticBezier(
+                curveStart,
+                corner,
+                curveEnd,
+                i / (float)JunctionCurveSamples);
+        }
+
+        points[points.Length - 1] = end;
+        return points;
+    }
+
     private void Awake()
     {
         CacheComponents();
+        LoadRoadData();
     }
 
     private void Start()
@@ -433,11 +1069,13 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     public void RebuildRoute()
     {
         CacheComponents();
+        LoadRoadData();
 
-        List<Spline> splines = new List<Spline>(RouteSegments.Length);
-        for (int i = 0; i < RouteSegments.Length; i++)
+        Vector3[][] routeSegments = GetActiveRouteSegments();
+        List<Spline> splines = new List<Spline>(routeSegments.Length);
+        for (int i = 0; i < routeSegments.Length; i++)
         {
-            splines.Add(CreateSpline(RouteSegments[i], PreSampledCurves[i]));
+            splines.Add(CreateSpline(routeSegments[i], PreSampledCurves[i]));
         }
 
         splineContainer.Splines = splines;
@@ -569,18 +1207,75 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     /// ลำดับความสำคัญตอนเดินหน้าข้ามทางแยก 1 pending จากการ swipe  2 history ด้านหน้า  3 เลนที่เลือก/default
     private RoadConnection ResolveForwardConnection(CarState car, RoadData road, bool towardNodeE)
     {
+        // Once the car is already on a junction traversal spline, the turn was
+        // decided on the approach road. Exit through the geometrically
+        // straight/default connection; never reuse a stale junction history
+        // entry that can send the car back into the same junction.
+        if (IsJunctionTraversalRoad(road.id))
+        {
+            int defaultLane = towardNodeE
+                ? road.defaultLaneE
+                : road.defaultLaneS;
+            return GetNextConnection(road, towardNodeE, defaultLane);
+        }
+
         if (car.hasPendingSelection && car.pendingNextRoad > 0)
         {
-            return new RoadConnection(car.pendingNextRoad, car.pendingEnterNode);
+            RoadConnection pending = new RoadConnection(
+                car.pendingNextRoad,
+                car.pendingEnterNode);
+            if (ContainsConnection(road, towardNodeE, pending))
+            {
+                return pending;
+            }
+
+            ClearPendingSelection(car);
         }
 
         RouteHistoryEntry forward = GetForwardHistory(car);
         if (forward != null)
         {
-            return new RoadConnection(forward.roadNo, forward.enterNode);
+            RoadConnection historyConnection = new RoadConnection(
+                forward.roadNo,
+                forward.enterNode);
+            if (ContainsConnection(road, towardNodeE, historyConnection))
+            {
+                return historyConnection;
+            }
+
+            // The topology or route choice changed. Remove only the invalid
+            // future branch and continue using this road's straight default.
+            int removeCount = car.history.Count - (car.historyIndex + 1);
+            if (removeCount > 0)
+            {
+                car.history.RemoveRange(car.historyIndex + 1, removeCount);
+            }
         }
 
         return GetNextConnection(road, towardNodeE, car.currentLane);
+    }
+
+    private static bool ContainsConnection(
+        RoadData road,
+        bool towardNodeE,
+        RoadConnection candidate)
+    {
+        RoadConnection[] connections = towardNodeE ? road.nodeE : road.nodeS;
+        if (connections == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < connections.Length; i++)
+        {
+            if (connections[i].roadNo == candidate.roadNo
+                && connections[i].enterNode == candidate.enterNode)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// Commit ตอนข้ามเข้ารางใหม่จริงเท่านั้น:
@@ -770,7 +1465,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         }
 
         float t = Mathf.Clamp01(car.currentPos / road.length);
-        Vector3 localPosition = EvaluatePolyline(RouteSegments[index], t) * routeScale;
+        Vector3 localPosition = EvaluatePolyline(GetActiveRouteSegments()[index], t);
         return transform.TransformPoint(localPosition);
     }
 
@@ -810,8 +1505,9 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
         float t = Mathf.Clamp01(car.currentPos / road.length);
         float t2 = Mathf.Clamp01(t + 0.01f);
-        Vector3 a = EvaluatePolyline(RouteSegments[index], t) * routeScale;
-        Vector3 b = EvaluatePolyline(RouteSegments[index], t2) * routeScale;
+        Vector3[] route = GetActiveRouteSegments()[index];
+        Vector3 a = EvaluatePolyline(route, t);
+        Vector3 b = EvaluatePolyline(route, t2);
 
         Vector3 forward = transform.TransformDirection((b - a).normalized);
         return car.dir == 0 ? forward : -forward;
@@ -819,15 +1515,29 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
     public RoadData GetRoadData(int roadNo) => GetRoad(roadNo);
 
+    /// Roads inside a junction are traversal pieces. Route selection happens
+    /// on the approach road, so their exit must continue by default without
+    /// presenting the same junction choices a second time.
+    public bool IsJunctionTraversalRoad(int roadNo)
+    {
+        return (roadNo >= 5 && roadNo <= 10)
+            || (roadNo >= 23 && roadNo <= 46);
+    }
+
     private RoadData GetRoad(int roadNo)
     {
+        if (roads == null)
+        {
+            LoadRoadData();
+        }
+
         int index = roadNo - 1;
-        if (index < 0 || index >= Roads.Length)
+        if (index < 0 || index >= roads.Length)
         {
             return null;
         }
 
-        return Roads[index];
+        return roads[index];
     }
 
     private Spline CreateSpline(IReadOnlyList<Vector3> points, bool preSampledCurve = false)
@@ -839,8 +1549,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
         for (int i = 0; i < renderPoints.Count; i++)
         {
-            Vector3 scaledPoint = renderPoints[i] * routeScale;
-            spline.Add(ToFloat3(scaledPoint), TangentMode.Linear);
+            spline.Add(ToFloat3(renderPoints[i]), TangentMode.Linear);
         }
 
         return spline;
@@ -961,6 +1670,123 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         return length;
     }
 
+    private Vector3[][] GetActiveRouteSegments()
+    {
+        if (activeRouteSegments == null || activeRouteSegments.Length != RouteSegments.Length)
+        {
+            RebuildActiveRouteSegments();
+        }
+
+        return activeRouteSegments;
+    }
+
+    private void RebuildActiveRouteSegments()
+    {
+        Vector2 fitScale = Vector2.one;
+        Vector2 fitCenter = Vector2.zero;
+
+        if (fitToRoadModel && TryGetRoadModelLocalBounds(out Bounds localBounds))
+        {
+            float halfWidth = Mathf.Max(0.01f, localBounds.extents.x - roadEdgeInset);
+            float halfDepth = Mathf.Max(0.01f, localBounds.extents.z - roadEdgeInset);
+            fitScale = new Vector2(halfWidth / ArmLength, halfDepth / ArmLength);
+            fitCenter = new Vector2(localBounds.center.x, localBounds.center.z);
+        }
+
+        float safeRouteScale = Mathf.Max(0.0001f, routeScale);
+        Vector2 finalScale = fitScale * safeRouteScale;
+        Vector2 finalOffset = fitCenter + routeOffset;
+        activeRouteSegments = new Vector3[RouteSegments.Length][];
+
+        for (int routeIndex = 0; routeIndex < RouteSegments.Length; routeIndex++)
+        {
+            Vector3[] source = RouteSegments[routeIndex];
+            Vector3[] fitted = new Vector3[source.Length];
+            for (int pointIndex = 0; pointIndex < source.Length; pointIndex++)
+            {
+                Vector3 point = source[pointIndex];
+                fitted[pointIndex] = new Vector3(
+                    finalOffset.x + point.x * finalScale.x,
+                    point.y * safeRouteScale,
+                    finalOffset.y + point.z * finalScale.y);
+            }
+
+            activeRouteSegments[routeIndex] = fitted;
+        }
+    }
+
+    private bool TryGetRoadModelLocalBounds(out Bounds localBounds)
+    {
+        localBounds = default;
+        Transform model = ResolveRoadModel();
+        if (model == null)
+        {
+            return false;
+        }
+
+        Renderer[] renderers = model.GetComponentsInChildren<Renderer>(true);
+        bool hasBounds = false;
+        Vector3 localMin = Vector3.zero;
+        Vector3 localMax = Vector3.zero;
+
+        for (int rendererIndex = 0; rendererIndex < renderers.Length; rendererIndex++)
+        {
+            Renderer renderer = renderers[rendererIndex];
+            if (renderer == null || renderer.transform == transform)
+            {
+                continue;
+            }
+
+            Bounds bounds = renderer.bounds;
+            Vector3 min = bounds.min;
+            Vector3 max = bounds.max;
+            for (int corner = 0; corner < 8; corner++)
+            {
+                Vector3 worldCorner = new Vector3(
+                    (corner & 1) == 0 ? min.x : max.x,
+                    (corner & 2) == 0 ? min.y : max.y,
+                    (corner & 4) == 0 ? min.z : max.z);
+                Vector3 localCorner = transform.InverseTransformPoint(worldCorner);
+
+                if (!hasBounds)
+                {
+                    localMin = localCorner;
+                    localMax = localCorner;
+                    hasBounds = true;
+                }
+                else
+                {
+                    localMin = Vector3.Min(localMin, localCorner);
+                    localMax = Vector3.Max(localMax, localCorner);
+                }
+            }
+        }
+
+        if (!hasBounds)
+        {
+            return false;
+        }
+
+        localBounds.SetMinMax(localMin, localMax);
+        return true;
+    }
+
+    private Transform ResolveRoadModel()
+    {
+        if (roadModel != null)
+        {
+            return roadModel;
+        }
+
+        if (string.IsNullOrWhiteSpace(roadModelObjectName))
+        {
+            return null;
+        }
+
+        GameObject modelObject = GameObject.Find(roadModelObjectName);
+        return modelObject != null ? modelObject.transform : null;
+    }
+
     private void CacheComponents()
     {
         splineContainer = GetOrAddComponent<SplineContainer>();
@@ -986,9 +1812,13 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         splineExtrude.Radius = roadWidth / RoadShapeWidth;
         SetRoadExtrudeShape(splineExtrude);
 
-        if (TryGetComponent(out MeshRenderer meshRenderer) && roadMaterial != null)
+        if (TryGetComponent(out MeshRenderer meshRenderer))
         {
-            meshRenderer.sharedMaterial = roadMaterial;
+            meshRenderer.enabled = createRoadMesh;
+            if (roadMaterial != null)
+            {
+                meshRenderer.sharedMaterial = roadMaterial;
+            }
         }
 
         SetRoadLayer();
@@ -1042,12 +1872,16 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
     private void SetupRoadCollider()
     {
-        if (!addRoadCollider)
+        if (TryGetComponent(out MeshCollider meshCollider))
         {
+            meshCollider.enabled = addRoadCollider;
             return;
         }
 
-        GetOrAddComponent<MeshCollider>();
+        if (addRoadCollider)
+        {
+            GetOrAddComponent<MeshCollider>();
+        }
     }
 
     private static void SetRoadExtrudeShape(SplineExtrude extrude)

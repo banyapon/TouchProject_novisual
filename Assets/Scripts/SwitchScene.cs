@@ -1,10 +1,32 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class SwitchScene : MonoBehaviour
 {
+    private const string DogPaddleScene = "Dogpaddle";
+    private const string DragNGoScene = "DragnGo";
+    private const string SplineMovementScene = "Spline";
+
     private string currentSceneName;
+    private string pendingSceneName;
     private Coroutine switchRoutine;
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Alpha1) || Input.GetKeyDown(KeyCode.Keypad1))
+        {
+            SwitchChange(DogPaddleScene);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha2) || Input.GetKeyDown(KeyCode.Keypad2))
+        {
+            SwitchChange(DragNGoScene);
+        }
+        else if (Input.GetKeyDown(KeyCode.Alpha3) || Input.GetKeyDown(KeyCode.Keypad3))
+        {
+            SwitchChange(SplineMovementScene);
+        }
+    }
 
     public void SwitchChange(string sceneName)
     {
@@ -14,42 +36,57 @@ public class SwitchScene : MonoBehaviour
             return;
         }
 
-        if (switchRoutine != null)
+        ToggleMenu toggleMenu = FindAnyObjectByType<ToggleMenu>(FindObjectsInactive.Include);
+        if (toggleMenu != null)
         {
-            StopCoroutine(switchRoutine);
+            toggleMenu.CloseMenu();
         }
 
-        switchRoutine = StartCoroutine(SwitchSceneRoutine(sceneName));
+        if (sceneName == currentSceneName
+            && SceneManager.GetSceneByName(sceneName).isLoaded)
+        {
+            return;
+        }
+
+        pendingSceneName = sceneName;
+        if (switchRoutine == null)
+        {
+            switchRoutine = StartCoroutine(SwitchSceneRoutine());
+        }
     }
 
-    private System.Collections.IEnumerator SwitchSceneRoutine(string sceneName)
+    private IEnumerator SwitchSceneRoutine()
     {
-        // ปิดฉากเดิม
-        if (!string.IsNullOrEmpty(currentSceneName))
+        while (!string.IsNullOrEmpty(pendingSceneName))
         {
-            Scene oldScene = SceneManager.GetSceneByName(currentSceneName);
-            if (oldScene.isLoaded)
+            string sceneName = pendingSceneName;
+            pendingSceneName = null;
+
+            if (!string.IsNullOrEmpty(currentSceneName))
             {
-                AsyncOperation unloadAsync = SceneManager.UnloadSceneAsync(currentSceneName);
-                while (unloadAsync != null && !unloadAsync.isDone)
+                Scene oldScene = SceneManager.GetSceneByName(currentSceneName);
+                if (oldScene.isLoaded)
                 {
-                    yield return null;
+                    AsyncOperation unloadAsync = SceneManager.UnloadSceneAsync(currentSceneName);
+                    while (unloadAsync != null && !unloadAsync.isDone)
+                    {
+                        yield return null;
+                    }
                 }
             }
-        }
 
-        // โหลดฉากใหม่ซ้อน
-        AsyncOperation loadAsync = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
-        while (loadAsync != null && !loadAsync.isDone)
-        {
-            yield return null;
-        }
+            AsyncOperation loadAsync = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            while (loadAsync != null && !loadAsync.isDone)
+            {
+                yield return null;
+            }
 
-        Scene newScene = SceneManager.GetSceneByName(sceneName);
-        if (newScene.isLoaded)
-        {
-            SceneManager.SetActiveScene(newScene);
-            currentSceneName = sceneName;
+            Scene newScene = SceneManager.GetSceneByName(sceneName);
+            if (newScene.isLoaded)
+            {
+                SceneManager.SetActiveScene(newScene);
+                currentSceneName = sceneName;
+            }
         }
 
         switchRoutine = null;
