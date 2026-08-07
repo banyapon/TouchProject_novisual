@@ -1,0 +1,138 @@
+{
+  "roads": [
+    {
+      "id": "A",
+      "nodeS": [],
+      "nodeE": [
+        { "roadNo": "B", "enterNode": 1 },
+        { "roadNo": "C", "enterNode": 0 },
+        { "roadNo": "D", "enterNode": 0 }
+      ],
+      "defaultRoadS": 0,
+      "defaultRoadE": "I"
+    },
+    {
+      "id": "B",
+      "nodeS": [
+        { "roadNo": "A", "enterNode": 1 },
+        { "roadNo": "F", "enterNode": 0 },
+        { "roadNo": "J", "enterNode": 0 }
+      ],
+      "nodeE": [
+        { "roadNo": "G", "enterNode": 1 },
+        { "roadNo": "I", "enterNode": 0 },
+        { "roadNo": "H", "enterNode": 0 }
+      ],
+      "defaultRoadS": "E",
+      "defaultRoadE": "G"
+    },
+    {
+      "id": "C",
+      "nodeS": [
+        { "roadNo": "A", "enterNode": 1 },
+        { "roadNo": "B", "enterNode": 1 },
+        { "roadNo": "I", "enterNode": 0 }
+      ],
+      "nodeE": [
+        { "roadNo": "D", "enterNode": 1 },
+        { "roadNo": "G", "enterNode": 1 },
+        { "roadNo": "J", "enterNode": 1 }
+      ],
+      "defaultRoadS": "C",
+      "defaultRoadE": "D"
+    },
+    {
+      "id": "D",
+      "nodeS": [],
+      "nodeE": [
+        { "roadNo": "C", "enterNode": 1 },
+        { "roadNo": "G", "enterNode": 1 },
+        { "roadNo": "J", "enterNode": 1 }
+      ],
+      "defaultRoadS": "D",
+      "defaultRoadE": "J"
+    },
+    {
+      "id": "E",
+      "nodeS": [],
+      "nodeE": [
+        { "roadNo": "A", "enterNode": 0 },
+        { "roadNo": "F", "enterNode": 0 },
+        { "roadNo": "J", "enterNode": 0 }
+      ],
+      "defaultRoadS": "E",
+      "defaultRoadE": "J"
+    },
+    {
+      "id": "F",
+      "nodeS": [
+        { "roadNo": "E", "enterNode": 1 },
+        { "roadNo": "G", "enterNode": 1 },
+        { "roadNo": "J", "enterNode": 1 }
+      ],
+      "nodeE": [
+        { "roadNo": "G", "enterNode": 0 },
+        { "roadNo": "H", "enterNode": 1 },
+        { "roadNo": "I", "enterNode": 1 }
+      ],
+      "defaultRoadS": "F",
+      "defaultRoadE": "H"
+    },
+    {
+      "id": "G",
+      "nodeS": [
+        { "roadNo": "F", "enterNode": 1 },
+        { "roadNo": "H", "enterNode": 1 },
+        { "roadNo": "I", "enterNode": 1 }
+      ],
+      "nodeE": [
+        { "roadNo": "C", "enterNode": 1 },
+        { "roadNo": "D", "enterNode": 1 },
+        { "roadNo": "J", "enterNode": 1 }
+      ],
+      "defaultRoadS": "G",
+      "defaultRoadE": "D"
+    },
+    {
+      "id": "H",
+      "nodeS": [],
+      "nodeE": [
+        { "roadNo": "F", "enterNode": 1 },
+        { "roadNo": "G", "enterNode": 0 },
+        { "roadNo": "I", "enterNode": 1 }
+      ],
+      "defaultRoadS": "H",
+      "defaultRoadE": "I"
+    },
+    {
+      "id": "I",
+      "nodeS": [
+        { "roadNo": "A", "enterNode": 1 },
+        { "roadNo": "B", "enterNode": 1 },
+        { "roadNo": "C", "enterNode": 0 }
+      ],
+      "nodeE": [
+        { "roadNo": "D", "enterNode": 1 },
+        { "roadNo": "E", "enterNode": 0 },
+        { "roadNo": "F", "enterNode": 1 }
+      ],
+      "defaultRoadS": "I",
+      "defaultRoadE": "F"
+    },
+    {
+      "id": "J",
+      "nodeS": [
+        { "roadNo": "C", "enterNode": 0 },
+        { "roadNo": "D", "enterNode": 1 },
+        { "roadNo": "E", "enterNode": 0 }
+      ],
+      "nodeE": [
+        { "roadNo": "F", "enterNode": 1 },
+        { "roadNo": "G", "enterNode": 1 },
+        { "roadNo": "H", "enterNode": 1 }
+      ],
+      "defaultRoadS": "J",
+      "defaultRoadE": "H"
+    }
+  ]
+}
