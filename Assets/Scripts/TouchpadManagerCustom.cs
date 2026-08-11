@@ -1,185 +1,254 @@
-using System.Collections.Generic;
-using RawInput.Touchpad;
-using TrackpadDll;
 using UnityEngine;
+using TrackpadDll; // The namespace you defined in Visual Studio
+using RawInput.Touchpad;
+
 
 public class TouchpadManagerCustom : MonoBehaviour
 {
-    private const float Scale = 1.625f;
-    private const float CalibratedRawDistance = 1784f;
-    private const float CalibratedCmDistance = 6f;
-    private const float VrFullDistanceMeters = 65f;
-    private const float CmPerRaw = CalibratedCmDistance / CalibratedRawDistance;
-    private const float ContactTimeoutSeconds = 0.08f;
+    public static TouchpadManagerCustom Instance { get; private set; }
+    private const float ContactTimeoutSeconds = 0.1f; // เกินเวลานี้ให้ถือว่า idle
 
-    [SerializeField] private GameObject planeObject;
-    [SerializeField] private GameObject cubeObject;
+    public bool IsTouching;
+    public int TouchCount;
+    public Vector2 PrimaryRawPosition { get; private set; }
+    public Vector2 currentRawPosition => PrimaryRawPosition;
+    public Vector2[] ContactRawPositions => contactidFrame;
+    [SerializeField] private bool showTouchDebug = true;
 
-    private readonly Dictionary<int, TouchSession> sessions = new Dictionary<int, TouchSession>();
-    private readonly List<int> _expiredIds = new List<int>();
-    private Vector3 cubeStartPosition;
-
-    private struct TouchSession
+    public enum TouchMode
     {
-        public float StartY;
-        public float LastY;
-        public float LastSeenTime;
-        public float AppliedWorldDistance;
+        None,
+        Translate,
+        Rotate,
+        Change
     }
+    public TouchMode CurrentMode { get; private set; }
+
+    public enum TouchStatus
+    {
+        None,
+        OnTouch,
+        OnDrag
+    }
+    public TouchStatus Status { get; private set; }
+
+    private int numTouch;
+    private int oldNumTouch;
+    private bool oldTouch;
+    private bool newTouch;
+    private TouchMode oldMode;
+    private TouchMode newMode;
 
     private void Awake()
     {
-        EnsureSceneObjects();
+        Instance = this;
     }
 
-    private void Start()
+    void Start()
     {
+        //Application.targetFrameRate =120;
+        // This starts the hidden window thread we built in the DLL
         TrackpadInterface.Start();
-        Debug.Log(
-            $"Scale={Scale}, CalibratedRawDistance={CalibratedRawDistance}, " +
-            $"CalibratedCmDistance={CalibratedCmDistance}, CmPerRaw={CmPerRaw}, " +
-            $"VrFullDistanceMeters={VrFullDistanceMeters}"
-        );
+        Debug.Log("Trackpad Listener Started!");
     }
 
-    private void Update()
+    // ใช้ ContactId เป็น index ตรง ๆ ห้อง i = นิ้วที่มี ContactId = i
+    private readonly Vector2[] contactidFrame = new Vector2[6];
+    private readonly bool[] contactActiveFrame = new bool[6];
+    private readonly string[] contactDebugActions = new string[6];
+    private int debugEventCountFrame;
+
+    //ตัวแปรไว้จำค่านิ้วหลักตอนนี้คือ index ห้แงไหน "-1 = ยังไม่มีการเตะ
+    void FixedUpdate()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        oldTouch = newTouch;
+        oldMode = CurrentMode;
+        oldNumTouch = numTouch;
+
+        int touchCount = 0;
+        int eventCount = 0;
+        Vector2 totalRawPosition = Vector2.zero;
+
+        //ล้างข้อมูลนิ้วในเฟรมนี้
+        for (int i = 0; i < contactidFrame.Length; i++)
         {
-            StopTrackpad();
-            SceneEscape.Handle();
-            return;
+            contactActiveFrame[i] = false;
+            contactidFrame[i] = Vector2.zero;
+            contactDebugActions[i] = "Clear";
         }
 
+        //รับ event แบบ simple: ContactId คือ index ตรง ๆ
         while (TrackpadInterface.EventQueue.TryDequeue(out TouchpadContact contact))
         {
-            HandleContact(contact);
-        }
+            eventCount++;
+            Debug.Log(contact);
 
-        CleanupExpiredSessions();
-    }
+            int id = contact.ContactId;
 
-    private void EnsureSceneObjects()
-    {
-        if (planeObject == null)
-        {
-            planeObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            planeObject.name = "TouchpadPlane";
-            planeObject.transform.position = Vector3.zero;
-            planeObject.transform.localScale = new Vector3(100f, 100f, 100f);
-        }
-
-        if (cubeObject == null)
-        {
-            cubeObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cubeObject.name = "TouchpadCube";
-            cubeObject.transform.position = new Vector3(0f, 0.5f, 0f);
-            cubeObject.transform.localScale = Vector3.one;
-            cubeStartPosition = cubeObject.transform.position;
-            Debug.Log($"Cube created at start position: {cubeStartPosition}");
-        }
-    }
-
-    private void HandleContact(TouchpadContact contact)
-    {
-        int contactId = contact.ContactId;
-        float now = Time.time;
-
-        if (!sessions.TryGetValue(contactId, out TouchSession session) || now - session.LastSeenTime >= ContactTimeoutSeconds)
-        {
-            sessions[contactId] = new TouchSession
+            //กัน id เกินขนาด array (บาง driver อาจส่ง id แปลก ๆ มา)
+            if (id < 0 || id >= contactidFrame.Length)
             {
-                StartY = contact.Y,
-                LastY = contact.Y,
-                LastSeenTime = now,
-                AppliedWorldDistance = 0f
-            };
+                continue;
+            }
 
-            Debug.Log($"Touch start id={contactId}, y={contact.Y}");
-            return;
+            //เจอห้องนี้ครั้งแรกในเฟรม = นิ้วใหม่ของเฟรมนี้
+            if (!contactActiveFrame[id])
+            {
+                contactActiveFrame[id] = true;
+                contactDebugActions[id] = "Add";
+                touchCount++;
+            }
+            else
+            {
+                contactDebugActions[id] = "Update";
+            }
+
+            //อัปเดตตำแหน่งล่าสุด
+            contactidFrame[id] = new Vector2(contact.X, contact.Y);
         }
 
-        float totalRawDistance = contact.Y - session.StartY;
-        float totalCmDistance = totalRawDistance * CmPerRaw;
-        float valueWorldDistance= totalCmDistance * Scale;
-        float deltaWorldDistance = valueWorldDistance- session.AppliedWorldDistance;
-
-        session.LastY = contact.Y;
-        session.LastSeenTime = now;
-        session.AppliedWorldDistance = valueWorldDistance;
-        sessions[contactId] = session;
-
-        if (Mathf.Approximately(deltaWorldDistance, 0f))
+        //ถ้านิ้วหลักเดิมยังแตะอยู่ ใช้ค่าเดิมต่อ (นิ้วไม่สลับไปมา)
+        //ถ้านิ้วหลักยกไปแล้ว ให้เช็คห้อง[index] 0,1,2,เจอใครก่อนเอาคนนั้น
+        for (int i = 0; i < contactActiveFrame.Length; i++)
         {
-            return;
+            if (contactActiveFrame[i])
+            {
+                totalRawPosition += contactidFrame[i];
+            }
         }
 
-        MoveCube(contactId, session.StartY, session.LastY, totalRawDistance, totalCmDistance, valueWorldDistance, deltaWorldDistance);
+        TouchCount = touchCount;
+        if (touchCount > 0)
+        {
+            PrimaryRawPosition = totalRawPosition / touchCount;
+        }
+        else
+        {
+            PrimaryRawPosition = Vector2.zero;
+        }
+
+        debugEventCountFrame = eventCount;
+
+        if (touchCount <= 0)
+        {
+            numTouch = 0;
+        }
+        else if (touchCount == 1)
+        {
+            numTouch = 1;
+        }
+        else
+        {
+            numTouch = 2;
+        }
+
+        newTouch = numTouch > 0;
+        IsTouching = newTouch;
+
+        if (!oldTouch && newTouch)
+        {
+            Status = TouchStatus.OnTouch;
+        }
+        else if (oldTouch && newTouch)
+        {
+            Status = TouchStatus.OnDrag;
+        }
+        else
+        {
+            Status = TouchStatus.None;
+        }
+
+        if (!newTouch)
+        {
+            newMode = TouchMode.None;
+        }
+        else if (!oldTouch)
+        {
+            newMode = TouchMode.Change;
+        }
+        else if (oldNumTouch != numTouch)
+        {
+            newMode = TouchMode.Change;
+        }
+        else if (numTouch == 2)
+        {
+            newMode = TouchMode.Rotate;
+        }
+        else
+        {
+            newMode = TouchMode.Translate;
+        }
+
+        CurrentMode = newMode;
+
+        if(Input.GetKeyDown(KeyCode.Tab))
+        {
+            if(showTouchDebug)
+            {
+                showTouchDebug = false;
+            }
+            else
+            {
+                showTouchDebug = true;
+            }
+        }
     }
 
-    private void MoveCube(
-        int contactId,
-        float startY,
-        float lastY,
-        float totalRawDistance,
-        float totalCmDistance,
-        float valueWorldDistance,
-        float deltaWorldDistance)
+    //เอามา Debug
+    private void OnGUI()
     {
-        if (cubeObject == null)
+        if (!showTouchDebug)
         {
-            Debug.LogWarning($"Touch move id={contactId}, cubeObject is missing.");
             return;
         }
 
-        Vector3 previousPosition = cubeObject.transform.position;
-        Vector3 movement = Vector3.forward * deltaWorldDistance;
-        Vector3 newPosition = previousPosition + movement;
-        float distanceFromStart = Vector3.Dot(newPosition - cubeStartPosition, Vector3.forward);
+        float debugWidth = 320f;
+        float debugHeight = 380f;
+        float debugMargin = 10f;
+        GUILayout.BeginArea(new Rect(Screen.width - debugWidth - debugMargin, debugMargin, debugWidth, debugHeight), GUI.skin.box);
+        GUILayout.Label("Touch Debug");
+        GUILayout.Label("IsTouching: " + IsTouching + " | TouchCount: " + TouchCount + " | Events: " + debugEventCountFrame);
+        GUILayout.Label("oldTouch: " + oldTouch + " | newTouch: " + newTouch + " | numTouch: " + numTouch);
+        GUILayout.Label("oldMode: " + oldMode + " | newMode: " + newMode + " | status: " + Status);
+        GUILayout.Label("Mode: " + CurrentMode);
+        GUILayout.Label("Current: " + PrimaryRawPosition.x.ToString("0") + " | " + PrimaryRawPosition.y.ToString("0"));
+        GUILayout.Space(6f);
+        GUILayout.Label("Id | Action | Active | X | Y");
 
-        cubeObject.transform.position = newPosition;
-
-        Debug.Log(
-            $"Touch move id={contactId}, startY={startY}, lastY={lastY}, totalRawDistance={totalRawDistance}, " +
-            $"totalCmDistance={totalCmDistance}, WorldDistance={valueWorldDistance}, " +
-            $"deltaWorldDistance={deltaWorldDistance}, cube from {previousPosition} to {newPosition}, " +
-            $"distanceFromStart={distanceFromStart}"
-        );
-    }
-
-    private void CleanupExpiredSessions()
-    {
-        float now = Time.time;
-        _expiredIds.Clear();
-
-        foreach (KeyValuePair<int, TouchSession> pair in sessions)
+        for (int i = 0; i < contactidFrame.Length; i++)
         {
-            if (now - pair.Value.LastSeenTime >= ContactTimeoutSeconds)
-                _expiredIds.Add(pair.Key);
+            Vector2 position = contactidFrame[i];
+            GUILayout.Label(
+                i + " | " +
+                contactDebugActions[i] + " | " +
+                contactActiveFrame[i] + " | " +
+                position.x.ToString("0") + " | " +
+                position.y.ToString("0"));
         }
 
-        foreach (int id in _expiredIds)
-            sessions.Remove(id);
+        GUILayout.EndArea();
+    }
+
+    public Vector2 GetCurrentTouch()
+    {
+        return PrimaryRawPosition;
     }
 
     private void OnDisable()
     {
-        StopTrackpad();
+        StopThread();
     }
-
     private void OnApplicationQuit()
     {
-        StopTrackpad();
+        // CRITICAL: If you don't stop the thread, the hidden window 
+        // might stay alive after you stop the Unity Editor!
+        TrackpadInterface.Stop();
+        StopThread();
     }
-
-    private void StopTrackpad()
+    private void StopThread()
     {
+        Debug.Log("Shutting down Trackpad Thread...");
         TrackpadInterface.Stop();
     }
 
-    private void QuitApplication()
-    {
-        StopTrackpad();
-        SceneEscape.Handle();
-    }
 }
