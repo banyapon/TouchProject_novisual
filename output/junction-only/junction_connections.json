@@ -1,0 +1,212 @@
+{
+  "schemaVersion": 3,
+  "nodeConvention": {
+    "0": "S / first point",
+    "1": "E / last point"
+  },
+  "travelDirectionByEnterNode": {
+    "0": "S to E; follow points in order",
+    "1": "E to S; follow points in reverse"
+  },
+  "notes": [
+    "Main roads: 1=south, 2=north, 3=west, 4=east"
+  ],
+  "roads": [
+    {
+      "id": 1,
+      "label": "1",
+      "kind": "main",
+      "color": "#FFFFFF",
+      "bidirectional": true,
+      "nodeS": [],
+      "nodeE": [
+        {
+          "roadNo": 2,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 5,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 6,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 0,
+      "defaultRoadE": 2
+    },
+    {
+      "id": 2,
+      "label": "2",
+      "kind": "main",
+      "color": "#FFFFFF",
+      "bidirectional": true,
+      "nodeS": [
+        {
+          "roadNo": 1,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 7,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 8,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [],
+      "defaultRoadS": 1,
+      "defaultRoadE": 0
+    },
+    {
+      "id": 3,
+      "label": "3",
+      "kind": "main",
+      "color": "#FFFFFF",
+      "bidirectional": true,
+      "nodeS": [],
+      "nodeE": [
+        {
+          "roadNo": 4,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 5,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 7,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 0,
+      "defaultRoadE": 4
+    },
+    {
+      "id": 4,
+      "label": "4",
+      "kind": "main",
+      "color": "#FFFFFF",
+      "bidirectional": true,
+      "nodeS": [
+        {
+          "roadNo": 3,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 6,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 8,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [],
+      "defaultRoadS": 3,
+      "defaultRoadE": 0
+    },
+    {
+      "id": 5,
+      "label": "1-3",
+      "kind": "turn",
+      "color": "#FFFFFF",
+      "bidirectional": true,
+      "directionColors": {
+        "S_to_E": "#FFE600",
+        "E_to_S": "#39FF14"
+      },
+      "nodeS": [
+        {
+          "roadNo": 1,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 3,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 1,
+      "defaultRoadE": 3
+    },
+    {
+      "id": 6,
+      "label": "1-4",
+      "kind": "turn",
+      "color": "#FFFFFF",
+      "bidirectional": true,
+      "directionColors": {
+        "S_to_E": "#FFE600",
+        "E_to_S": "#39FF14"
+      },
+      "nodeS": [
+        {
+          "roadNo": 1,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 4,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 1,
+      "defaultRoadE": 4
+    },
+    {
+      "id": 7,
+      "label": "2-3",
+      "kind": "turn",
+      "color": "#FFFFFF",
+      "bidirectional": true,
+      "directionColors": {
+        "S_to_E": "#FFE600",
+        "E_to_S": "#39FF14"
+      },
+      "nodeS": [
+        {
+          "roadNo": 3,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 2,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 3,
+      "defaultRoadE": 2
+    },
+    {
+      "id": 8,
+      "label": "2-4",
+      "kind": "turn",
+      "color": "#FFFFFF",
+      "bidirectional": true,
+      "directionColors": {
+        "S_to_E": "#FFE600",
+        "E_to_S": "#39FF14"
+      },
+      "nodeS": [
+        {
+          "roadNo": 4,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 2,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 4,
+      "defaultRoadE": 2
+    }
+  ]
+}

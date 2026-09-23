@@ -284,13 +284,15 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     };
 
     // 1-14 retain their previous meaning. Roads 15-22 add the inner
-    // radial/loop segments, and Roads 23-46 add four complete junctions.
+    // radial/loop segments, Roads 23-46 add four complete junctions,
+    // and Roads 47-58 connect the four outer T-junctions.
     private static readonly Vector3[][] RouteSegments = BuildRouteSegments();
     private static readonly bool[] PreSampledCurves = BuildPreSampledCurves();
 
     //NodeS / NodeE / LaneS / LaneE
     private RoadData[] roads;
     private Vector3[][] activeRouteSegments;
+    private Spline[] activeSplines;
 
     private RoadData[] BuildRoads()
     {
@@ -681,11 +683,11 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
     private void PrepareRoads(RoadData[] roadData)
     {
-        Vector3[][] routeSegments = GetActiveRouteSegments();
+        GetActiveRouteSegments();
         for (int i = 0; i < roadData.Length; i++)
         {
             RoadData road = roadData[i];
-            road.length = GetPolylineLength(routeSegments[i]);
+            road.length = activeSplines[i].GetLength();
             road.laneS = SortConnectionsLeftToRight(road.id, false, road.nodeS);
             road.laneE = SortConnectionsLeftToRight(road.id, true, road.nodeE);
             road.defaultLaneS = GetDefaultLaneIndex(
@@ -855,10 +857,10 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         List<Vector3[]> routes = new List<Vector3[]>
         {
             // Roads 1-4: from the outer loop to the nearest inner junction.
-            new[] { WestDestination, westW },
-            new[] { eastE, EastDestination },
-            new[] { northN, NorthDestination },
-            new[] { southS, SouthDestination },
+            new[] { JunctionPort(WestDestination, 1f, 0f), westW },
+            new[] { eastE, JunctionPort(EastDestination, -1f, 0f) },
+            new[] { northN, JunctionPort(NorthDestination, 0f, -1f) },
+            new[] { southS, JunctionPort(SouthDestination, 0f, 1f) },
 
             // Roads 5-10: center junction, including two straight defaults.
             new[] { centerW, centerE },
@@ -870,24 +872,24 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
             // Roads 11-14: outer loop.
             RoundedCornerPoints(
-                WestDestination,
+                JunctionPort(WestDestination, 0f, 1f),
                 Point(-ArmLength, 0f, ArmLength),
-                NorthDestination,
+                JunctionPort(NorthDestination, -1f, 0f),
                 DestinationCornerRadius),
             RoundedCornerPoints(
-                NorthDestination,
+                JunctionPort(NorthDestination, 1f, 0f),
                 Point(ArmLength, 0f, ArmLength),
-                EastDestination,
+                JunctionPort(EastDestination, 0f, 1f),
                 DestinationCornerRadius),
             RoundedCornerPoints(
-                EastDestination,
+                JunctionPort(EastDestination, 0f, -1f),
                 Point(ArmLength, 0f, -ArmLength),
-                SouthDestination,
+                JunctionPort(SouthDestination, 1f, 0f),
                 DestinationCornerRadius),
             RoundedCornerPoints(
-                SouthDestination,
+                JunctionPort(SouthDestination, -1f, 0f),
                 Point(-ArmLength, 0f, -ArmLength),
-                WestDestination,
+                JunctionPort(WestDestination, 0f, -1f),
                 DestinationCornerRadius),
 
             // Roads 15-18: center-to-inner-junction radial segments.
@@ -923,7 +925,25 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         AddJunctionRoutes(routes, NorthJunction);
         AddJunctionRoutes(routes, EastJunction);
         AddJunctionRoutes(routes, SouthJunction);
+        AddTJunctionRoutes(routes, WestDestination, Vector3.right);
+        AddTJunctionRoutes(routes, NorthDestination, Vector3.back);
+        AddTJunctionRoutes(routes, EastDestination, Vector3.left);
+        AddTJunctionRoutes(routes, SouthDestination, Vector3.forward);
         return routes.ToArray();
+    }
+
+    private static void AddTJunctionRoutes(
+        List<Vector3[]> routes, Vector3 center, Vector3 inward)
+    {
+        // Trim all three arms to distinct ports, then connect every legal
+        // movement: along the outer loop, or from the stem to either side.
+        Vector3 alongLoop = Vector3.Cross(Vector3.up, inward);
+        Vector3 stem = center + inward * NewJunctionRadius;
+        Vector3 sideA = center + alongLoop * NewJunctionRadius;
+        Vector3 sideB = center - alongLoop * NewJunctionRadius;
+        routes.Add(new[] { sideA, sideB });
+        routes.Add(BezierCurvePoints(stem, center, sideA));
+        routes.Add(BezierCurvePoints(stem, center, sideB));
     }
 
     private static void AddJunctionRoutes(List<Vector3[]> routes, Vector3 center)
@@ -1071,14 +1091,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         CacheComponents();
         LoadRoadData();
 
-        Vector3[][] routeSegments = GetActiveRouteSegments();
-        List<Spline> splines = new List<Spline>(routeSegments.Length);
-        for (int i = 0; i < routeSegments.Length; i++)
-        {
-            splines.Add(CreateSpline(routeSegments[i], PreSampledCurves[i]));
-        }
-
-        splineContainer.Splines = splines;
+        splineContainer.Splines = activeSplines;
         SetupRoadExtrude();
     }
 
@@ -1330,9 +1343,8 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
         car.roadNo = prev.roadNo;
         car.dir = prev.dirOnEnter;
-        car.currentPos = prev.dirOnEnter == 0
-            ? Mathf.Clamp(prevRoad.length - remain, 0f, prevRoad.length)
-            : Mathf.Clamp(remain, 0f, prevRoad.length);
+        // MoveCarLoop consumes remain on the next iteration, exactly once.
+        car.currentPos = prev.dirOnEnter == 0 ? prevRoad.length : 0f;
 
         ClearPendingSelection(car);
         SyncLaneWithForwardHistory(car);
@@ -1413,9 +1425,9 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
         car.roadNo = connection.roadNo;
 
-        car.currentPos = connection.enterNode == 0
-            ? Mathf.Clamp(remain, 0f, nextRoad.length)
-            : Mathf.Clamp(nextRoad.length - remain, 0f, nextRoad.length);
+        // Start at the shared endpoint; MoveCarLoop applies remain after this
+        // transition and can carry it across further roads when necessary.
+        car.currentPos = connection.enterNode == 0 ? 0f : nextRoad.length;
 
         // เดินหน้าข้าม node = หันออกจาก node ที่เข้า, ถอยหลังข้าม node = ยังหันเข้าหา node ที่เข้า
         int facingDir = connection.enterNode == 0 ? 0 : 1;
@@ -1465,7 +1477,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         }
 
         float t = Mathf.Clamp01(car.currentPos / road.length);
-        Vector3 localPosition = EvaluatePolyline(GetActiveRouteSegments()[index], t);
+        Vector3 localPosition = activeSplines[index].EvaluatePosition(t);
         return transform.TransformPoint(localPosition);
     }
 
@@ -1504,12 +1516,8 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         }
 
         float t = Mathf.Clamp01(car.currentPos / road.length);
-        float t2 = Mathf.Clamp01(t + 0.01f);
-        Vector3[] route = GetActiveRouteSegments()[index];
-        Vector3 a = EvaluatePolyline(route, t);
-        Vector3 b = EvaluatePolyline(route, t2);
-
-        Vector3 forward = transform.TransformDirection((b - a).normalized);
+        Vector3 tangent = activeSplines[index].EvaluateTangent(t);
+        Vector3 forward = transform.TransformVector(tangent).normalized;
         return car.dir == 0 ? forward : -forward;
     }
 
@@ -1521,7 +1529,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     public bool IsJunctionTraversalRoad(int roadNo)
     {
         return (roadNo >= 5 && roadNo <= 10)
-            || (roadNo >= 23 && roadNo <= 46);
+            || (roadNo >= 23 && roadNo <= RouteSegments.Length);
     }
 
     private RoadData GetRoad(int roadNo)
@@ -1542,14 +1550,65 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
     private Spline CreateSpline(IReadOnlyList<Vector3> points, bool preSampledCurve = false)
     {
-        List<Vector3> renderPoints = preSampledCurve
-            ? new List<Vector3>(points)
-            : BuildRenderPoints(points);
+        if (preSampledCurve)
+        {
+            return CreateBezierSpline(points);
+        }
+
+        List<Vector3> renderPoints = BuildRenderPoints(points);
         Spline spline = new Spline(renderPoints.Count, false);
 
         for (int i = 0; i < renderPoints.Count; i++)
         {
-            spline.Add(ToFloat3(renderPoints[i]), TangentMode.Linear);
+            // Collinear handles keep straight spans straight, with a nonzero
+            // tangent at the endpoints for continuous vehicle orientation.
+            Vector3 tangentIn = i > 0 ? (renderPoints[i - 1] - renderPoints[i]) / 3f : Vector3.zero;
+            Vector3 tangentOut = i + 1 < renderPoints.Count ? (renderPoints[i + 1] - renderPoints[i]) / 3f : Vector3.zero;
+            spline.Add(new BezierKnot(ToFloat3(renderPoints[i]), ToFloat3(tangentIn),
+                ToFloat3(tangentOut)), TangentMode.Broken);
+        }
+
+        return spline;
+    }
+
+    private static Spline CreateBezierSpline(IReadOnlyList<Vector3> points)
+    {
+        // BezierCurvePoints contains one uniformly sampled quadratic.
+        // RoundedCornerPoints adds a straight approach/departure at each end.
+        bool hasApproaches = points.Count == JunctionCurveSamples + 3;
+        int first = hasApproaches ? 1 : 0;
+        int last = first + JunctionCurveSamples;
+        Vector3 start = points[first];
+        Vector3 end = points[last];
+        Vector3 midpoint = points[first + JunctionCurveSamples / 2];
+        Vector3 control = 2f * midpoint - (start + end) * 0.5f;
+
+        // Exact quadratic-to-cubic conversion keeps the endpoint tangents
+        // aligned with both connecting roads, including after model fitting.
+        Vector3 approach = hasApproaches ? (start - points[0]) / 3f : Vector3.zero;
+        Vector3 departure = hasApproaches ? (points[points.Count - 1] - end) / 3f : Vector3.zero;
+        Spline spline = new Spline(hasApproaches ? 4 : 2, false);
+        if (hasApproaches)
+        {
+            spline.Add(new BezierKnot(ToFloat3(points[0]), float3.zero, ToFloat3(approach)), TangentMode.Broken);
+        }
+
+        spline.Add(new BezierKnot(ToFloat3(start), ToFloat3(-approach),
+            ToFloat3((control - start) * 1.1f)), TangentMode.Broken);
+        spline.Add(new BezierKnot(ToFloat3(end), ToFloat3((control - end) * 1.1f),
+            ToFloat3(departure)), TangentMode.Broken);
+
+        /*
+         spline.Add(new BezierKnot(ToFloat3(start), ToFloat3(-approach),
+            ToFloat3((control - start) * (2f / 3f))), TangentMode.Broken);
+        spline.Add(new BezierKnot(ToFloat3(end), ToFloat3((control - end) * (2f / 3f)),
+            ToFloat3(departure)), TangentMode.Broken);
+*/
+
+
+        if (hasApproaches)
+        {
+            spline.Add(new BezierKnot(ToFloat3(points[points.Count - 1]), ToFloat3(-departure), float3.zero), TangentMode.Broken);
         }
 
         return spline;
@@ -1619,57 +1678,6 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         }
     }
 
-    private static Vector3 EvaluatePolyline(IReadOnlyList<Vector3> points, float t)
-    {
-        if (points == null || points.Count == 0)
-        {
-            return Vector3.zero;
-        }
-
-        if (points.Count == 1)
-        {
-            return points[0];
-        }
-
-        float totalLength = GetPolylineLength(points);
-        if (totalLength <= Mathf.Epsilon)
-        {
-            return points[0];
-        }
-
-        float targetDistance = Mathf.Clamp01(t) * totalLength;
-        float walked = 0f;
-
-        for (int i = 0; i < points.Count - 1; i++)
-        {
-            Vector3 a = points[i];
-            Vector3 b = points[i + 1];
-            float segmentLength = Vector3.Distance(a, b);
-
-            if (walked + segmentLength >= targetDistance)
-            {
-                float localT = (targetDistance - walked) / segmentLength;
-                return Vector3.Lerp(a, b, localT);
-            }
-
-            walked += segmentLength;
-        }
-
-        return points[points.Count - 1];
-    }
-
-    private static float GetPolylineLength(IReadOnlyList<Vector3> points)
-    {
-        float length = 0f;
-
-        for (int i = 0; i < points.Count - 1; i++)
-        {
-            length += Vector3.Distance(points[i], points[i + 1]);
-        }
-
-        return length;
-    }
-
     private Vector3[][] GetActiveRouteSegments()
     {
         if (activeRouteSegments == null || activeRouteSegments.Length != RouteSegments.Length)
@@ -1697,6 +1705,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         Vector2 finalScale = fitScale * safeRouteScale;
         Vector2 finalOffset = fitCenter + routeOffset;
         activeRouteSegments = new Vector3[RouteSegments.Length][];
+        activeSplines = new Spline[RouteSegments.Length];
 
         for (int routeIndex = 0; routeIndex < RouteSegments.Length; routeIndex++)
         {
@@ -1712,6 +1721,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
             }
 
             activeRouteSegments[routeIndex] = fitted;
+            activeSplines[routeIndex] = CreateSpline(fitted, PreSampledCurves[routeIndex]);
         }
     }
 

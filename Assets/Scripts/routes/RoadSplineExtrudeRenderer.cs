@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Splines;
 
@@ -75,8 +74,11 @@ public class RoadSplineExtrudeRenderer : MonoBehaviour
 
             for (int knotIndex = 0; knotIndex < source.Count; knotIndex++)
             {
-                float3 scaledPosition = source[knotIndex].Position * scale;
-                copy.Add(scaledPosition, TangentMode.Linear);
+                BezierKnot knot = source[knotIndex];
+                knot.Position *= scale;
+                knot.TangentIn *= scale;
+                knot.TangentOut *= scale;
+                copy.Add(knot, TangentMode.Broken);
             }
 
             destination.Add(copy);

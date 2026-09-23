@@ -1,0 +1,8951 @@
+{
+  "schemaVersion": 2,
+  "canvas": {
+    "width": 512,
+    "height": 512,
+    "origin": "top-left",
+    "yAxis": "down"
+  },
+  "nodeConvention": {
+    "0": "S / points[0]",
+    "1": "E / points[-1]"
+  },
+  "directionConvention": {
+    "-1": "bidirectional",
+    "0": "S to E only",
+    "1": "E to S only"
+  },
+  "notes": [
+    "IDs 1-16 are main roads; IDs 17-72 are directed turn connectors.",
+    "nodeS/nodeE describe reciprocal physical incidence. Filter destinations by allowedEntryNodes before traversal.",
+    "For the opposite turn use reverseRoad; do not travel backward on the same connector ID.",
+    "Straight continuations use direct nodeS/nodeE links with no extra road ID. Interpolate the corresponding junction straightConnections points.",
+    "enterNode is the destination endpoint, not a travel-direction flag. Depending on the main-road orientation, joins may be 1-0, 0-1, 0-0, or 1-1.",
+    "At the central crossing straight roads cross geometrically; switch direction only via a numbered turn connector."
+  ],
+  "roads": [
+    {
+      "id": 1,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 58,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 59,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 57,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 60,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 5,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 25,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 32,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 26,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 31,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 58,
+      "defaultRoadE": 5,
+      "points": [
+        [
+          66,
+          256
+        ],
+        [
+          126,
+          256
+        ]
+      ],
+      "startJunction": "OW",
+      "endJunction": "IW"
+    },
+    {
+      "id": 2,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 6,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 44,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 45,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 43,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 46,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 65,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 68,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 66,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 67,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 6,
+      "defaultRoadE": 65,
+      "points": [
+        [
+          386,
+          256
+        ],
+        [
+          446,
+          256
+        ]
+      ],
+      "startJunction": "IE",
+      "endJunction": "OE"
+    },
+    {
+      "id": 3,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 62,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 63,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 61,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 64,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 7,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 34,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 35,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 33,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 36,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 62,
+      "defaultRoadE": 7,
+      "points": [
+        [
+          256,
+          66
+        ],
+        [
+          256,
+          126
+        ]
+      ],
+      "startJunction": "ON",
+      "endJunction": "IN"
+    },
+    {
+      "id": 4,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 8,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 54,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 55,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 53,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 56,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 70,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 71,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 69,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 72,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 8,
+      "defaultRoadE": 70,
+      "points": [
+        [
+          256,
+          386
+        ],
+        [
+          256,
+          446
+        ]
+      ],
+      "startJunction": "IS",
+      "endJunction": "OS"
+    },
+    {
+      "id": 5,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 1,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 28,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 29,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 27,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 30,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 6,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 17,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 24,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 18,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 23,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 1,
+      "defaultRoadE": 6,
+      "points": [
+        [
+          162,
+          256
+        ],
+        [
+          238,
+          256
+        ]
+      ],
+      "startJunction": "IW",
+      "endJunction": "C"
+    },
+    {
+      "id": 6,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 5,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 20,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 21,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 19,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 22,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 2,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 41,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 48,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 42,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 47,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 5,
+      "defaultRoadE": 2,
+      "points": [
+        [
+          274,
+          256
+        ],
+        [
+          350,
+          256
+        ]
+      ],
+      "startJunction": "C",
+      "endJunction": "IE"
+    },
+    {
+      "id": 7,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 3,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 38,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 39,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 37,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 40,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 8,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 18,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 19,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 17,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 20,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 3,
+      "defaultRoadE": 8,
+      "points": [
+        [
+          256,
+          162
+        ],
+        [
+          256,
+          238
+        ]
+      ],
+      "startJunction": "IN",
+      "endJunction": "C"
+    },
+    {
+      "id": 8,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 7,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 22,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 23,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 21,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 24,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 4,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 50,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 51,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 49,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 52,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 7,
+      "defaultRoadE": 4,
+      "points": [
+        [
+          256,
+          274
+        ],
+        [
+          256,
+          350
+        ]
+      ],
+      "startJunction": "C",
+      "endJunction": "IS"
+    },
+    {
+      "id": 9,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 12,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 26,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 27,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 25,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 28,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 10,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 33,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 40,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 34,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 39,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 12,
+      "defaultRoadE": 10,
+      "points": [
+        [
+          144,
+          238
+        ],
+        [
+          144,
+          144
+        ],
+        [
+          238,
+          144
+        ]
+      ],
+      "startJunction": "IW",
+      "endJunction": "IN"
+    },
+    {
+      "id": 10,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 9,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 36,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 37,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 35,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 38,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 11,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 42,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 43,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 41,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 44,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 9,
+      "defaultRoadE": 11,
+      "points": [
+        [
+          274,
+          144
+        ],
+        [
+          368,
+          144
+        ],
+        [
+          368,
+          238
+        ]
+      ],
+      "startJunction": "IN",
+      "endJunction": "IE"
+    },
+    {
+      "id": 11,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 10,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 46,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 47,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 45,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 48,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 12,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 52,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 53,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 51,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 54,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 10,
+      "defaultRoadE": 12,
+      "points": [
+        [
+          368,
+          274
+        ],
+        [
+          368,
+          368
+        ],
+        [
+          274,
+          368
+        ]
+      ],
+      "startJunction": "IE",
+      "endJunction": "IS"
+    },
+    {
+      "id": 12,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 11,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 49,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 56,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 50,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 55,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 9,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 30,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 31,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 29,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 32,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 11,
+      "defaultRoadE": 9,
+      "points": [
+        [
+          238,
+          368
+        ],
+        [
+          144,
+          368
+        ],
+        [
+          144,
+          274
+        ]
+      ],
+      "startJunction": "IS",
+      "endJunction": "IW"
+    },
+    {
+      "id": 13,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 16,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 57,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 58,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 14,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 64,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 63,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 16,
+      "defaultRoadE": 14,
+      "points": [
+        [
+          48,
+          238
+        ],
+        [
+          48,
+          48
+        ],
+        [
+          238,
+          48
+        ]
+      ],
+      "startJunction": "OW",
+      "endJunction": "ON"
+    },
+    {
+      "id": 14,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 13,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 61,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 62,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 15,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 66,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 65,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 13,
+      "defaultRoadE": 15,
+      "points": [
+        [
+          274,
+          48
+        ],
+        [
+          464,
+          48
+        ],
+        [
+          464,
+          238
+        ]
+      ],
+      "startJunction": "ON",
+      "endJunction": "OE"
+    },
+    {
+      "id": 15,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 14,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 67,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 68,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 16,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 72,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 71,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 14,
+      "defaultRoadE": 16,
+      "points": [
+        [
+          464,
+          274
+        ],
+        [
+          464,
+          464
+        ],
+        [
+          274,
+          464
+        ]
+      ],
+      "startJunction": "OE",
+      "endJunction": "OS"
+    },
+    {
+      "id": 16,
+      "kind": "main",
+      "direction": -1,
+      "allowedEntryNodes": [
+        0,
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 15,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 69,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 70,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 13,
+          "enterNode": 0
+        },
+        {
+          "roadNo": 60,
+          "enterNode": 1
+        },
+        {
+          "roadNo": 59,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 15,
+      "defaultRoadE": 13,
+      "points": [
+        [
+          238,
+          464
+        ],
+        [
+          48,
+          464
+        ],
+        [
+          48,
+          274
+        ]
+      ],
+      "startJunction": "OS",
+      "endJunction": "OW"
+    },
+    {
+      "id": 17,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 5,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 7,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 5,
+      "defaultRoadE": 7,
+      "points": [
+        [
+          238.0,
+          256.0
+        ],
+        [
+          239.46875,
+          255.96875
+        ],
+        [
+          240.875,
+          255.875
+        ],
+        [
+          242.21875,
+          255.71875
+        ],
+        [
+          243.5,
+          255.5
+        ],
+        [
+          244.71875,
+          255.21875
+        ],
+        [
+          245.875,
+          254.875
+        ],
+        [
+          246.96875,
+          254.46875
+        ],
+        [
+          248.0,
+          254.0
+        ],
+        [
+          248.96875,
+          253.46875
+        ],
+        [
+          249.875,
+          252.875
+        ],
+        [
+          250.71875,
+          252.21875
+        ],
+        [
+          251.5,
+          251.5
+        ],
+        [
+          252.21875,
+          250.71875
+        ],
+        [
+          252.875,
+          249.875
+        ],
+        [
+          253.46875,
+          248.96875
+        ],
+        [
+          254.0,
+          248.0
+        ],
+        [
+          254.46875,
+          246.96875
+        ],
+        [
+          254.875,
+          245.875
+        ],
+        [
+          255.21875,
+          244.71875
+        ],
+        [
+          255.5,
+          243.5
+        ],
+        [
+          255.71875,
+          242.21875
+        ],
+        [
+          255.875,
+          240.875
+        ],
+        [
+          255.96875,
+          239.46875
+        ],
+        [
+          256.0,
+          238.0
+        ]
+      ],
+      "junction": "C",
+      "fromRoadNo": 5,
+      "fromNode": 1,
+      "toRoadNo": 7,
+      "toNode": 1,
+      "controlPoint": [
+        256,
+        256
+      ],
+      "reverseRoad": 18
+    },
+    {
+      "id": 18,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 5,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 7,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 5,
+      "defaultRoadE": 7,
+      "points": [
+        [
+          238.0,
+          256.0
+        ],
+        [
+          239.06944,
+          255.56944
+        ],
+        [
+          240.11111,
+          255.11111
+        ],
+        [
+          241.125,
+          254.625
+        ],
+        [
+          242.11111,
+          254.11111
+        ],
+        [
+          243.06944,
+          253.56944
+        ],
+        [
+          244.0,
+          253.0
+        ],
+        [
+          244.90278,
+          252.40278
+        ],
+        [
+          245.77778,
+          251.77778
+        ],
+        [
+          246.625,
+          251.125
+        ],
+        [
+          247.44444,
+          250.44444
+        ],
+        [
+          248.23611,
+          249.73611
+        ],
+        [
+          249.0,
+          249.0
+        ],
+        [
+          249.73611,
+          248.23611
+        ],
+        [
+          250.44444,
+          247.44444
+        ],
+        [
+          251.125,
+          246.625
+        ],
+        [
+          251.77778,
+          245.77778
+        ],
+        [
+          252.40278,
+          244.90278
+        ],
+        [
+          253.0,
+          244.0
+        ],
+        [
+          253.56944,
+          243.06944
+        ],
+        [
+          254.11111,
+          242.11111
+        ],
+        [
+          254.625,
+          241.125
+        ],
+        [
+          255.11111,
+          240.11111
+        ],
+        [
+          255.56944,
+          239.06944
+        ],
+        [
+          256.0,
+          238.0
+        ]
+      ],
+      "junction": "C",
+      "fromRoadNo": 7,
+      "fromNode": 1,
+      "toRoadNo": 5,
+      "toNode": 1,
+      "controlPoint": [
+        251,
+        251
+      ],
+      "reverseRoad": 17
+    },
+    {
+      "id": 19,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 7,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 6,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 7,
+      "defaultRoadE": 6,
+      "points": [
+        [
+          256.0,
+          238.0
+        ],
+        [
+          256.03125,
+          239.46875
+        ],
+        [
+          256.125,
+          240.875
+        ],
+        [
+          256.28125,
+          242.21875
+        ],
+        [
+          256.5,
+          243.5
+        ],
+        [
+          256.78125,
+          244.71875
+        ],
+        [
+          257.125,
+          245.875
+        ],
+        [
+          257.53125,
+          246.96875
+        ],
+        [
+          258.0,
+          248.0
+        ],
+        [
+          258.53125,
+          248.96875
+        ],
+        [
+          259.125,
+          249.875
+        ],
+        [
+          259.78125,
+          250.71875
+        ],
+        [
+          260.5,
+          251.5
+        ],
+        [
+          261.28125,
+          252.21875
+        ],
+        [
+          262.125,
+          252.875
+        ],
+        [
+          263.03125,
+          253.46875
+        ],
+        [
+          264.0,
+          254.0
+        ],
+        [
+          265.03125,
+          254.46875
+        ],
+        [
+          266.125,
+          254.875
+        ],
+        [
+          267.28125,
+          255.21875
+        ],
+        [
+          268.5,
+          255.5
+        ],
+        [
+          269.78125,
+          255.71875
+        ],
+        [
+          271.125,
+          255.875
+        ],
+        [
+          272.53125,
+          255.96875
+        ],
+        [
+          274.0,
+          256.0
+        ]
+      ],
+      "junction": "C",
+      "fromRoadNo": 7,
+      "fromNode": 1,
+      "toRoadNo": 6,
+      "toNode": 0,
+      "controlPoint": [
+        256,
+        256
+      ],
+      "reverseRoad": 20
+    },
+    {
+      "id": 20,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 7,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 6,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 7,
+      "defaultRoadE": 6,
+      "points": [
+        [
+          256.0,
+          238.0
+        ],
+        [
+          256.43056,
+          239.06944
+        ],
+        [
+          256.88889,
+          240.11111
+        ],
+        [
+          257.375,
+          241.125
+        ],
+        [
+          257.88889,
+          242.11111
+        ],
+        [
+          258.43056,
+          243.06944
+        ],
+        [
+          259.0,
+          244.0
+        ],
+        [
+          259.59722,
+          244.90278
+        ],
+        [
+          260.22222,
+          245.77778
+        ],
+        [
+          260.875,
+          246.625
+        ],
+        [
+          261.55556,
+          247.44444
+        ],
+        [
+          262.26389,
+          248.23611
+        ],
+        [
+          263.0,
+          249.0
+        ],
+        [
+          263.76389,
+          249.73611
+        ],
+        [
+          264.55556,
+          250.44444
+        ],
+        [
+          265.375,
+          251.125
+        ],
+        [
+          266.22222,
+          251.77778
+        ],
+        [
+          267.09722,
+          252.40278
+        ],
+        [
+          268.0,
+          253.0
+        ],
+        [
+          268.93056,
+          253.56944
+        ],
+        [
+          269.88889,
+          254.11111
+        ],
+        [
+          270.875,
+          254.625
+        ],
+        [
+          271.88889,
+          255.11111
+        ],
+        [
+          272.93056,
+          255.56944
+        ],
+        [
+          274.0,
+          256.0
+        ]
+      ],
+      "junction": "C",
+      "fromRoadNo": 6,
+      "fromNode": 0,
+      "toRoadNo": 7,
+      "toNode": 1,
+      "controlPoint": [
+        261,
+        251
+      ],
+      "reverseRoad": 19
+    },
+    {
+      "id": 21,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 6,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 8,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 6,
+      "defaultRoadE": 8,
+      "points": [
+        [
+          274.0,
+          256.0
+        ],
+        [
+          272.53125,
+          256.03125
+        ],
+        [
+          271.125,
+          256.125
+        ],
+        [
+          269.78125,
+          256.28125
+        ],
+        [
+          268.5,
+          256.5
+        ],
+        [
+          267.28125,
+          256.78125
+        ],
+        [
+          266.125,
+          257.125
+        ],
+        [
+          265.03125,
+          257.53125
+        ],
+        [
+          264.0,
+          258.0
+        ],
+        [
+          263.03125,
+          258.53125
+        ],
+        [
+          262.125,
+          259.125
+        ],
+        [
+          261.28125,
+          259.78125
+        ],
+        [
+          260.5,
+          260.5
+        ],
+        [
+          259.78125,
+          261.28125
+        ],
+        [
+          259.125,
+          262.125
+        ],
+        [
+          258.53125,
+          263.03125
+        ],
+        [
+          258.0,
+          264.0
+        ],
+        [
+          257.53125,
+          265.03125
+        ],
+        [
+          257.125,
+          266.125
+        ],
+        [
+          256.78125,
+          267.28125
+        ],
+        [
+          256.5,
+          268.5
+        ],
+        [
+          256.28125,
+          269.78125
+        ],
+        [
+          256.125,
+          271.125
+        ],
+        [
+          256.03125,
+          272.53125
+        ],
+        [
+          256.0,
+          274.0
+        ]
+      ],
+      "junction": "C",
+      "fromRoadNo": 6,
+      "fromNode": 0,
+      "toRoadNo": 8,
+      "toNode": 0,
+      "controlPoint": [
+        256,
+        256
+      ],
+      "reverseRoad": 22
+    },
+    {
+      "id": 22,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 6,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 8,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 6,
+      "defaultRoadE": 8,
+      "points": [
+        [
+          274.0,
+          256.0
+        ],
+        [
+          272.93056,
+          256.43056
+        ],
+        [
+          271.88889,
+          256.88889
+        ],
+        [
+          270.875,
+          257.375
+        ],
+        [
+          269.88889,
+          257.88889
+        ],
+        [
+          268.93056,
+          258.43056
+        ],
+        [
+          268.0,
+          259.0
+        ],
+        [
+          267.09722,
+          259.59722
+        ],
+        [
+          266.22222,
+          260.22222
+        ],
+        [
+          265.375,
+          260.875
+        ],
+        [
+          264.55556,
+          261.55556
+        ],
+        [
+          263.76389,
+          262.26389
+        ],
+        [
+          263.0,
+          263.0
+        ],
+        [
+          262.26389,
+          263.76389
+        ],
+        [
+          261.55556,
+          264.55556
+        ],
+        [
+          260.875,
+          265.375
+        ],
+        [
+          260.22222,
+          266.22222
+        ],
+        [
+          259.59722,
+          267.09722
+        ],
+        [
+          259.0,
+          268.0
+        ],
+        [
+          258.43056,
+          268.93056
+        ],
+        [
+          257.88889,
+          269.88889
+        ],
+        [
+          257.375,
+          270.875
+        ],
+        [
+          256.88889,
+          271.88889
+        ],
+        [
+          256.43056,
+          272.93056
+        ],
+        [
+          256.0,
+          274.0
+        ]
+      ],
+      "junction": "C",
+      "fromRoadNo": 8,
+      "fromNode": 0,
+      "toRoadNo": 6,
+      "toNode": 0,
+      "controlPoint": [
+        261,
+        261
+      ],
+      "reverseRoad": 21
+    },
+    {
+      "id": 23,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 8,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 5,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 8,
+      "defaultRoadE": 5,
+      "points": [
+        [
+          256.0,
+          274.0
+        ],
+        [
+          255.96875,
+          272.53125
+        ],
+        [
+          255.875,
+          271.125
+        ],
+        [
+          255.71875,
+          269.78125
+        ],
+        [
+          255.5,
+          268.5
+        ],
+        [
+          255.21875,
+          267.28125
+        ],
+        [
+          254.875,
+          266.125
+        ],
+        [
+          254.46875,
+          265.03125
+        ],
+        [
+          254.0,
+          264.0
+        ],
+        [
+          253.46875,
+          263.03125
+        ],
+        [
+          252.875,
+          262.125
+        ],
+        [
+          252.21875,
+          261.28125
+        ],
+        [
+          251.5,
+          260.5
+        ],
+        [
+          250.71875,
+          259.78125
+        ],
+        [
+          249.875,
+          259.125
+        ],
+        [
+          248.96875,
+          258.53125
+        ],
+        [
+          248.0,
+          258.0
+        ],
+        [
+          246.96875,
+          257.53125
+        ],
+        [
+          245.875,
+          257.125
+        ],
+        [
+          244.71875,
+          256.78125
+        ],
+        [
+          243.5,
+          256.5
+        ],
+        [
+          242.21875,
+          256.28125
+        ],
+        [
+          240.875,
+          256.125
+        ],
+        [
+          239.46875,
+          256.03125
+        ],
+        [
+          238.0,
+          256.0
+        ]
+      ],
+      "junction": "C",
+      "fromRoadNo": 8,
+      "fromNode": 0,
+      "toRoadNo": 5,
+      "toNode": 1,
+      "controlPoint": [
+        256,
+        256
+      ],
+      "reverseRoad": 24
+    },
+    {
+      "id": 24,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 8,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 5,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 8,
+      "defaultRoadE": 5,
+      "points": [
+        [
+          256.0,
+          274.0
+        ],
+        [
+          255.56944,
+          272.93056
+        ],
+        [
+          255.11111,
+          271.88889
+        ],
+        [
+          254.625,
+          270.875
+        ],
+        [
+          254.11111,
+          269.88889
+        ],
+        [
+          253.56944,
+          268.93056
+        ],
+        [
+          253.0,
+          268.0
+        ],
+        [
+          252.40278,
+          267.09722
+        ],
+        [
+          251.77778,
+          266.22222
+        ],
+        [
+          251.125,
+          265.375
+        ],
+        [
+          250.44444,
+          264.55556
+        ],
+        [
+          249.73611,
+          263.76389
+        ],
+        [
+          249.0,
+          263.0
+        ],
+        [
+          248.23611,
+          262.26389
+        ],
+        [
+          247.44444,
+          261.55556
+        ],
+        [
+          246.625,
+          260.875
+        ],
+        [
+          245.77778,
+          260.22222
+        ],
+        [
+          244.90278,
+          259.59722
+        ],
+        [
+          244.0,
+          259.0
+        ],
+        [
+          243.06944,
+          258.43056
+        ],
+        [
+          242.11111,
+          257.88889
+        ],
+        [
+          241.125,
+          257.375
+        ],
+        [
+          240.11111,
+          256.88889
+        ],
+        [
+          239.06944,
+          256.43056
+        ],
+        [
+          238.0,
+          256.0
+        ]
+      ],
+      "junction": "C",
+      "fromRoadNo": 5,
+      "fromNode": 1,
+      "toRoadNo": 8,
+      "toNode": 0,
+      "controlPoint": [
+        251,
+        261
+      ],
+      "reverseRoad": 23
+    },
+    {
+      "id": 25,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 1,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 9,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 1,
+      "defaultRoadE": 9,
+      "points": [
+        [
+          126.0,
+          256.0
+        ],
+        [
+          127.46875,
+          255.96875
+        ],
+        [
+          128.875,
+          255.875
+        ],
+        [
+          130.21875,
+          255.71875
+        ],
+        [
+          131.5,
+          255.5
+        ],
+        [
+          132.71875,
+          255.21875
+        ],
+        [
+          133.875,
+          254.875
+        ],
+        [
+          134.96875,
+          254.46875
+        ],
+        [
+          136.0,
+          254.0
+        ],
+        [
+          136.96875,
+          253.46875
+        ],
+        [
+          137.875,
+          252.875
+        ],
+        [
+          138.71875,
+          252.21875
+        ],
+        [
+          139.5,
+          251.5
+        ],
+        [
+          140.21875,
+          250.71875
+        ],
+        [
+          140.875,
+          249.875
+        ],
+        [
+          141.46875,
+          248.96875
+        ],
+        [
+          142.0,
+          248.0
+        ],
+        [
+          142.46875,
+          246.96875
+        ],
+        [
+          142.875,
+          245.875
+        ],
+        [
+          143.21875,
+          244.71875
+        ],
+        [
+          143.5,
+          243.5
+        ],
+        [
+          143.71875,
+          242.21875
+        ],
+        [
+          143.875,
+          240.875
+        ],
+        [
+          143.96875,
+          239.46875
+        ],
+        [
+          144.0,
+          238.0
+        ]
+      ],
+      "junction": "IW",
+      "fromRoadNo": 1,
+      "fromNode": 1,
+      "toRoadNo": 9,
+      "toNode": 0,
+      "controlPoint": [
+        144,
+        256
+      ],
+      "reverseRoad": 26
+    },
+    {
+      "id": 26,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 1,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 9,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 1,
+      "defaultRoadE": 9,
+      "points": [
+        [
+          126.0,
+          256.0
+        ],
+        [
+          127.06944,
+          255.56944
+        ],
+        [
+          128.11111,
+          255.11111
+        ],
+        [
+          129.125,
+          254.625
+        ],
+        [
+          130.11111,
+          254.11111
+        ],
+        [
+          131.06944,
+          253.56944
+        ],
+        [
+          132.0,
+          253.0
+        ],
+        [
+          132.90278,
+          252.40278
+        ],
+        [
+          133.77778,
+          251.77778
+        ],
+        [
+          134.625,
+          251.125
+        ],
+        [
+          135.44444,
+          250.44444
+        ],
+        [
+          136.23611,
+          249.73611
+        ],
+        [
+          137.0,
+          249.0
+        ],
+        [
+          137.73611,
+          248.23611
+        ],
+        [
+          138.44444,
+          247.44444
+        ],
+        [
+          139.125,
+          246.625
+        ],
+        [
+          139.77778,
+          245.77778
+        ],
+        [
+          140.40278,
+          244.90278
+        ],
+        [
+          141.0,
+          244.0
+        ],
+        [
+          141.56944,
+          243.06944
+        ],
+        [
+          142.11111,
+          242.11111
+        ],
+        [
+          142.625,
+          241.125
+        ],
+        [
+          143.11111,
+          240.11111
+        ],
+        [
+          143.56944,
+          239.06944
+        ],
+        [
+          144.0,
+          238.0
+        ]
+      ],
+      "junction": "IW",
+      "fromRoadNo": 9,
+      "fromNode": 0,
+      "toRoadNo": 1,
+      "toNode": 1,
+      "controlPoint": [
+        139,
+        251
+      ],
+      "reverseRoad": 25
+    },
+    {
+      "id": 27,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 9,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 5,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 9,
+      "defaultRoadE": 5,
+      "points": [
+        [
+          144.0,
+          238.0
+        ],
+        [
+          144.03125,
+          239.46875
+        ],
+        [
+          144.125,
+          240.875
+        ],
+        [
+          144.28125,
+          242.21875
+        ],
+        [
+          144.5,
+          243.5
+        ],
+        [
+          144.78125,
+          244.71875
+        ],
+        [
+          145.125,
+          245.875
+        ],
+        [
+          145.53125,
+          246.96875
+        ],
+        [
+          146.0,
+          248.0
+        ],
+        [
+          146.53125,
+          248.96875
+        ],
+        [
+          147.125,
+          249.875
+        ],
+        [
+          147.78125,
+          250.71875
+        ],
+        [
+          148.5,
+          251.5
+        ],
+        [
+          149.28125,
+          252.21875
+        ],
+        [
+          150.125,
+          252.875
+        ],
+        [
+          151.03125,
+          253.46875
+        ],
+        [
+          152.0,
+          254.0
+        ],
+        [
+          153.03125,
+          254.46875
+        ],
+        [
+          154.125,
+          254.875
+        ],
+        [
+          155.28125,
+          255.21875
+        ],
+        [
+          156.5,
+          255.5
+        ],
+        [
+          157.78125,
+          255.71875
+        ],
+        [
+          159.125,
+          255.875
+        ],
+        [
+          160.53125,
+          255.96875
+        ],
+        [
+          162.0,
+          256.0
+        ]
+      ],
+      "junction": "IW",
+      "fromRoadNo": 9,
+      "fromNode": 0,
+      "toRoadNo": 5,
+      "toNode": 0,
+      "controlPoint": [
+        144,
+        256
+      ],
+      "reverseRoad": 28
+    },
+    {
+      "id": 28,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 9,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 5,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 9,
+      "defaultRoadE": 5,
+      "points": [
+        [
+          144.0,
+          238.0
+        ],
+        [
+          144.43056,
+          239.06944
+        ],
+        [
+          144.88889,
+          240.11111
+        ],
+        [
+          145.375,
+          241.125
+        ],
+        [
+          145.88889,
+          242.11111
+        ],
+        [
+          146.43056,
+          243.06944
+        ],
+        [
+          147.0,
+          244.0
+        ],
+        [
+          147.59722,
+          244.90278
+        ],
+        [
+          148.22222,
+          245.77778
+        ],
+        [
+          148.875,
+          246.625
+        ],
+        [
+          149.55556,
+          247.44444
+        ],
+        [
+          150.26389,
+          248.23611
+        ],
+        [
+          151.0,
+          249.0
+        ],
+        [
+          151.76389,
+          249.73611
+        ],
+        [
+          152.55556,
+          250.44444
+        ],
+        [
+          153.375,
+          251.125
+        ],
+        [
+          154.22222,
+          251.77778
+        ],
+        [
+          155.09722,
+          252.40278
+        ],
+        [
+          156.0,
+          253.0
+        ],
+        [
+          156.93056,
+          253.56944
+        ],
+        [
+          157.88889,
+          254.11111
+        ],
+        [
+          158.875,
+          254.625
+        ],
+        [
+          159.88889,
+          255.11111
+        ],
+        [
+          160.93056,
+          255.56944
+        ],
+        [
+          162.0,
+          256.0
+        ]
+      ],
+      "junction": "IW",
+      "fromRoadNo": 5,
+      "fromNode": 0,
+      "toRoadNo": 9,
+      "toNode": 0,
+      "controlPoint": [
+        149,
+        251
+      ],
+      "reverseRoad": 27
+    },
+    {
+      "id": 29,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 5,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 12,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 5,
+      "defaultRoadE": 12,
+      "points": [
+        [
+          162.0,
+          256.0
+        ],
+        [
+          160.53125,
+          256.03125
+        ],
+        [
+          159.125,
+          256.125
+        ],
+        [
+          157.78125,
+          256.28125
+        ],
+        [
+          156.5,
+          256.5
+        ],
+        [
+          155.28125,
+          256.78125
+        ],
+        [
+          154.125,
+          257.125
+        ],
+        [
+          153.03125,
+          257.53125
+        ],
+        [
+          152.0,
+          258.0
+        ],
+        [
+          151.03125,
+          258.53125
+        ],
+        [
+          150.125,
+          259.125
+        ],
+        [
+          149.28125,
+          259.78125
+        ],
+        [
+          148.5,
+          260.5
+        ],
+        [
+          147.78125,
+          261.28125
+        ],
+        [
+          147.125,
+          262.125
+        ],
+        [
+          146.53125,
+          263.03125
+        ],
+        [
+          146.0,
+          264.0
+        ],
+        [
+          145.53125,
+          265.03125
+        ],
+        [
+          145.125,
+          266.125
+        ],
+        [
+          144.78125,
+          267.28125
+        ],
+        [
+          144.5,
+          268.5
+        ],
+        [
+          144.28125,
+          269.78125
+        ],
+        [
+          144.125,
+          271.125
+        ],
+        [
+          144.03125,
+          272.53125
+        ],
+        [
+          144.0,
+          274.0
+        ]
+      ],
+      "junction": "IW",
+      "fromRoadNo": 5,
+      "fromNode": 0,
+      "toRoadNo": 12,
+      "toNode": 1,
+      "controlPoint": [
+        144,
+        256
+      ],
+      "reverseRoad": 30
+    },
+    {
+      "id": 30,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 5,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 12,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 5,
+      "defaultRoadE": 12,
+      "points": [
+        [
+          162.0,
+          256.0
+        ],
+        [
+          160.93056,
+          256.43056
+        ],
+        [
+          159.88889,
+          256.88889
+        ],
+        [
+          158.875,
+          257.375
+        ],
+        [
+          157.88889,
+          257.88889
+        ],
+        [
+          156.93056,
+          258.43056
+        ],
+        [
+          156.0,
+          259.0
+        ],
+        [
+          155.09722,
+          259.59722
+        ],
+        [
+          154.22222,
+          260.22222
+        ],
+        [
+          153.375,
+          260.875
+        ],
+        [
+          152.55556,
+          261.55556
+        ],
+        [
+          151.76389,
+          262.26389
+        ],
+        [
+          151.0,
+          263.0
+        ],
+        [
+          150.26389,
+          263.76389
+        ],
+        [
+          149.55556,
+          264.55556
+        ],
+        [
+          148.875,
+          265.375
+        ],
+        [
+          148.22222,
+          266.22222
+        ],
+        [
+          147.59722,
+          267.09722
+        ],
+        [
+          147.0,
+          268.0
+        ],
+        [
+          146.43056,
+          268.93056
+        ],
+        [
+          145.88889,
+          269.88889
+        ],
+        [
+          145.375,
+          270.875
+        ],
+        [
+          144.88889,
+          271.88889
+        ],
+        [
+          144.43056,
+          272.93056
+        ],
+        [
+          144.0,
+          274.0
+        ]
+      ],
+      "junction": "IW",
+      "fromRoadNo": 12,
+      "fromNode": 1,
+      "toRoadNo": 5,
+      "toNode": 0,
+      "controlPoint": [
+        149,
+        261
+      ],
+      "reverseRoad": 29
+    },
+    {
+      "id": 31,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 12,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 1,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 12,
+      "defaultRoadE": 1,
+      "points": [
+        [
+          144.0,
+          274.0
+        ],
+        [
+          143.96875,
+          272.53125
+        ],
+        [
+          143.875,
+          271.125
+        ],
+        [
+          143.71875,
+          269.78125
+        ],
+        [
+          143.5,
+          268.5
+        ],
+        [
+          143.21875,
+          267.28125
+        ],
+        [
+          142.875,
+          266.125
+        ],
+        [
+          142.46875,
+          265.03125
+        ],
+        [
+          142.0,
+          264.0
+        ],
+        [
+          141.46875,
+          263.03125
+        ],
+        [
+          140.875,
+          262.125
+        ],
+        [
+          140.21875,
+          261.28125
+        ],
+        [
+          139.5,
+          260.5
+        ],
+        [
+          138.71875,
+          259.78125
+        ],
+        [
+          137.875,
+          259.125
+        ],
+        [
+          136.96875,
+          258.53125
+        ],
+        [
+          136.0,
+          258.0
+        ],
+        [
+          134.96875,
+          257.53125
+        ],
+        [
+          133.875,
+          257.125
+        ],
+        [
+          132.71875,
+          256.78125
+        ],
+        [
+          131.5,
+          256.5
+        ],
+        [
+          130.21875,
+          256.28125
+        ],
+        [
+          128.875,
+          256.125
+        ],
+        [
+          127.46875,
+          256.03125
+        ],
+        [
+          126.0,
+          256.0
+        ]
+      ],
+      "junction": "IW",
+      "fromRoadNo": 12,
+      "fromNode": 1,
+      "toRoadNo": 1,
+      "toNode": 1,
+      "controlPoint": [
+        144,
+        256
+      ],
+      "reverseRoad": 32
+    },
+    {
+      "id": 32,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 12,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 1,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 12,
+      "defaultRoadE": 1,
+      "points": [
+        [
+          144.0,
+          274.0
+        ],
+        [
+          143.56944,
+          272.93056
+        ],
+        [
+          143.11111,
+          271.88889
+        ],
+        [
+          142.625,
+          270.875
+        ],
+        [
+          142.11111,
+          269.88889
+        ],
+        [
+          141.56944,
+          268.93056
+        ],
+        [
+          141.0,
+          268.0
+        ],
+        [
+          140.40278,
+          267.09722
+        ],
+        [
+          139.77778,
+          266.22222
+        ],
+        [
+          139.125,
+          265.375
+        ],
+        [
+          138.44444,
+          264.55556
+        ],
+        [
+          137.73611,
+          263.76389
+        ],
+        [
+          137.0,
+          263.0
+        ],
+        [
+          136.23611,
+          262.26389
+        ],
+        [
+          135.44444,
+          261.55556
+        ],
+        [
+          134.625,
+          260.875
+        ],
+        [
+          133.77778,
+          260.22222
+        ],
+        [
+          132.90278,
+          259.59722
+        ],
+        [
+          132.0,
+          259.0
+        ],
+        [
+          131.06944,
+          258.43056
+        ],
+        [
+          130.11111,
+          257.88889
+        ],
+        [
+          129.125,
+          257.375
+        ],
+        [
+          128.11111,
+          256.88889
+        ],
+        [
+          127.06944,
+          256.43056
+        ],
+        [
+          126.0,
+          256.0
+        ]
+      ],
+      "junction": "IW",
+      "fromRoadNo": 1,
+      "fromNode": 1,
+      "toRoadNo": 12,
+      "toNode": 1,
+      "controlPoint": [
+        139,
+        261
+      ],
+      "reverseRoad": 31
+    },
+    {
+      "id": 33,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 9,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 3,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 9,
+      "defaultRoadE": 3,
+      "points": [
+        [
+          238.0,
+          144.0
+        ],
+        [
+          239.46875,
+          143.96875
+        ],
+        [
+          240.875,
+          143.875
+        ],
+        [
+          242.21875,
+          143.71875
+        ],
+        [
+          243.5,
+          143.5
+        ],
+        [
+          244.71875,
+          143.21875
+        ],
+        [
+          245.875,
+          142.875
+        ],
+        [
+          246.96875,
+          142.46875
+        ],
+        [
+          248.0,
+          142.0
+        ],
+        [
+          248.96875,
+          141.46875
+        ],
+        [
+          249.875,
+          140.875
+        ],
+        [
+          250.71875,
+          140.21875
+        ],
+        [
+          251.5,
+          139.5
+        ],
+        [
+          252.21875,
+          138.71875
+        ],
+        [
+          252.875,
+          137.875
+        ],
+        [
+          253.46875,
+          136.96875
+        ],
+        [
+          254.0,
+          136.0
+        ],
+        [
+          254.46875,
+          134.96875
+        ],
+        [
+          254.875,
+          133.875
+        ],
+        [
+          255.21875,
+          132.71875
+        ],
+        [
+          255.5,
+          131.5
+        ],
+        [
+          255.71875,
+          130.21875
+        ],
+        [
+          255.875,
+          128.875
+        ],
+        [
+          255.96875,
+          127.46875
+        ],
+        [
+          256.0,
+          126.0
+        ]
+      ],
+      "junction": "IN",
+      "fromRoadNo": 9,
+      "fromNode": 1,
+      "toRoadNo": 3,
+      "toNode": 1,
+      "controlPoint": [
+        256,
+        144
+      ],
+      "reverseRoad": 34
+    },
+    {
+      "id": 34,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 9,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 3,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 9,
+      "defaultRoadE": 3,
+      "points": [
+        [
+          238.0,
+          144.0
+        ],
+        [
+          239.06944,
+          143.56944
+        ],
+        [
+          240.11111,
+          143.11111
+        ],
+        [
+          241.125,
+          142.625
+        ],
+        [
+          242.11111,
+          142.11111
+        ],
+        [
+          243.06944,
+          141.56944
+        ],
+        [
+          244.0,
+          141.0
+        ],
+        [
+          244.90278,
+          140.40278
+        ],
+        [
+          245.77778,
+          139.77778
+        ],
+        [
+          246.625,
+          139.125
+        ],
+        [
+          247.44444,
+          138.44444
+        ],
+        [
+          248.23611,
+          137.73611
+        ],
+        [
+          249.0,
+          137.0
+        ],
+        [
+          249.73611,
+          136.23611
+        ],
+        [
+          250.44444,
+          135.44444
+        ],
+        [
+          251.125,
+          134.625
+        ],
+        [
+          251.77778,
+          133.77778
+        ],
+        [
+          252.40278,
+          132.90278
+        ],
+        [
+          253.0,
+          132.0
+        ],
+        [
+          253.56944,
+          131.06944
+        ],
+        [
+          254.11111,
+          130.11111
+        ],
+        [
+          254.625,
+          129.125
+        ],
+        [
+          255.11111,
+          128.11111
+        ],
+        [
+          255.56944,
+          127.06944
+        ],
+        [
+          256.0,
+          126.0
+        ]
+      ],
+      "junction": "IN",
+      "fromRoadNo": 3,
+      "fromNode": 1,
+      "toRoadNo": 9,
+      "toNode": 1,
+      "controlPoint": [
+        251,
+        139
+      ],
+      "reverseRoad": 33
+    },
+    {
+      "id": 35,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 3,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 10,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 3,
+      "defaultRoadE": 10,
+      "points": [
+        [
+          256.0,
+          126.0
+        ],
+        [
+          256.03125,
+          127.46875
+        ],
+        [
+          256.125,
+          128.875
+        ],
+        [
+          256.28125,
+          130.21875
+        ],
+        [
+          256.5,
+          131.5
+        ],
+        [
+          256.78125,
+          132.71875
+        ],
+        [
+          257.125,
+          133.875
+        ],
+        [
+          257.53125,
+          134.96875
+        ],
+        [
+          258.0,
+          136.0
+        ],
+        [
+          258.53125,
+          136.96875
+        ],
+        [
+          259.125,
+          137.875
+        ],
+        [
+          259.78125,
+          138.71875
+        ],
+        [
+          260.5,
+          139.5
+        ],
+        [
+          261.28125,
+          140.21875
+        ],
+        [
+          262.125,
+          140.875
+        ],
+        [
+          263.03125,
+          141.46875
+        ],
+        [
+          264.0,
+          142.0
+        ],
+        [
+          265.03125,
+          142.46875
+        ],
+        [
+          266.125,
+          142.875
+        ],
+        [
+          267.28125,
+          143.21875
+        ],
+        [
+          268.5,
+          143.5
+        ],
+        [
+          269.78125,
+          143.71875
+        ],
+        [
+          271.125,
+          143.875
+        ],
+        [
+          272.53125,
+          143.96875
+        ],
+        [
+          274.0,
+          144.0
+        ]
+      ],
+      "junction": "IN",
+      "fromRoadNo": 3,
+      "fromNode": 1,
+      "toRoadNo": 10,
+      "toNode": 0,
+      "controlPoint": [
+        256,
+        144
+      ],
+      "reverseRoad": 36
+    },
+    {
+      "id": 36,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 3,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 10,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 3,
+      "defaultRoadE": 10,
+      "points": [
+        [
+          256.0,
+          126.0
+        ],
+        [
+          256.43056,
+          127.06944
+        ],
+        [
+          256.88889,
+          128.11111
+        ],
+        [
+          257.375,
+          129.125
+        ],
+        [
+          257.88889,
+          130.11111
+        ],
+        [
+          258.43056,
+          131.06944
+        ],
+        [
+          259.0,
+          132.0
+        ],
+        [
+          259.59722,
+          132.90278
+        ],
+        [
+          260.22222,
+          133.77778
+        ],
+        [
+          260.875,
+          134.625
+        ],
+        [
+          261.55556,
+          135.44444
+        ],
+        [
+          262.26389,
+          136.23611
+        ],
+        [
+          263.0,
+          137.0
+        ],
+        [
+          263.76389,
+          137.73611
+        ],
+        [
+          264.55556,
+          138.44444
+        ],
+        [
+          265.375,
+          139.125
+        ],
+        [
+          266.22222,
+          139.77778
+        ],
+        [
+          267.09722,
+          140.40278
+        ],
+        [
+          268.0,
+          141.0
+        ],
+        [
+          268.93056,
+          141.56944
+        ],
+        [
+          269.88889,
+          142.11111
+        ],
+        [
+          270.875,
+          142.625
+        ],
+        [
+          271.88889,
+          143.11111
+        ],
+        [
+          272.93056,
+          143.56944
+        ],
+        [
+          274.0,
+          144.0
+        ]
+      ],
+      "junction": "IN",
+      "fromRoadNo": 10,
+      "fromNode": 0,
+      "toRoadNo": 3,
+      "toNode": 1,
+      "controlPoint": [
+        261,
+        139
+      ],
+      "reverseRoad": 35
+    },
+    {
+      "id": 37,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 10,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 7,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 10,
+      "defaultRoadE": 7,
+      "points": [
+        [
+          274.0,
+          144.0
+        ],
+        [
+          272.53125,
+          144.03125
+        ],
+        [
+          271.125,
+          144.125
+        ],
+        [
+          269.78125,
+          144.28125
+        ],
+        [
+          268.5,
+          144.5
+        ],
+        [
+          267.28125,
+          144.78125
+        ],
+        [
+          266.125,
+          145.125
+        ],
+        [
+          265.03125,
+          145.53125
+        ],
+        [
+          264.0,
+          146.0
+        ],
+        [
+          263.03125,
+          146.53125
+        ],
+        [
+          262.125,
+          147.125
+        ],
+        [
+          261.28125,
+          147.78125
+        ],
+        [
+          260.5,
+          148.5
+        ],
+        [
+          259.78125,
+          149.28125
+        ],
+        [
+          259.125,
+          150.125
+        ],
+        [
+          258.53125,
+          151.03125
+        ],
+        [
+          258.0,
+          152.0
+        ],
+        [
+          257.53125,
+          153.03125
+        ],
+        [
+          257.125,
+          154.125
+        ],
+        [
+          256.78125,
+          155.28125
+        ],
+        [
+          256.5,
+          156.5
+        ],
+        [
+          256.28125,
+          157.78125
+        ],
+        [
+          256.125,
+          159.125
+        ],
+        [
+          256.03125,
+          160.53125
+        ],
+        [
+          256.0,
+          162.0
+        ]
+      ],
+      "junction": "IN",
+      "fromRoadNo": 10,
+      "fromNode": 0,
+      "toRoadNo": 7,
+      "toNode": 0,
+      "controlPoint": [
+        256,
+        144
+      ],
+      "reverseRoad": 38
+    },
+    {
+      "id": 38,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 10,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 7,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 10,
+      "defaultRoadE": 7,
+      "points": [
+        [
+          274.0,
+          144.0
+        ],
+        [
+          272.93056,
+          144.43056
+        ],
+        [
+          271.88889,
+          144.88889
+        ],
+        [
+          270.875,
+          145.375
+        ],
+        [
+          269.88889,
+          145.88889
+        ],
+        [
+          268.93056,
+          146.43056
+        ],
+        [
+          268.0,
+          147.0
+        ],
+        [
+          267.09722,
+          147.59722
+        ],
+        [
+          266.22222,
+          148.22222
+        ],
+        [
+          265.375,
+          148.875
+        ],
+        [
+          264.55556,
+          149.55556
+        ],
+        [
+          263.76389,
+          150.26389
+        ],
+        [
+          263.0,
+          151.0
+        ],
+        [
+          262.26389,
+          151.76389
+        ],
+        [
+          261.55556,
+          152.55556
+        ],
+        [
+          260.875,
+          153.375
+        ],
+        [
+          260.22222,
+          154.22222
+        ],
+        [
+          259.59722,
+          155.09722
+        ],
+        [
+          259.0,
+          156.0
+        ],
+        [
+          258.43056,
+          156.93056
+        ],
+        [
+          257.88889,
+          157.88889
+        ],
+        [
+          257.375,
+          158.875
+        ],
+        [
+          256.88889,
+          159.88889
+        ],
+        [
+          256.43056,
+          160.93056
+        ],
+        [
+          256.0,
+          162.0
+        ]
+      ],
+      "junction": "IN",
+      "fromRoadNo": 7,
+      "fromNode": 0,
+      "toRoadNo": 10,
+      "toNode": 0,
+      "controlPoint": [
+        261,
+        149
+      ],
+      "reverseRoad": 37
+    },
+    {
+      "id": 39,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 7,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 9,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 7,
+      "defaultRoadE": 9,
+      "points": [
+        [
+          256.0,
+          162.0
+        ],
+        [
+          255.96875,
+          160.53125
+        ],
+        [
+          255.875,
+          159.125
+        ],
+        [
+          255.71875,
+          157.78125
+        ],
+        [
+          255.5,
+          156.5
+        ],
+        [
+          255.21875,
+          155.28125
+        ],
+        [
+          254.875,
+          154.125
+        ],
+        [
+          254.46875,
+          153.03125
+        ],
+        [
+          254.0,
+          152.0
+        ],
+        [
+          253.46875,
+          151.03125
+        ],
+        [
+          252.875,
+          150.125
+        ],
+        [
+          252.21875,
+          149.28125
+        ],
+        [
+          251.5,
+          148.5
+        ],
+        [
+          250.71875,
+          147.78125
+        ],
+        [
+          249.875,
+          147.125
+        ],
+        [
+          248.96875,
+          146.53125
+        ],
+        [
+          248.0,
+          146.0
+        ],
+        [
+          246.96875,
+          145.53125
+        ],
+        [
+          245.875,
+          145.125
+        ],
+        [
+          244.71875,
+          144.78125
+        ],
+        [
+          243.5,
+          144.5
+        ],
+        [
+          242.21875,
+          144.28125
+        ],
+        [
+          240.875,
+          144.125
+        ],
+        [
+          239.46875,
+          144.03125
+        ],
+        [
+          238.0,
+          144.0
+        ]
+      ],
+      "junction": "IN",
+      "fromRoadNo": 7,
+      "fromNode": 0,
+      "toRoadNo": 9,
+      "toNode": 1,
+      "controlPoint": [
+        256,
+        144
+      ],
+      "reverseRoad": 40
+    },
+    {
+      "id": 40,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 7,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 9,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 7,
+      "defaultRoadE": 9,
+      "points": [
+        [
+          256.0,
+          162.0
+        ],
+        [
+          255.56944,
+          160.93056
+        ],
+        [
+          255.11111,
+          159.88889
+        ],
+        [
+          254.625,
+          158.875
+        ],
+        [
+          254.11111,
+          157.88889
+        ],
+        [
+          253.56944,
+          156.93056
+        ],
+        [
+          253.0,
+          156.0
+        ],
+        [
+          252.40278,
+          155.09722
+        ],
+        [
+          251.77778,
+          154.22222
+        ],
+        [
+          251.125,
+          153.375
+        ],
+        [
+          250.44444,
+          152.55556
+        ],
+        [
+          249.73611,
+          151.76389
+        ],
+        [
+          249.0,
+          151.0
+        ],
+        [
+          248.23611,
+          150.26389
+        ],
+        [
+          247.44444,
+          149.55556
+        ],
+        [
+          246.625,
+          148.875
+        ],
+        [
+          245.77778,
+          148.22222
+        ],
+        [
+          244.90278,
+          147.59722
+        ],
+        [
+          244.0,
+          147.0
+        ],
+        [
+          243.06944,
+          146.43056
+        ],
+        [
+          242.11111,
+          145.88889
+        ],
+        [
+          241.125,
+          145.375
+        ],
+        [
+          240.11111,
+          144.88889
+        ],
+        [
+          239.06944,
+          144.43056
+        ],
+        [
+          238.0,
+          144.0
+        ]
+      ],
+      "junction": "IN",
+      "fromRoadNo": 9,
+      "fromNode": 1,
+      "toRoadNo": 7,
+      "toNode": 0,
+      "controlPoint": [
+        251,
+        149
+      ],
+      "reverseRoad": 39
+    },
+    {
+      "id": 41,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 6,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 10,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 6,
+      "defaultRoadE": 10,
+      "points": [
+        [
+          350.0,
+          256.0
+        ],
+        [
+          351.46875,
+          255.96875
+        ],
+        [
+          352.875,
+          255.875
+        ],
+        [
+          354.21875,
+          255.71875
+        ],
+        [
+          355.5,
+          255.5
+        ],
+        [
+          356.71875,
+          255.21875
+        ],
+        [
+          357.875,
+          254.875
+        ],
+        [
+          358.96875,
+          254.46875
+        ],
+        [
+          360.0,
+          254.0
+        ],
+        [
+          360.96875,
+          253.46875
+        ],
+        [
+          361.875,
+          252.875
+        ],
+        [
+          362.71875,
+          252.21875
+        ],
+        [
+          363.5,
+          251.5
+        ],
+        [
+          364.21875,
+          250.71875
+        ],
+        [
+          364.875,
+          249.875
+        ],
+        [
+          365.46875,
+          248.96875
+        ],
+        [
+          366.0,
+          248.0
+        ],
+        [
+          366.46875,
+          246.96875
+        ],
+        [
+          366.875,
+          245.875
+        ],
+        [
+          367.21875,
+          244.71875
+        ],
+        [
+          367.5,
+          243.5
+        ],
+        [
+          367.71875,
+          242.21875
+        ],
+        [
+          367.875,
+          240.875
+        ],
+        [
+          367.96875,
+          239.46875
+        ],
+        [
+          368.0,
+          238.0
+        ]
+      ],
+      "junction": "IE",
+      "fromRoadNo": 6,
+      "fromNode": 1,
+      "toRoadNo": 10,
+      "toNode": 1,
+      "controlPoint": [
+        368,
+        256
+      ],
+      "reverseRoad": 42
+    },
+    {
+      "id": 42,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 6,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 10,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 6,
+      "defaultRoadE": 10,
+      "points": [
+        [
+          350.0,
+          256.0
+        ],
+        [
+          351.06944,
+          255.56944
+        ],
+        [
+          352.11111,
+          255.11111
+        ],
+        [
+          353.125,
+          254.625
+        ],
+        [
+          354.11111,
+          254.11111
+        ],
+        [
+          355.06944,
+          253.56944
+        ],
+        [
+          356.0,
+          253.0
+        ],
+        [
+          356.90278,
+          252.40278
+        ],
+        [
+          357.77778,
+          251.77778
+        ],
+        [
+          358.625,
+          251.125
+        ],
+        [
+          359.44444,
+          250.44444
+        ],
+        [
+          360.23611,
+          249.73611
+        ],
+        [
+          361.0,
+          249.0
+        ],
+        [
+          361.73611,
+          248.23611
+        ],
+        [
+          362.44444,
+          247.44444
+        ],
+        [
+          363.125,
+          246.625
+        ],
+        [
+          363.77778,
+          245.77778
+        ],
+        [
+          364.40278,
+          244.90278
+        ],
+        [
+          365.0,
+          244.0
+        ],
+        [
+          365.56944,
+          243.06944
+        ],
+        [
+          366.11111,
+          242.11111
+        ],
+        [
+          366.625,
+          241.125
+        ],
+        [
+          367.11111,
+          240.11111
+        ],
+        [
+          367.56944,
+          239.06944
+        ],
+        [
+          368.0,
+          238.0
+        ]
+      ],
+      "junction": "IE",
+      "fromRoadNo": 10,
+      "fromNode": 1,
+      "toRoadNo": 6,
+      "toNode": 1,
+      "controlPoint": [
+        363,
+        251
+      ],
+      "reverseRoad": 41
+    },
+    {
+      "id": 43,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 10,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 2,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 10,
+      "defaultRoadE": 2,
+      "points": [
+        [
+          368.0,
+          238.0
+        ],
+        [
+          368.03125,
+          239.46875
+        ],
+        [
+          368.125,
+          240.875
+        ],
+        [
+          368.28125,
+          242.21875
+        ],
+        [
+          368.5,
+          243.5
+        ],
+        [
+          368.78125,
+          244.71875
+        ],
+        [
+          369.125,
+          245.875
+        ],
+        [
+          369.53125,
+          246.96875
+        ],
+        [
+          370.0,
+          248.0
+        ],
+        [
+          370.53125,
+          248.96875
+        ],
+        [
+          371.125,
+          249.875
+        ],
+        [
+          371.78125,
+          250.71875
+        ],
+        [
+          372.5,
+          251.5
+        ],
+        [
+          373.28125,
+          252.21875
+        ],
+        [
+          374.125,
+          252.875
+        ],
+        [
+          375.03125,
+          253.46875
+        ],
+        [
+          376.0,
+          254.0
+        ],
+        [
+          377.03125,
+          254.46875
+        ],
+        [
+          378.125,
+          254.875
+        ],
+        [
+          379.28125,
+          255.21875
+        ],
+        [
+          380.5,
+          255.5
+        ],
+        [
+          381.78125,
+          255.71875
+        ],
+        [
+          383.125,
+          255.875
+        ],
+        [
+          384.53125,
+          255.96875
+        ],
+        [
+          386.0,
+          256.0
+        ]
+      ],
+      "junction": "IE",
+      "fromRoadNo": 10,
+      "fromNode": 1,
+      "toRoadNo": 2,
+      "toNode": 0,
+      "controlPoint": [
+        368,
+        256
+      ],
+      "reverseRoad": 44
+    },
+    {
+      "id": 44,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 10,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 2,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 10,
+      "defaultRoadE": 2,
+      "points": [
+        [
+          368.0,
+          238.0
+        ],
+        [
+          368.43056,
+          239.06944
+        ],
+        [
+          368.88889,
+          240.11111
+        ],
+        [
+          369.375,
+          241.125
+        ],
+        [
+          369.88889,
+          242.11111
+        ],
+        [
+          370.43056,
+          243.06944
+        ],
+        [
+          371.0,
+          244.0
+        ],
+        [
+          371.59722,
+          244.90278
+        ],
+        [
+          372.22222,
+          245.77778
+        ],
+        [
+          372.875,
+          246.625
+        ],
+        [
+          373.55556,
+          247.44444
+        ],
+        [
+          374.26389,
+          248.23611
+        ],
+        [
+          375.0,
+          249.0
+        ],
+        [
+          375.76389,
+          249.73611
+        ],
+        [
+          376.55556,
+          250.44444
+        ],
+        [
+          377.375,
+          251.125
+        ],
+        [
+          378.22222,
+          251.77778
+        ],
+        [
+          379.09722,
+          252.40278
+        ],
+        [
+          380.0,
+          253.0
+        ],
+        [
+          380.93056,
+          253.56944
+        ],
+        [
+          381.88889,
+          254.11111
+        ],
+        [
+          382.875,
+          254.625
+        ],
+        [
+          383.88889,
+          255.11111
+        ],
+        [
+          384.93056,
+          255.56944
+        ],
+        [
+          386.0,
+          256.0
+        ]
+      ],
+      "junction": "IE",
+      "fromRoadNo": 2,
+      "fromNode": 0,
+      "toRoadNo": 10,
+      "toNode": 1,
+      "controlPoint": [
+        373,
+        251
+      ],
+      "reverseRoad": 43
+    },
+    {
+      "id": 45,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 2,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 11,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 2,
+      "defaultRoadE": 11,
+      "points": [
+        [
+          386.0,
+          256.0
+        ],
+        [
+          384.53125,
+          256.03125
+        ],
+        [
+          383.125,
+          256.125
+        ],
+        [
+          381.78125,
+          256.28125
+        ],
+        [
+          380.5,
+          256.5
+        ],
+        [
+          379.28125,
+          256.78125
+        ],
+        [
+          378.125,
+          257.125
+        ],
+        [
+          377.03125,
+          257.53125
+        ],
+        [
+          376.0,
+          258.0
+        ],
+        [
+          375.03125,
+          258.53125
+        ],
+        [
+          374.125,
+          259.125
+        ],
+        [
+          373.28125,
+          259.78125
+        ],
+        [
+          372.5,
+          260.5
+        ],
+        [
+          371.78125,
+          261.28125
+        ],
+        [
+          371.125,
+          262.125
+        ],
+        [
+          370.53125,
+          263.03125
+        ],
+        [
+          370.0,
+          264.0
+        ],
+        [
+          369.53125,
+          265.03125
+        ],
+        [
+          369.125,
+          266.125
+        ],
+        [
+          368.78125,
+          267.28125
+        ],
+        [
+          368.5,
+          268.5
+        ],
+        [
+          368.28125,
+          269.78125
+        ],
+        [
+          368.125,
+          271.125
+        ],
+        [
+          368.03125,
+          272.53125
+        ],
+        [
+          368.0,
+          274.0
+        ]
+      ],
+      "junction": "IE",
+      "fromRoadNo": 2,
+      "fromNode": 0,
+      "toRoadNo": 11,
+      "toNode": 0,
+      "controlPoint": [
+        368,
+        256
+      ],
+      "reverseRoad": 46
+    },
+    {
+      "id": 46,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 2,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 11,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 2,
+      "defaultRoadE": 11,
+      "points": [
+        [
+          386.0,
+          256.0
+        ],
+        [
+          384.93056,
+          256.43056
+        ],
+        [
+          383.88889,
+          256.88889
+        ],
+        [
+          382.875,
+          257.375
+        ],
+        [
+          381.88889,
+          257.88889
+        ],
+        [
+          380.93056,
+          258.43056
+        ],
+        [
+          380.0,
+          259.0
+        ],
+        [
+          379.09722,
+          259.59722
+        ],
+        [
+          378.22222,
+          260.22222
+        ],
+        [
+          377.375,
+          260.875
+        ],
+        [
+          376.55556,
+          261.55556
+        ],
+        [
+          375.76389,
+          262.26389
+        ],
+        [
+          375.0,
+          263.0
+        ],
+        [
+          374.26389,
+          263.76389
+        ],
+        [
+          373.55556,
+          264.55556
+        ],
+        [
+          372.875,
+          265.375
+        ],
+        [
+          372.22222,
+          266.22222
+        ],
+        [
+          371.59722,
+          267.09722
+        ],
+        [
+          371.0,
+          268.0
+        ],
+        [
+          370.43056,
+          268.93056
+        ],
+        [
+          369.88889,
+          269.88889
+        ],
+        [
+          369.375,
+          270.875
+        ],
+        [
+          368.88889,
+          271.88889
+        ],
+        [
+          368.43056,
+          272.93056
+        ],
+        [
+          368.0,
+          274.0
+        ]
+      ],
+      "junction": "IE",
+      "fromRoadNo": 11,
+      "fromNode": 0,
+      "toRoadNo": 2,
+      "toNode": 0,
+      "controlPoint": [
+        373,
+        261
+      ],
+      "reverseRoad": 45
+    },
+    {
+      "id": 47,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 11,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 6,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 11,
+      "defaultRoadE": 6,
+      "points": [
+        [
+          368.0,
+          274.0
+        ],
+        [
+          367.96875,
+          272.53125
+        ],
+        [
+          367.875,
+          271.125
+        ],
+        [
+          367.71875,
+          269.78125
+        ],
+        [
+          367.5,
+          268.5
+        ],
+        [
+          367.21875,
+          267.28125
+        ],
+        [
+          366.875,
+          266.125
+        ],
+        [
+          366.46875,
+          265.03125
+        ],
+        [
+          366.0,
+          264.0
+        ],
+        [
+          365.46875,
+          263.03125
+        ],
+        [
+          364.875,
+          262.125
+        ],
+        [
+          364.21875,
+          261.28125
+        ],
+        [
+          363.5,
+          260.5
+        ],
+        [
+          362.71875,
+          259.78125
+        ],
+        [
+          361.875,
+          259.125
+        ],
+        [
+          360.96875,
+          258.53125
+        ],
+        [
+          360.0,
+          258.0
+        ],
+        [
+          358.96875,
+          257.53125
+        ],
+        [
+          357.875,
+          257.125
+        ],
+        [
+          356.71875,
+          256.78125
+        ],
+        [
+          355.5,
+          256.5
+        ],
+        [
+          354.21875,
+          256.28125
+        ],
+        [
+          352.875,
+          256.125
+        ],
+        [
+          351.46875,
+          256.03125
+        ],
+        [
+          350.0,
+          256.0
+        ]
+      ],
+      "junction": "IE",
+      "fromRoadNo": 11,
+      "fromNode": 0,
+      "toRoadNo": 6,
+      "toNode": 1,
+      "controlPoint": [
+        368,
+        256
+      ],
+      "reverseRoad": 48
+    },
+    {
+      "id": 48,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 11,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 6,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 11,
+      "defaultRoadE": 6,
+      "points": [
+        [
+          368.0,
+          274.0
+        ],
+        [
+          367.56944,
+          272.93056
+        ],
+        [
+          367.11111,
+          271.88889
+        ],
+        [
+          366.625,
+          270.875
+        ],
+        [
+          366.11111,
+          269.88889
+        ],
+        [
+          365.56944,
+          268.93056
+        ],
+        [
+          365.0,
+          268.0
+        ],
+        [
+          364.40278,
+          267.09722
+        ],
+        [
+          363.77778,
+          266.22222
+        ],
+        [
+          363.125,
+          265.375
+        ],
+        [
+          362.44444,
+          264.55556
+        ],
+        [
+          361.73611,
+          263.76389
+        ],
+        [
+          361.0,
+          263.0
+        ],
+        [
+          360.23611,
+          262.26389
+        ],
+        [
+          359.44444,
+          261.55556
+        ],
+        [
+          358.625,
+          260.875
+        ],
+        [
+          357.77778,
+          260.22222
+        ],
+        [
+          356.90278,
+          259.59722
+        ],
+        [
+          356.0,
+          259.0
+        ],
+        [
+          355.06944,
+          258.43056
+        ],
+        [
+          354.11111,
+          257.88889
+        ],
+        [
+          353.125,
+          257.375
+        ],
+        [
+          352.11111,
+          256.88889
+        ],
+        [
+          351.06944,
+          256.43056
+        ],
+        [
+          350.0,
+          256.0
+        ]
+      ],
+      "junction": "IE",
+      "fromRoadNo": 6,
+      "fromNode": 1,
+      "toRoadNo": 11,
+      "toNode": 0,
+      "controlPoint": [
+        363,
+        261
+      ],
+      "reverseRoad": 47
+    },
+    {
+      "id": 49,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 12,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 8,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 12,
+      "defaultRoadE": 8,
+      "points": [
+        [
+          238.0,
+          368.0
+        ],
+        [
+          239.46875,
+          367.96875
+        ],
+        [
+          240.875,
+          367.875
+        ],
+        [
+          242.21875,
+          367.71875
+        ],
+        [
+          243.5,
+          367.5
+        ],
+        [
+          244.71875,
+          367.21875
+        ],
+        [
+          245.875,
+          366.875
+        ],
+        [
+          246.96875,
+          366.46875
+        ],
+        [
+          248.0,
+          366.0
+        ],
+        [
+          248.96875,
+          365.46875
+        ],
+        [
+          249.875,
+          364.875
+        ],
+        [
+          250.71875,
+          364.21875
+        ],
+        [
+          251.5,
+          363.5
+        ],
+        [
+          252.21875,
+          362.71875
+        ],
+        [
+          252.875,
+          361.875
+        ],
+        [
+          253.46875,
+          360.96875
+        ],
+        [
+          254.0,
+          360.0
+        ],
+        [
+          254.46875,
+          358.96875
+        ],
+        [
+          254.875,
+          357.875
+        ],
+        [
+          255.21875,
+          356.71875
+        ],
+        [
+          255.5,
+          355.5
+        ],
+        [
+          255.71875,
+          354.21875
+        ],
+        [
+          255.875,
+          352.875
+        ],
+        [
+          255.96875,
+          351.46875
+        ],
+        [
+          256.0,
+          350.0
+        ]
+      ],
+      "junction": "IS",
+      "fromRoadNo": 12,
+      "fromNode": 0,
+      "toRoadNo": 8,
+      "toNode": 1,
+      "controlPoint": [
+        256,
+        368
+      ],
+      "reverseRoad": 50
+    },
+    {
+      "id": 50,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 12,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 8,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 12,
+      "defaultRoadE": 8,
+      "points": [
+        [
+          238.0,
+          368.0
+        ],
+        [
+          239.06944,
+          367.56944
+        ],
+        [
+          240.11111,
+          367.11111
+        ],
+        [
+          241.125,
+          366.625
+        ],
+        [
+          242.11111,
+          366.11111
+        ],
+        [
+          243.06944,
+          365.56944
+        ],
+        [
+          244.0,
+          365.0
+        ],
+        [
+          244.90278,
+          364.40278
+        ],
+        [
+          245.77778,
+          363.77778
+        ],
+        [
+          246.625,
+          363.125
+        ],
+        [
+          247.44444,
+          362.44444
+        ],
+        [
+          248.23611,
+          361.73611
+        ],
+        [
+          249.0,
+          361.0
+        ],
+        [
+          249.73611,
+          360.23611
+        ],
+        [
+          250.44444,
+          359.44444
+        ],
+        [
+          251.125,
+          358.625
+        ],
+        [
+          251.77778,
+          357.77778
+        ],
+        [
+          252.40278,
+          356.90278
+        ],
+        [
+          253.0,
+          356.0
+        ],
+        [
+          253.56944,
+          355.06944
+        ],
+        [
+          254.11111,
+          354.11111
+        ],
+        [
+          254.625,
+          353.125
+        ],
+        [
+          255.11111,
+          352.11111
+        ],
+        [
+          255.56944,
+          351.06944
+        ],
+        [
+          256.0,
+          350.0
+        ]
+      ],
+      "junction": "IS",
+      "fromRoadNo": 8,
+      "fromNode": 1,
+      "toRoadNo": 12,
+      "toNode": 0,
+      "controlPoint": [
+        251,
+        363
+      ],
+      "reverseRoad": 49
+    },
+    {
+      "id": 51,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 8,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 11,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 8,
+      "defaultRoadE": 11,
+      "points": [
+        [
+          256.0,
+          350.0
+        ],
+        [
+          256.03125,
+          351.46875
+        ],
+        [
+          256.125,
+          352.875
+        ],
+        [
+          256.28125,
+          354.21875
+        ],
+        [
+          256.5,
+          355.5
+        ],
+        [
+          256.78125,
+          356.71875
+        ],
+        [
+          257.125,
+          357.875
+        ],
+        [
+          257.53125,
+          358.96875
+        ],
+        [
+          258.0,
+          360.0
+        ],
+        [
+          258.53125,
+          360.96875
+        ],
+        [
+          259.125,
+          361.875
+        ],
+        [
+          259.78125,
+          362.71875
+        ],
+        [
+          260.5,
+          363.5
+        ],
+        [
+          261.28125,
+          364.21875
+        ],
+        [
+          262.125,
+          364.875
+        ],
+        [
+          263.03125,
+          365.46875
+        ],
+        [
+          264.0,
+          366.0
+        ],
+        [
+          265.03125,
+          366.46875
+        ],
+        [
+          266.125,
+          366.875
+        ],
+        [
+          267.28125,
+          367.21875
+        ],
+        [
+          268.5,
+          367.5
+        ],
+        [
+          269.78125,
+          367.71875
+        ],
+        [
+          271.125,
+          367.875
+        ],
+        [
+          272.53125,
+          367.96875
+        ],
+        [
+          274.0,
+          368.0
+        ]
+      ],
+      "junction": "IS",
+      "fromRoadNo": 8,
+      "fromNode": 1,
+      "toRoadNo": 11,
+      "toNode": 1,
+      "controlPoint": [
+        256,
+        368
+      ],
+      "reverseRoad": 52
+    },
+    {
+      "id": 52,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 8,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 11,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 8,
+      "defaultRoadE": 11,
+      "points": [
+        [
+          256.0,
+          350.0
+        ],
+        [
+          256.43056,
+          351.06944
+        ],
+        [
+          256.88889,
+          352.11111
+        ],
+        [
+          257.375,
+          353.125
+        ],
+        [
+          257.88889,
+          354.11111
+        ],
+        [
+          258.43056,
+          355.06944
+        ],
+        [
+          259.0,
+          356.0
+        ],
+        [
+          259.59722,
+          356.90278
+        ],
+        [
+          260.22222,
+          357.77778
+        ],
+        [
+          260.875,
+          358.625
+        ],
+        [
+          261.55556,
+          359.44444
+        ],
+        [
+          262.26389,
+          360.23611
+        ],
+        [
+          263.0,
+          361.0
+        ],
+        [
+          263.76389,
+          361.73611
+        ],
+        [
+          264.55556,
+          362.44444
+        ],
+        [
+          265.375,
+          363.125
+        ],
+        [
+          266.22222,
+          363.77778
+        ],
+        [
+          267.09722,
+          364.40278
+        ],
+        [
+          268.0,
+          365.0
+        ],
+        [
+          268.93056,
+          365.56944
+        ],
+        [
+          269.88889,
+          366.11111
+        ],
+        [
+          270.875,
+          366.625
+        ],
+        [
+          271.88889,
+          367.11111
+        ],
+        [
+          272.93056,
+          367.56944
+        ],
+        [
+          274.0,
+          368.0
+        ]
+      ],
+      "junction": "IS",
+      "fromRoadNo": 11,
+      "fromNode": 1,
+      "toRoadNo": 8,
+      "toNode": 1,
+      "controlPoint": [
+        261,
+        363
+      ],
+      "reverseRoad": 51
+    },
+    {
+      "id": 53,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 11,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 4,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 11,
+      "defaultRoadE": 4,
+      "points": [
+        [
+          274.0,
+          368.0
+        ],
+        [
+          272.53125,
+          368.03125
+        ],
+        [
+          271.125,
+          368.125
+        ],
+        [
+          269.78125,
+          368.28125
+        ],
+        [
+          268.5,
+          368.5
+        ],
+        [
+          267.28125,
+          368.78125
+        ],
+        [
+          266.125,
+          369.125
+        ],
+        [
+          265.03125,
+          369.53125
+        ],
+        [
+          264.0,
+          370.0
+        ],
+        [
+          263.03125,
+          370.53125
+        ],
+        [
+          262.125,
+          371.125
+        ],
+        [
+          261.28125,
+          371.78125
+        ],
+        [
+          260.5,
+          372.5
+        ],
+        [
+          259.78125,
+          373.28125
+        ],
+        [
+          259.125,
+          374.125
+        ],
+        [
+          258.53125,
+          375.03125
+        ],
+        [
+          258.0,
+          376.0
+        ],
+        [
+          257.53125,
+          377.03125
+        ],
+        [
+          257.125,
+          378.125
+        ],
+        [
+          256.78125,
+          379.28125
+        ],
+        [
+          256.5,
+          380.5
+        ],
+        [
+          256.28125,
+          381.78125
+        ],
+        [
+          256.125,
+          383.125
+        ],
+        [
+          256.03125,
+          384.53125
+        ],
+        [
+          256.0,
+          386.0
+        ]
+      ],
+      "junction": "IS",
+      "fromRoadNo": 11,
+      "fromNode": 1,
+      "toRoadNo": 4,
+      "toNode": 0,
+      "controlPoint": [
+        256,
+        368
+      ],
+      "reverseRoad": 54
+    },
+    {
+      "id": 54,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 11,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 4,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 11,
+      "defaultRoadE": 4,
+      "points": [
+        [
+          274.0,
+          368.0
+        ],
+        [
+          272.93056,
+          368.43056
+        ],
+        [
+          271.88889,
+          368.88889
+        ],
+        [
+          270.875,
+          369.375
+        ],
+        [
+          269.88889,
+          369.88889
+        ],
+        [
+          268.93056,
+          370.43056
+        ],
+        [
+          268.0,
+          371.0
+        ],
+        [
+          267.09722,
+          371.59722
+        ],
+        [
+          266.22222,
+          372.22222
+        ],
+        [
+          265.375,
+          372.875
+        ],
+        [
+          264.55556,
+          373.55556
+        ],
+        [
+          263.76389,
+          374.26389
+        ],
+        [
+          263.0,
+          375.0
+        ],
+        [
+          262.26389,
+          375.76389
+        ],
+        [
+          261.55556,
+          376.55556
+        ],
+        [
+          260.875,
+          377.375
+        ],
+        [
+          260.22222,
+          378.22222
+        ],
+        [
+          259.59722,
+          379.09722
+        ],
+        [
+          259.0,
+          380.0
+        ],
+        [
+          258.43056,
+          380.93056
+        ],
+        [
+          257.88889,
+          381.88889
+        ],
+        [
+          257.375,
+          382.875
+        ],
+        [
+          256.88889,
+          383.88889
+        ],
+        [
+          256.43056,
+          384.93056
+        ],
+        [
+          256.0,
+          386.0
+        ]
+      ],
+      "junction": "IS",
+      "fromRoadNo": 4,
+      "fromNode": 0,
+      "toRoadNo": 11,
+      "toNode": 1,
+      "controlPoint": [
+        261,
+        373
+      ],
+      "reverseRoad": 53
+    },
+    {
+      "id": 55,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 4,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 12,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 4,
+      "defaultRoadE": 12,
+      "points": [
+        [
+          256.0,
+          386.0
+        ],
+        [
+          255.96875,
+          384.53125
+        ],
+        [
+          255.875,
+          383.125
+        ],
+        [
+          255.71875,
+          381.78125
+        ],
+        [
+          255.5,
+          380.5
+        ],
+        [
+          255.21875,
+          379.28125
+        ],
+        [
+          254.875,
+          378.125
+        ],
+        [
+          254.46875,
+          377.03125
+        ],
+        [
+          254.0,
+          376.0
+        ],
+        [
+          253.46875,
+          375.03125
+        ],
+        [
+          252.875,
+          374.125
+        ],
+        [
+          252.21875,
+          373.28125
+        ],
+        [
+          251.5,
+          372.5
+        ],
+        [
+          250.71875,
+          371.78125
+        ],
+        [
+          249.875,
+          371.125
+        ],
+        [
+          248.96875,
+          370.53125
+        ],
+        [
+          248.0,
+          370.0
+        ],
+        [
+          246.96875,
+          369.53125
+        ],
+        [
+          245.875,
+          369.125
+        ],
+        [
+          244.71875,
+          368.78125
+        ],
+        [
+          243.5,
+          368.5
+        ],
+        [
+          242.21875,
+          368.28125
+        ],
+        [
+          240.875,
+          368.125
+        ],
+        [
+          239.46875,
+          368.03125
+        ],
+        [
+          238.0,
+          368.0
+        ]
+      ],
+      "junction": "IS",
+      "fromRoadNo": 4,
+      "fromNode": 0,
+      "toRoadNo": 12,
+      "toNode": 0,
+      "controlPoint": [
+        256,
+        368
+      ],
+      "reverseRoad": 56
+    },
+    {
+      "id": 56,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 4,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 12,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 4,
+      "defaultRoadE": 12,
+      "points": [
+        [
+          256.0,
+          386.0
+        ],
+        [
+          255.56944,
+          384.93056
+        ],
+        [
+          255.11111,
+          383.88889
+        ],
+        [
+          254.625,
+          382.875
+        ],
+        [
+          254.11111,
+          381.88889
+        ],
+        [
+          253.56944,
+          380.93056
+        ],
+        [
+          253.0,
+          380.0
+        ],
+        [
+          252.40278,
+          379.09722
+        ],
+        [
+          251.77778,
+          378.22222
+        ],
+        [
+          251.125,
+          377.375
+        ],
+        [
+          250.44444,
+          376.55556
+        ],
+        [
+          249.73611,
+          375.76389
+        ],
+        [
+          249.0,
+          375.0
+        ],
+        [
+          248.23611,
+          374.26389
+        ],
+        [
+          247.44444,
+          373.55556
+        ],
+        [
+          246.625,
+          372.875
+        ],
+        [
+          245.77778,
+          372.22222
+        ],
+        [
+          244.90278,
+          371.59722
+        ],
+        [
+          244.0,
+          371.0
+        ],
+        [
+          243.06944,
+          370.43056
+        ],
+        [
+          242.11111,
+          369.88889
+        ],
+        [
+          241.125,
+          369.375
+        ],
+        [
+          240.11111,
+          368.88889
+        ],
+        [
+          239.06944,
+          368.43056
+        ],
+        [
+          238.0,
+          368.0
+        ]
+      ],
+      "junction": "IS",
+      "fromRoadNo": 12,
+      "fromNode": 0,
+      "toRoadNo": 4,
+      "toNode": 0,
+      "controlPoint": [
+        251,
+        373
+      ],
+      "reverseRoad": 55
+    },
+    {
+      "id": 57,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 13,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 1,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 13,
+      "defaultRoadE": 1,
+      "points": [
+        [
+          48.0,
+          238.0
+        ],
+        [
+          48.03125,
+          239.46875
+        ],
+        [
+          48.125,
+          240.875
+        ],
+        [
+          48.28125,
+          242.21875
+        ],
+        [
+          48.5,
+          243.5
+        ],
+        [
+          48.78125,
+          244.71875
+        ],
+        [
+          49.125,
+          245.875
+        ],
+        [
+          49.53125,
+          246.96875
+        ],
+        [
+          50.0,
+          248.0
+        ],
+        [
+          50.53125,
+          248.96875
+        ],
+        [
+          51.125,
+          249.875
+        ],
+        [
+          51.78125,
+          250.71875
+        ],
+        [
+          52.5,
+          251.5
+        ],
+        [
+          53.28125,
+          252.21875
+        ],
+        [
+          54.125,
+          252.875
+        ],
+        [
+          55.03125,
+          253.46875
+        ],
+        [
+          56.0,
+          254.0
+        ],
+        [
+          57.03125,
+          254.46875
+        ],
+        [
+          58.125,
+          254.875
+        ],
+        [
+          59.28125,
+          255.21875
+        ],
+        [
+          60.5,
+          255.5
+        ],
+        [
+          61.78125,
+          255.71875
+        ],
+        [
+          63.125,
+          255.875
+        ],
+        [
+          64.53125,
+          255.96875
+        ],
+        [
+          66.0,
+          256.0
+        ]
+      ],
+      "junction": "OW",
+      "fromRoadNo": 13,
+      "fromNode": 0,
+      "toRoadNo": 1,
+      "toNode": 0,
+      "controlPoint": [
+        48,
+        256
+      ],
+      "reverseRoad": 58
+    },
+    {
+      "id": 58,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 13,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 1,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 13,
+      "defaultRoadE": 1,
+      "points": [
+        [
+          48.0,
+          238.0
+        ],
+        [
+          48.43056,
+          239.06944
+        ],
+        [
+          48.88889,
+          240.11111
+        ],
+        [
+          49.375,
+          241.125
+        ],
+        [
+          49.88889,
+          242.11111
+        ],
+        [
+          50.43056,
+          243.06944
+        ],
+        [
+          51.0,
+          244.0
+        ],
+        [
+          51.59722,
+          244.90278
+        ],
+        [
+          52.22222,
+          245.77778
+        ],
+        [
+          52.875,
+          246.625
+        ],
+        [
+          53.55556,
+          247.44444
+        ],
+        [
+          54.26389,
+          248.23611
+        ],
+        [
+          55.0,
+          249.0
+        ],
+        [
+          55.76389,
+          249.73611
+        ],
+        [
+          56.55556,
+          250.44444
+        ],
+        [
+          57.375,
+          251.125
+        ],
+        [
+          58.22222,
+          251.77778
+        ],
+        [
+          59.09722,
+          252.40278
+        ],
+        [
+          60.0,
+          253.0
+        ],
+        [
+          60.93056,
+          253.56944
+        ],
+        [
+          61.88889,
+          254.11111
+        ],
+        [
+          62.875,
+          254.625
+        ],
+        [
+          63.88889,
+          255.11111
+        ],
+        [
+          64.93056,
+          255.56944
+        ],
+        [
+          66.0,
+          256.0
+        ]
+      ],
+      "junction": "OW",
+      "fromRoadNo": 1,
+      "fromNode": 0,
+      "toRoadNo": 13,
+      "toNode": 0,
+      "controlPoint": [
+        53,
+        251
+      ],
+      "reverseRoad": 57
+    },
+    {
+      "id": 59,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 1,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 16,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 1,
+      "defaultRoadE": 16,
+      "points": [
+        [
+          66.0,
+          256.0
+        ],
+        [
+          64.53125,
+          256.03125
+        ],
+        [
+          63.125,
+          256.125
+        ],
+        [
+          61.78125,
+          256.28125
+        ],
+        [
+          60.5,
+          256.5
+        ],
+        [
+          59.28125,
+          256.78125
+        ],
+        [
+          58.125,
+          257.125
+        ],
+        [
+          57.03125,
+          257.53125
+        ],
+        [
+          56.0,
+          258.0
+        ],
+        [
+          55.03125,
+          258.53125
+        ],
+        [
+          54.125,
+          259.125
+        ],
+        [
+          53.28125,
+          259.78125
+        ],
+        [
+          52.5,
+          260.5
+        ],
+        [
+          51.78125,
+          261.28125
+        ],
+        [
+          51.125,
+          262.125
+        ],
+        [
+          50.53125,
+          263.03125
+        ],
+        [
+          50.0,
+          264.0
+        ],
+        [
+          49.53125,
+          265.03125
+        ],
+        [
+          49.125,
+          266.125
+        ],
+        [
+          48.78125,
+          267.28125
+        ],
+        [
+          48.5,
+          268.5
+        ],
+        [
+          48.28125,
+          269.78125
+        ],
+        [
+          48.125,
+          271.125
+        ],
+        [
+          48.03125,
+          272.53125
+        ],
+        [
+          48.0,
+          274.0
+        ]
+      ],
+      "junction": "OW",
+      "fromRoadNo": 1,
+      "fromNode": 0,
+      "toRoadNo": 16,
+      "toNode": 1,
+      "controlPoint": [
+        48,
+        256
+      ],
+      "reverseRoad": 60
+    },
+    {
+      "id": 60,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 1,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 16,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 1,
+      "defaultRoadE": 16,
+      "points": [
+        [
+          66.0,
+          256.0
+        ],
+        [
+          64.93056,
+          256.43056
+        ],
+        [
+          63.88889,
+          256.88889
+        ],
+        [
+          62.875,
+          257.375
+        ],
+        [
+          61.88889,
+          257.88889
+        ],
+        [
+          60.93056,
+          258.43056
+        ],
+        [
+          60.0,
+          259.0
+        ],
+        [
+          59.09722,
+          259.59722
+        ],
+        [
+          58.22222,
+          260.22222
+        ],
+        [
+          57.375,
+          260.875
+        ],
+        [
+          56.55556,
+          261.55556
+        ],
+        [
+          55.76389,
+          262.26389
+        ],
+        [
+          55.0,
+          263.0
+        ],
+        [
+          54.26389,
+          263.76389
+        ],
+        [
+          53.55556,
+          264.55556
+        ],
+        [
+          52.875,
+          265.375
+        ],
+        [
+          52.22222,
+          266.22222
+        ],
+        [
+          51.59722,
+          267.09722
+        ],
+        [
+          51.0,
+          268.0
+        ],
+        [
+          50.43056,
+          268.93056
+        ],
+        [
+          49.88889,
+          269.88889
+        ],
+        [
+          49.375,
+          270.875
+        ],
+        [
+          48.88889,
+          271.88889
+        ],
+        [
+          48.43056,
+          272.93056
+        ],
+        [
+          48.0,
+          274.0
+        ]
+      ],
+      "junction": "OW",
+      "fromRoadNo": 16,
+      "fromNode": 1,
+      "toRoadNo": 1,
+      "toNode": 0,
+      "controlPoint": [
+        53,
+        261
+      ],
+      "reverseRoad": 59
+    },
+    {
+      "id": 61,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 14,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 3,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 14,
+      "defaultRoadE": 3,
+      "points": [
+        [
+          274.0,
+          48.0
+        ],
+        [
+          272.53125,
+          48.03125
+        ],
+        [
+          271.125,
+          48.125
+        ],
+        [
+          269.78125,
+          48.28125
+        ],
+        [
+          268.5,
+          48.5
+        ],
+        [
+          267.28125,
+          48.78125
+        ],
+        [
+          266.125,
+          49.125
+        ],
+        [
+          265.03125,
+          49.53125
+        ],
+        [
+          264.0,
+          50.0
+        ],
+        [
+          263.03125,
+          50.53125
+        ],
+        [
+          262.125,
+          51.125
+        ],
+        [
+          261.28125,
+          51.78125
+        ],
+        [
+          260.5,
+          52.5
+        ],
+        [
+          259.78125,
+          53.28125
+        ],
+        [
+          259.125,
+          54.125
+        ],
+        [
+          258.53125,
+          55.03125
+        ],
+        [
+          258.0,
+          56.0
+        ],
+        [
+          257.53125,
+          57.03125
+        ],
+        [
+          257.125,
+          58.125
+        ],
+        [
+          256.78125,
+          59.28125
+        ],
+        [
+          256.5,
+          60.5
+        ],
+        [
+          256.28125,
+          61.78125
+        ],
+        [
+          256.125,
+          63.125
+        ],
+        [
+          256.03125,
+          64.53125
+        ],
+        [
+          256.0,
+          66.0
+        ]
+      ],
+      "junction": "ON",
+      "fromRoadNo": 14,
+      "fromNode": 0,
+      "toRoadNo": 3,
+      "toNode": 0,
+      "controlPoint": [
+        256,
+        48
+      ],
+      "reverseRoad": 62
+    },
+    {
+      "id": 62,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 14,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 3,
+          "enterNode": 0
+        }
+      ],
+      "defaultRoadS": 14,
+      "defaultRoadE": 3,
+      "points": [
+        [
+          274.0,
+          48.0
+        ],
+        [
+          272.93056,
+          48.43056
+        ],
+        [
+          271.88889,
+          48.88889
+        ],
+        [
+          270.875,
+          49.375
+        ],
+        [
+          269.88889,
+          49.88889
+        ],
+        [
+          268.93056,
+          50.43056
+        ],
+        [
+          268.0,
+          51.0
+        ],
+        [
+          267.09722,
+          51.59722
+        ],
+        [
+          266.22222,
+          52.22222
+        ],
+        [
+          265.375,
+          52.875
+        ],
+        [
+          264.55556,
+          53.55556
+        ],
+        [
+          263.76389,
+          54.26389
+        ],
+        [
+          263.0,
+          55.0
+        ],
+        [
+          262.26389,
+          55.76389
+        ],
+        [
+          261.55556,
+          56.55556
+        ],
+        [
+          260.875,
+          57.375
+        ],
+        [
+          260.22222,
+          58.22222
+        ],
+        [
+          259.59722,
+          59.09722
+        ],
+        [
+          259.0,
+          60.0
+        ],
+        [
+          258.43056,
+          60.93056
+        ],
+        [
+          257.88889,
+          61.88889
+        ],
+        [
+          257.375,
+          62.875
+        ],
+        [
+          256.88889,
+          63.88889
+        ],
+        [
+          256.43056,
+          64.93056
+        ],
+        [
+          256.0,
+          66.0
+        ]
+      ],
+      "junction": "ON",
+      "fromRoadNo": 3,
+      "fromNode": 0,
+      "toRoadNo": 14,
+      "toNode": 0,
+      "controlPoint": [
+        261,
+        53
+      ],
+      "reverseRoad": 61
+    },
+    {
+      "id": 63,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 3,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 13,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 3,
+      "defaultRoadE": 13,
+      "points": [
+        [
+          256.0,
+          66.0
+        ],
+        [
+          255.96875,
+          64.53125
+        ],
+        [
+          255.875,
+          63.125
+        ],
+        [
+          255.71875,
+          61.78125
+        ],
+        [
+          255.5,
+          60.5
+        ],
+        [
+          255.21875,
+          59.28125
+        ],
+        [
+          254.875,
+          58.125
+        ],
+        [
+          254.46875,
+          57.03125
+        ],
+        [
+          254.0,
+          56.0
+        ],
+        [
+          253.46875,
+          55.03125
+        ],
+        [
+          252.875,
+          54.125
+        ],
+        [
+          252.21875,
+          53.28125
+        ],
+        [
+          251.5,
+          52.5
+        ],
+        [
+          250.71875,
+          51.78125
+        ],
+        [
+          249.875,
+          51.125
+        ],
+        [
+          248.96875,
+          50.53125
+        ],
+        [
+          248.0,
+          50.0
+        ],
+        [
+          246.96875,
+          49.53125
+        ],
+        [
+          245.875,
+          49.125
+        ],
+        [
+          244.71875,
+          48.78125
+        ],
+        [
+          243.5,
+          48.5
+        ],
+        [
+          242.21875,
+          48.28125
+        ],
+        [
+          240.875,
+          48.125
+        ],
+        [
+          239.46875,
+          48.03125
+        ],
+        [
+          238.0,
+          48.0
+        ]
+      ],
+      "junction": "ON",
+      "fromRoadNo": 3,
+      "fromNode": 0,
+      "toRoadNo": 13,
+      "toNode": 1,
+      "controlPoint": [
+        256,
+        48
+      ],
+      "reverseRoad": 64
+    },
+    {
+      "id": 64,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 3,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 13,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 3,
+      "defaultRoadE": 13,
+      "points": [
+        [
+          256.0,
+          66.0
+        ],
+        [
+          255.56944,
+          64.93056
+        ],
+        [
+          255.11111,
+          63.88889
+        ],
+        [
+          254.625,
+          62.875
+        ],
+        [
+          254.11111,
+          61.88889
+        ],
+        [
+          253.56944,
+          60.93056
+        ],
+        [
+          253.0,
+          60.0
+        ],
+        [
+          252.40278,
+          59.09722
+        ],
+        [
+          251.77778,
+          58.22222
+        ],
+        [
+          251.125,
+          57.375
+        ],
+        [
+          250.44444,
+          56.55556
+        ],
+        [
+          249.73611,
+          55.76389
+        ],
+        [
+          249.0,
+          55.0
+        ],
+        [
+          248.23611,
+          54.26389
+        ],
+        [
+          247.44444,
+          53.55556
+        ],
+        [
+          246.625,
+          52.875
+        ],
+        [
+          245.77778,
+          52.22222
+        ],
+        [
+          244.90278,
+          51.59722
+        ],
+        [
+          244.0,
+          51.0
+        ],
+        [
+          243.06944,
+          50.43056
+        ],
+        [
+          242.11111,
+          49.88889
+        ],
+        [
+          241.125,
+          49.375
+        ],
+        [
+          240.11111,
+          48.88889
+        ],
+        [
+          239.06944,
+          48.43056
+        ],
+        [
+          238.0,
+          48.0
+        ]
+      ],
+      "junction": "ON",
+      "fromRoadNo": 13,
+      "fromNode": 1,
+      "toRoadNo": 3,
+      "toNode": 0,
+      "controlPoint": [
+        251,
+        53
+      ],
+      "reverseRoad": 63
+    },
+    {
+      "id": 65,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 2,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 14,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 2,
+      "defaultRoadE": 14,
+      "points": [
+        [
+          446.0,
+          256.0
+        ],
+        [
+          447.46875,
+          255.96875
+        ],
+        [
+          448.875,
+          255.875
+        ],
+        [
+          450.21875,
+          255.71875
+        ],
+        [
+          451.5,
+          255.5
+        ],
+        [
+          452.71875,
+          255.21875
+        ],
+        [
+          453.875,
+          254.875
+        ],
+        [
+          454.96875,
+          254.46875
+        ],
+        [
+          456.0,
+          254.0
+        ],
+        [
+          456.96875,
+          253.46875
+        ],
+        [
+          457.875,
+          252.875
+        ],
+        [
+          458.71875,
+          252.21875
+        ],
+        [
+          459.5,
+          251.5
+        ],
+        [
+          460.21875,
+          250.71875
+        ],
+        [
+          460.875,
+          249.875
+        ],
+        [
+          461.46875,
+          248.96875
+        ],
+        [
+          462.0,
+          248.0
+        ],
+        [
+          462.46875,
+          246.96875
+        ],
+        [
+          462.875,
+          245.875
+        ],
+        [
+          463.21875,
+          244.71875
+        ],
+        [
+          463.5,
+          243.5
+        ],
+        [
+          463.71875,
+          242.21875
+        ],
+        [
+          463.875,
+          240.875
+        ],
+        [
+          463.96875,
+          239.46875
+        ],
+        [
+          464.0,
+          238.0
+        ]
+      ],
+      "junction": "OE",
+      "fromRoadNo": 2,
+      "fromNode": 1,
+      "toRoadNo": 14,
+      "toNode": 1,
+      "controlPoint": [
+        464,
+        256
+      ],
+      "reverseRoad": 66
+    },
+    {
+      "id": 66,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 2,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 14,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 2,
+      "defaultRoadE": 14,
+      "points": [
+        [
+          446.0,
+          256.0
+        ],
+        [
+          447.06944,
+          255.56944
+        ],
+        [
+          448.11111,
+          255.11111
+        ],
+        [
+          449.125,
+          254.625
+        ],
+        [
+          450.11111,
+          254.11111
+        ],
+        [
+          451.06944,
+          253.56944
+        ],
+        [
+          452.0,
+          253.0
+        ],
+        [
+          452.90278,
+          252.40278
+        ],
+        [
+          453.77778,
+          251.77778
+        ],
+        [
+          454.625,
+          251.125
+        ],
+        [
+          455.44444,
+          250.44444
+        ],
+        [
+          456.23611,
+          249.73611
+        ],
+        [
+          457.0,
+          249.0
+        ],
+        [
+          457.73611,
+          248.23611
+        ],
+        [
+          458.44444,
+          247.44444
+        ],
+        [
+          459.125,
+          246.625
+        ],
+        [
+          459.77778,
+          245.77778
+        ],
+        [
+          460.40278,
+          244.90278
+        ],
+        [
+          461.0,
+          244.0
+        ],
+        [
+          461.56944,
+          243.06944
+        ],
+        [
+          462.11111,
+          242.11111
+        ],
+        [
+          462.625,
+          241.125
+        ],
+        [
+          463.11111,
+          240.11111
+        ],
+        [
+          463.56944,
+          239.06944
+        ],
+        [
+          464.0,
+          238.0
+        ]
+      ],
+      "junction": "OE",
+      "fromRoadNo": 14,
+      "fromNode": 1,
+      "toRoadNo": 2,
+      "toNode": 1,
+      "controlPoint": [
+        459,
+        251
+      ],
+      "reverseRoad": 65
+    },
+    {
+      "id": 67,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 15,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 2,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 15,
+      "defaultRoadE": 2,
+      "points": [
+        [
+          464.0,
+          274.0
+        ],
+        [
+          463.96875,
+          272.53125
+        ],
+        [
+          463.875,
+          271.125
+        ],
+        [
+          463.71875,
+          269.78125
+        ],
+        [
+          463.5,
+          268.5
+        ],
+        [
+          463.21875,
+          267.28125
+        ],
+        [
+          462.875,
+          266.125
+        ],
+        [
+          462.46875,
+          265.03125
+        ],
+        [
+          462.0,
+          264.0
+        ],
+        [
+          461.46875,
+          263.03125
+        ],
+        [
+          460.875,
+          262.125
+        ],
+        [
+          460.21875,
+          261.28125
+        ],
+        [
+          459.5,
+          260.5
+        ],
+        [
+          458.71875,
+          259.78125
+        ],
+        [
+          457.875,
+          259.125
+        ],
+        [
+          456.96875,
+          258.53125
+        ],
+        [
+          456.0,
+          258.0
+        ],
+        [
+          454.96875,
+          257.53125
+        ],
+        [
+          453.875,
+          257.125
+        ],
+        [
+          452.71875,
+          256.78125
+        ],
+        [
+          451.5,
+          256.5
+        ],
+        [
+          450.21875,
+          256.28125
+        ],
+        [
+          448.875,
+          256.125
+        ],
+        [
+          447.46875,
+          256.03125
+        ],
+        [
+          446.0,
+          256.0
+        ]
+      ],
+      "junction": "OE",
+      "fromRoadNo": 15,
+      "fromNode": 0,
+      "toRoadNo": 2,
+      "toNode": 1,
+      "controlPoint": [
+        464,
+        256
+      ],
+      "reverseRoad": 68
+    },
+    {
+      "id": 68,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 15,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 2,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 15,
+      "defaultRoadE": 2,
+      "points": [
+        [
+          464.0,
+          274.0
+        ],
+        [
+          463.56944,
+          272.93056
+        ],
+        [
+          463.11111,
+          271.88889
+        ],
+        [
+          462.625,
+          270.875
+        ],
+        [
+          462.11111,
+          269.88889
+        ],
+        [
+          461.56944,
+          268.93056
+        ],
+        [
+          461.0,
+          268.0
+        ],
+        [
+          460.40278,
+          267.09722
+        ],
+        [
+          459.77778,
+          266.22222
+        ],
+        [
+          459.125,
+          265.375
+        ],
+        [
+          458.44444,
+          264.55556
+        ],
+        [
+          457.73611,
+          263.76389
+        ],
+        [
+          457.0,
+          263.0
+        ],
+        [
+          456.23611,
+          262.26389
+        ],
+        [
+          455.44444,
+          261.55556
+        ],
+        [
+          454.625,
+          260.875
+        ],
+        [
+          453.77778,
+          260.22222
+        ],
+        [
+          452.90278,
+          259.59722
+        ],
+        [
+          452.0,
+          259.0
+        ],
+        [
+          451.06944,
+          258.43056
+        ],
+        [
+          450.11111,
+          257.88889
+        ],
+        [
+          449.125,
+          257.375
+        ],
+        [
+          448.11111,
+          256.88889
+        ],
+        [
+          447.06944,
+          256.43056
+        ],
+        [
+          446.0,
+          256.0
+        ]
+      ],
+      "junction": "OE",
+      "fromRoadNo": 2,
+      "fromNode": 1,
+      "toRoadNo": 15,
+      "toNode": 0,
+      "controlPoint": [
+        459,
+        261
+      ],
+      "reverseRoad": 67
+    },
+    {
+      "id": 69,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 16,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 4,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 16,
+      "defaultRoadE": 4,
+      "points": [
+        [
+          238.0,
+          464.0
+        ],
+        [
+          239.46875,
+          463.96875
+        ],
+        [
+          240.875,
+          463.875
+        ],
+        [
+          242.21875,
+          463.71875
+        ],
+        [
+          243.5,
+          463.5
+        ],
+        [
+          244.71875,
+          463.21875
+        ],
+        [
+          245.875,
+          462.875
+        ],
+        [
+          246.96875,
+          462.46875
+        ],
+        [
+          248.0,
+          462.0
+        ],
+        [
+          248.96875,
+          461.46875
+        ],
+        [
+          249.875,
+          460.875
+        ],
+        [
+          250.71875,
+          460.21875
+        ],
+        [
+          251.5,
+          459.5
+        ],
+        [
+          252.21875,
+          458.71875
+        ],
+        [
+          252.875,
+          457.875
+        ],
+        [
+          253.46875,
+          456.96875
+        ],
+        [
+          254.0,
+          456.0
+        ],
+        [
+          254.46875,
+          454.96875
+        ],
+        [
+          254.875,
+          453.875
+        ],
+        [
+          255.21875,
+          452.71875
+        ],
+        [
+          255.5,
+          451.5
+        ],
+        [
+          255.71875,
+          450.21875
+        ],
+        [
+          255.875,
+          448.875
+        ],
+        [
+          255.96875,
+          447.46875
+        ],
+        [
+          256.0,
+          446.0
+        ]
+      ],
+      "junction": "OS",
+      "fromRoadNo": 16,
+      "fromNode": 0,
+      "toRoadNo": 4,
+      "toNode": 1,
+      "controlPoint": [
+        256,
+        464
+      ],
+      "reverseRoad": 70
+    },
+    {
+      "id": 70,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 16,
+          "enterNode": 0
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 4,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 16,
+      "defaultRoadE": 4,
+      "points": [
+        [
+          238.0,
+          464.0
+        ],
+        [
+          239.06944,
+          463.56944
+        ],
+        [
+          240.11111,
+          463.11111
+        ],
+        [
+          241.125,
+          462.625
+        ],
+        [
+          242.11111,
+          462.11111
+        ],
+        [
+          243.06944,
+          461.56944
+        ],
+        [
+          244.0,
+          461.0
+        ],
+        [
+          244.90278,
+          460.40278
+        ],
+        [
+          245.77778,
+          459.77778
+        ],
+        [
+          246.625,
+          459.125
+        ],
+        [
+          247.44444,
+          458.44444
+        ],
+        [
+          248.23611,
+          457.73611
+        ],
+        [
+          249.0,
+          457.0
+        ],
+        [
+          249.73611,
+          456.23611
+        ],
+        [
+          250.44444,
+          455.44444
+        ],
+        [
+          251.125,
+          454.625
+        ],
+        [
+          251.77778,
+          453.77778
+        ],
+        [
+          252.40278,
+          452.90278
+        ],
+        [
+          253.0,
+          452.0
+        ],
+        [
+          253.56944,
+          451.06944
+        ],
+        [
+          254.11111,
+          450.11111
+        ],
+        [
+          254.625,
+          449.125
+        ],
+        [
+          255.11111,
+          448.11111
+        ],
+        [
+          255.56944,
+          447.06944
+        ],
+        [
+          256.0,
+          446.0
+        ]
+      ],
+      "junction": "OS",
+      "fromRoadNo": 4,
+      "fromNode": 1,
+      "toRoadNo": 16,
+      "toNode": 0,
+      "controlPoint": [
+        251,
+        459
+      ],
+      "reverseRoad": 69
+    },
+    {
+      "id": 71,
+      "kind": "turn",
+      "direction": 0,
+      "allowedEntryNodes": [
+        0
+      ],
+      "nodeS": [
+        {
+          "roadNo": 4,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 15,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 4,
+      "defaultRoadE": 15,
+      "points": [
+        [
+          256.0,
+          446.0
+        ],
+        [
+          256.03125,
+          447.46875
+        ],
+        [
+          256.125,
+          448.875
+        ],
+        [
+          256.28125,
+          450.21875
+        ],
+        [
+          256.5,
+          451.5
+        ],
+        [
+          256.78125,
+          452.71875
+        ],
+        [
+          257.125,
+          453.875
+        ],
+        [
+          257.53125,
+          454.96875
+        ],
+        [
+          258.0,
+          456.0
+        ],
+        [
+          258.53125,
+          456.96875
+        ],
+        [
+          259.125,
+          457.875
+        ],
+        [
+          259.78125,
+          458.71875
+        ],
+        [
+          260.5,
+          459.5
+        ],
+        [
+          261.28125,
+          460.21875
+        ],
+        [
+          262.125,
+          460.875
+        ],
+        [
+          263.03125,
+          461.46875
+        ],
+        [
+          264.0,
+          462.0
+        ],
+        [
+          265.03125,
+          462.46875
+        ],
+        [
+          266.125,
+          462.875
+        ],
+        [
+          267.28125,
+          463.21875
+        ],
+        [
+          268.5,
+          463.5
+        ],
+        [
+          269.78125,
+          463.71875
+        ],
+        [
+          271.125,
+          463.875
+        ],
+        [
+          272.53125,
+          463.96875
+        ],
+        [
+          274.0,
+          464.0
+        ]
+      ],
+      "junction": "OS",
+      "fromRoadNo": 4,
+      "fromNode": 1,
+      "toRoadNo": 15,
+      "toNode": 1,
+      "controlPoint": [
+        256,
+        464
+      ],
+      "reverseRoad": 72
+    },
+    {
+      "id": 72,
+      "kind": "turn",
+      "direction": 1,
+      "allowedEntryNodes": [
+        1
+      ],
+      "nodeS": [
+        {
+          "roadNo": 4,
+          "enterNode": 1
+        }
+      ],
+      "nodeE": [
+        {
+          "roadNo": 15,
+          "enterNode": 1
+        }
+      ],
+      "defaultRoadS": 4,
+      "defaultRoadE": 15,
+      "points": [
+        [
+          256.0,
+          446.0
+        ],
+        [
+          256.43056,
+          447.06944
+        ],
+        [
+          256.88889,
+          448.11111
+        ],
+        [
+          257.375,
+          449.125
+        ],
+        [
+          257.88889,
+          450.11111
+        ],
+        [
+          258.43056,
+          451.06944
+        ],
+        [
+          259.0,
+          452.0
+        ],
+        [
+          259.59722,
+          452.90278
+        ],
+        [
+          260.22222,
+          453.77778
+        ],
+        [
+          260.875,
+          454.625
+        ],
+        [
+          261.55556,
+          455.44444
+        ],
+        [
+          262.26389,
+          456.23611
+        ],
+        [
+          263.0,
+          457.0
+        ],
+        [
+          263.76389,
+          457.73611
+        ],
+        [
+          264.55556,
+          458.44444
+        ],
+        [
+          265.375,
+          459.125
+        ],
+        [
+          266.22222,
+          459.77778
+        ],
+        [
+          267.09722,
+          460.40278
+        ],
+        [
+          268.0,
+          461.0
+        ],
+        [
+          268.93056,
+          461.56944
+        ],
+        [
+          269.88889,
+          462.11111
+        ],
+        [
+          270.875,
+          462.625
+        ],
+        [
+          271.88889,
+          463.11111
+        ],
+        [
+          272.93056,
+          463.56944
+        ],
+        [
+          274.0,
+          464.0
+        ]
+      ],
+      "junction": "OS",
+      "fromRoadNo": 15,
+      "fromNode": 1,
+      "toRoadNo": 4,
+      "toNode": 1,
+      "controlPoint": [
+        261,
+        459
+      ],
+      "reverseRoad": 71
+    }
+  ],
+  "junctions": [
+    {
+      "id": "C",
+      "center": [
+        256,
+        256
+      ],
+      "straightConnections": [
+        {
+          "fromRoadNo": 5,
+          "fromNode": 1,
+          "toRoadNo": 6,
+          "toNode": 0,
+          "bidirectional": true,
+          "points": [
+            [
+              238,
+              256
+            ],
+            [
+              274,
+              256
+            ]
+          ]
+        },
+        {
+          "fromRoadNo": 7,
+          "fromNode": 1,
+          "toRoadNo": 8,
+          "toNode": 0,
+          "bidirectional": true,
+          "points": [
+            [
+              256,
+              238
+            ],
+            [
+              256,
+              274
+            ]
+          ]
+        }
+      ],
+      "connectorRoads": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ]
+    },
+    {
+      "id": "IW",
+      "center": [
+        144,
+        256
+      ],
+      "straightConnections": [
+        {
+          "fromRoadNo": 1,
+          "fromNode": 1,
+          "toRoadNo": 5,
+          "toNode": 0,
+          "bidirectional": true,
+          "points": [
+            [
+              126,
+              256
+            ],
+            [
+              162,
+              256
+            ]
+          ]
+        },
+        {
+          "fromRoadNo": 9,
+          "fromNode": 0,
+          "toRoadNo": 12,
+          "toNode": 1,
+          "bidirectional": true,
+          "points": [
+            [
+              144,
+              238
+            ],
+            [
+              144,
+              274
+            ]
+          ]
+        }
+      ],
+      "connectorRoads": [
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32
+      ]
+    },
+    {
+      "id": "IN",
+      "center": [
+        256,
+        144
+      ],
+      "straightConnections": [
+        {
+          "fromRoadNo": 9,
+          "fromNode": 1,
+          "toRoadNo": 10,
+          "toNode": 0,
+          "bidirectional": true,
+          "points": [
+            [
+              238,
+              144
+            ],
+            [
+              274,
+              144
+            ]
+          ]
+        },
+        {
+          "fromRoadNo": 3,
+          "fromNode": 1,
+          "toRoadNo": 7,
+          "toNode": 0,
+          "bidirectional": true,
+          "points": [
+            [
+              256,
+              126
+            ],
+            [
+              256,
+              162
+            ]
+          ]
+        }
+      ],
+      "connectorRoads": [
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40
+      ]
+    },
+    {
+      "id": "IE",
+      "center": [
+        368,
+        256
+      ],
+      "straightConnections": [
+        {
+          "fromRoadNo": 6,
+          "fromNode": 1,
+          "toRoadNo": 2,
+          "toNode": 0,
+          "bidirectional": true,
+          "points": [
+            [
+              350,
+              256
+            ],
+            [
+              386,
+              256
+            ]
+          ]
+        },
+        {
+          "fromRoadNo": 10,
+          "fromNode": 1,
+          "toRoadNo": 11,
+          "toNode": 0,
+          "bidirectional": true,
+          "points": [
+            [
+              368,
+              238
+            ],
+            [
+              368,
+              274
+            ]
+          ]
+        }
+      ],
+      "connectorRoads": [
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48
+      ]
+    },
+    {
+      "id": "IS",
+      "center": [
+        256,
+        368
+      ],
+      "straightConnections": [
+        {
+          "fromRoadNo": 12,
+          "fromNode": 0,
+          "toRoadNo": 11,
+          "toNode": 1,
+          "bidirectional": true,
+          "points": [
+            [
+              238,
+              368
+            ],
+            [
+              274,
+              368
+            ]
+          ]
+        },
+        {
+          "fromRoadNo": 8,
+          "fromNode": 1,
+          "toRoadNo": 4,
+          "toNode": 0,
+          "bidirectional": true,
+          "points": [
+            [
+              256,
+              350
+            ],
+            [
+              256,
+              386
+            ]
+          ]
+        }
+      ],
+      "connectorRoads": [
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56
+      ]
+    },
+    {
+      "id": "OW",
+      "center": [
+        48,
+        256
+      ],
+      "straightConnections": [
+        {
+          "fromRoadNo": 13,
+          "fromNode": 0,
+          "toRoadNo": 16,
+          "toNode": 1,
+          "bidirectional": true,
+          "points": [
+            [
+              48,
+              238
+            ],
+            [
+              48,
+              274
+            ]
+          ]
+        }
+      ],
+      "connectorRoads": [
+        57,
+        58,
+        59,
+        60
+      ]
+    },
+    {
+      "id": "ON",
+      "center": [
+        256,
+        48
+      ],
+      "straightConnections": [
+        {
+          "fromRoadNo": 13,
+          "fromNode": 1,
+          "toRoadNo": 14,
+          "toNode": 0,
+          "bidirectional": true,
+          "points": [
+            [
+              238,
+              48
+            ],
+            [
+              274,
+              48
+            ]
+          ]
+        }
+      ],
+      "connectorRoads": [
+        61,
+        62,
+        63,
+        64
+      ]
+    },
+    {
+      "id": "OE",
+      "center": [
+        464,
+        256
+      ],
+      "straightConnections": [
+        {
+          "fromRoadNo": 14,
+          "fromNode": 1,
+          "toRoadNo": 15,
+          "toNode": 0,
+          "bidirectional": true,
+          "points": [
+            [
+              464,
+              238
+            ],
+            [
+              464,
+              274
+            ]
+          ]
+        }
+      ],
+      "connectorRoads": [
+        65,
+        66,
+        67,
+        68
+      ]
+    },
+    {
+      "id": "OS",
+      "center": [
+        256,
+        464
+      ],
+      "straightConnections": [
+        {
+          "fromRoadNo": 16,
+          "fromNode": 0,
+          "toRoadNo": 15,
+          "toNode": 1,
+          "bidirectional": true,
+          "points": [
+            [
+              238,
+              464
+            ],
+            [
+              274,
+              464
+            ]
+          ]
+        }
+      ],
+      "connectorRoads": [
+        69,
+        70,
+        71,
+        72
+      ]
+    }
+  ]
+}

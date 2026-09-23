@@ -1,0 +1,25 @@
+{
+  "roads": [
+    {
+      "id": 1,
+      "nodeE": [{ "roadNo": 2, "direction": 0 }],
+      "defaultRoadE": 2,
+      "points": [[0, 0], [0, -108]]
+    },
+    {
+      "id": 2,
+      "nodeS": [{ "roadNo": 1, "direction": 1 }],
+      "defaultRoadS": 1,
+      "points": [[0, -292], [0, -400]]
+    }
+  ],
+  "mainRoad": [
+    {
+      "fromRoadNo": 1,
+      "fromNode": 1,
+      "toRoadNo": 2,
+      "toNode": 0,
+      "points": [[0, -108], [0, -292]]
+    }
+  ]
+}

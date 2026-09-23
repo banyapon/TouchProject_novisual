@@ -1,0 +1,1 @@
+PASS: 135 checks. All approach directions, shared turn IDs, straight-span distance, reverse history, branch replacement, open endpoints, world scale, scene references, Play Mode Rigidbody, gesture parity, previews, camera and slider.

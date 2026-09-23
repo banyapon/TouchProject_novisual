@@ -1,0 +1,15 @@
+{
+  "roads": 72,
+  "mainRoads": 16,
+  "turnRoads": 56,
+  "reversePairs": 28,
+  "junctions": 9,
+  "straightContinuations": 14,
+  "directedTravelStates": 88,
+  "allIdsValid": true,
+  "allConnectionsReciprocal": true,
+  "allTurnsMeetRoadEndpoints": true,
+  "noDiagonalMainRoads": true,
+  "exactlyOneLegalRoutePerExit": true,
+  "allTravelStatesMutuallyReachable": true
+}

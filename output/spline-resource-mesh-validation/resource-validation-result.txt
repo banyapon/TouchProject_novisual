@@ -1,0 +1,1 @@
+PASS: 513 checks. Resource models, intersection coverage, curve ports, road support, forward/reverse travel, Undo, repeat Refresh, scene persistence and actual splinemovement in Play Mode.
