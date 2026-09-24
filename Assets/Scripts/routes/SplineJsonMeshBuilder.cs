@@ -37,7 +37,9 @@ public static class SplineJsonMeshBuilder
         {
             var mesh = new Mesh { name = name, indexFormat = IndexFormat.UInt32 };
             mesh.SetVertices(vertices); mesh.SetTriangles(triangles, 0); mesh.SetUVs(0, uv);
-            mesh.RecalculateNormals(); mesh.RecalculateBounds();
+            mesh.RecalculateNormals();
+            mesh.RecalculateTangents();
+            mesh.RecalculateBounds();
             return mesh;
         }
     }
@@ -53,6 +55,32 @@ public static class SplineJsonMeshBuilder
     public static void Build(IReadOnlyList<Vector3[]> paths, float width, float curbWidth, float curbHeight,
         out Mesh roadMesh, out Mesh curbMesh, IReadOnlyList<Vector3?> fillCenters = null)
     {
+        BuildGeometry(paths, width, curbWidth, curbHeight, true, true,
+            out roadMesh, out curbMesh, fillCenters);
+    }
+
+    // ทำเฉพาะพื้นถนน ขอบไม่เกี่ยว แยกไว้จะได้แก้ง่ายๆ
+    public static Mesh BuildRoad(IReadOnlyList<Vector3[]> paths, float width,
+        IReadOnlyList<Vector3?> fillCenters = null)
+    {
+        BuildGeometry(paths, width, 0f, 0f, true, false,
+            out Mesh roadMesh, out _, fillCenters);
+        return roadMesh;
+    }
+
+    // ทำเฉพาะขอบ Extrude ไม่ต้องสร้างพื้นถนนซ้ำ
+    public static Mesh BuildEdges(IReadOnlyList<Vector3[]> paths, float width,
+        float curbWidth, float curbHeight, IReadOnlyList<Vector3?> fillCenters = null)
+    {
+        BuildGeometry(paths, width, curbWidth, curbHeight, false, true,
+            out _, out Mesh edgeMesh, fillCenters);
+        return edgeMesh;
+    }
+
+    private static void BuildGeometry(IReadOnlyList<Vector3[]> paths, float width,
+        float curbWidth, float curbHeight, bool buildRoad, bool buildEdges,
+        out Mesh roadMesh, out Mesh curbMesh, IReadOnlyList<Vector3?> fillCenters)
+    {
         if (width <= 0f || curbWidth < 0f || curbHeight < 0f) throw new ArgumentException("Invalid road dimensions.");
         var road = new Geometry();
         var curb = new Geometry();
@@ -62,8 +90,6 @@ public static class SplineJsonMeshBuilder
                 segments.Add(new Segment { a = paths[p][i - 1], b = paths[p][i], path = p });
         float half = width * 0.5f;
         var fills = new List<FillTriangle>();
-        // A turn's control point lies on the straight crossing in this schema. Fill toward it
-        // so the meeting road ribbons do not leave small enclosed holes in the junction.
         if (fillCenters != null)
             for (int p = 0; p < paths.Count; p++)
             {
@@ -74,7 +100,7 @@ public static class SplineJsonMeshBuilder
                     Vector3 a = paths[p][i - 1], b = paths[p][i];
                     if (Vector3.Cross(a - center, b - center).sqrMagnitude < 0.00000001f) continue;
                     fills.Add(new FillTriangle { a = center, b = a, c = b });
-                    road.Triangle(center, a, b);
+                    if (buildRoad) road.Triangle(center, a, b);
                 }
             }
         for (int pathIndex = 0; pathIndex < paths.Count; pathIndex++)
@@ -96,8 +122,9 @@ public static class SplineJsonMeshBuilder
             {
                 Vector3 a = points[i - 1], b = points[i];
                 Vector3 oa = offsets[i - 1], ob = offsets[i];
-                road.Quad(a - oa * half, b - ob * half, b + ob * half, a + oa * half, Vector3.up);
-                if (curbWidth == 0f || curbHeight == 0f) continue;
+                if (buildRoad)
+                    road.Quad(a - oa * half, b - ob * half, b + ob * half, a + oa * half, Vector3.up);
+                if (!buildEdges || curbWidth == 0f || curbHeight == 0f) continue;
                 foreach (int side in new[] { -1, 1 })
                 {
                     Vector3 innerA = a + oa * (half * side), innerB = b + ob * (half * side);
@@ -129,6 +156,14 @@ public static class SplineJsonMeshBuilder
         foreach (var segment in segments)
         {
             if (segment.path == ownPath) continue;
+
+            // ส่วนใหญ่ถนนอยู่ไกลกัน เช็กกรอบง่ายๆ ก่อน จะได้ไม่คำนวณระยะทุกเส้น
+            if (point.x < Mathf.Min(segment.a.x, segment.b.x) - threshold ||
+                point.x > Mathf.Max(segment.a.x, segment.b.x) + threshold ||
+                point.z < Mathf.Min(segment.a.z, segment.b.z) - threshold ||
+                point.z > Mathf.Max(segment.a.z, segment.b.z) + threshold)
+                continue;
+
             Vector3 ab = segment.b - segment.a;
             float lengthSquared = ab.sqrMagnitude;
             if (lengthSquared < 0.000001f) continue;

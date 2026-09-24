@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Splines;
-using UnityEngine.Splines.ExtrusionShapes;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -18,7 +16,7 @@ using UnityEditor;
 /// - currentPos วัดจาก NodeS เสมอ
 /// - LaneS / LaneE คือ mapping จากเลนที่เลือก ไปยังถนนถัดไป
 [ExecuteAlways]
-[RequireComponent(typeof(SplineContainer), typeof(SplineExtrude))]
+[RequireComponent(typeof(SplineContainer))]
 public class RoadNetworkSplineCreator : MonoBehaviour
 {
     public enum MoveMode
@@ -167,6 +165,9 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     [SerializeField] private int laneCount = 2;
     [SerializeField] private float segmentsPerUnit = 1f;
     [SerializeField] private Material roadMaterial;
+    [SerializeField] private Material roadEdgeMaterial;
+    [SerializeField, Min(0f)] private float roadEdgeWidth = 0.2f;
+    [SerializeField, Min(0f)] private float roadEdgeHeight = 0.35f;
     [SerializeField] private string roadLayerName = "Road";
     [SerializeField] private bool addRoadCollider = true;
 
@@ -176,12 +177,9 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     [SerializeField] private float debugMoveDistance = 10f;
 
     private SplineContainer splineContainer;
-    private SplineExtrude splineExtrude;
-
-    private const float RoadShapeWidth = 1.2f;
-    private static readonly FieldInfo ShapeField = typeof(SplineExtrude).GetField(
-        "m_Shape",
-        BindingFlags.Instance | BindingFlags.NonPublic);
+    [SerializeField, HideInInspector] private GameObject roadMeshRoot;
+    [SerializeField, HideInInspector] private MeshFilter roadMeshFilter;
+    [SerializeField, HideInInspector] private MeshFilter roadEdgeFilter;
 
     // -------------------------------------------------------------------------
     // จุด spline ของถนนแต่ละเส้น: สี่แยกกลางเมือง
@@ -221,6 +219,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     private static readonly Vector3 NorthDestination = Point(0f, 0f, ArmLength);
     private static readonly Vector3 SouthDestination = Point(0f, 0f, -ArmLength);
 
+#if false // ชุดเก่าไม่มีที่ไหนเรียกแล้ว ไม่เอาเข้า build
     private static readonly Vector3[][] LegacyRouteSegments =
     {
         // Road 1: ทิศตะวันตก NodeS = ขอบแผนที่, NodeE = ปากแยก
@@ -282,6 +281,8 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         false, false, false, false, false, false, true, true, true, true,
         true, true, true, true
     };
+
+#endif
 
     // 1-14 retain their previous meaning. Roads 15-22 add the inner
     // radial/loop segments, Roads 23-46 add four complete junctions,
@@ -347,6 +348,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         return connections.ToArray();
     }
 
+#if false // method เก่าไม่มี caller แล้ว ไม่เอาเข้า build
     private RoadData[] BuildLegacyRoads()
     {
         RoadData[] roads =
@@ -535,6 +537,8 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     }
 
     /// สุ่มจุดตาม Quadratic Bezier
+#endif
+
     [ContextMenu("Reload Road Data")]
     public void LoadRoadData()
     {
@@ -1092,7 +1096,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         LoadRoadData();
 
         splineContainer.Splines = activeSplines;
-        SetupRoadExtrude();
+        BuildRoadMeshes();
     }
 
     [ContextMenu("Debug Move Forward")]
@@ -1603,7 +1607,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
             ToFloat3((control - start) * (2f / 3f))), TangentMode.Broken);
         spline.Add(new BezierKnot(ToFloat3(end), ToFloat3((control - end) * (2f / 3f)),
             ToFloat3(departure)), TangentMode.Broken);
-*/
+        */
 
 
         if (hasApproaches)
@@ -1800,40 +1804,124 @@ public class RoadNetworkSplineCreator : MonoBehaviour
     private void CacheComponents()
     {
         splineContainer = GetOrAddComponent<SplineContainer>();
-        splineExtrude = GetOrAddComponent<SplineExtrude>();
     }
 
-    private void SetupRoadExtrude()
+    private void BuildRoadMeshes()
     {
-        if (splineExtrude == null)
+        if (!createRoadMesh)
         {
+            if (roadMeshRoot != null) roadMeshRoot.SetActive(false);
             return;
         }
 
-        splineExtrude.enabled = createRoadMesh;
-        splineExtrude.Container = splineContainer;
-        splineExtrude.RebuildOnSplineChange = true;
-        splineExtrude.RebuildFrequency = 30;
-        splineExtrude.SegmentsPerUnit = segmentsPerUnit;
-        splineExtrude.Capped = true;
-        splineExtrude.Range = new Vector2(0f, 1f);
-
+        // ใช้ตัวสร้างเดียวกับ SplineJson จะได้หน้าตาถนนกับขอบเหมือนกัน
         float roadWidth = Mathf.Max(0.1f, laneWidth * Mathf.Max(1, laneCount));
-        splineExtrude.Radius = roadWidth / RoadShapeWidth;
-        SetRoadExtrudeShape(splineExtrude);
+        // ค่าเดิม 0.1 ละเอียดเกินไปมาก เพราะตัวเช็กขอบต้องไล่ดูทุก segment
+        // 0.25-1.0 ยังโค้งเนียน แต่สร้าง mesh เร็วขึ้นหลายเท่า
+        float sampleSpacing = Mathf.Clamp(1f / Mathf.Max(1f, segmentsPerUnit), 0.25f, 1f);
+        List<Vector3[]> paths = SampleRoadSplines(sampleSpacing);
 
-        if (TryGetComponent(out MeshRenderer meshRenderer))
-        {
-            meshRenderer.enabled = createRoadMesh;
-            if (roadMaterial != null)
-            {
-                meshRenderer.sharedMaterial = roadMaterial;
-            }
-        }
+        // ำextrude ขอบ คำนวณแนวถนนรอบเดียว
+        SplineJsonMeshBuilder.Build(paths, roadWidth, roadEdgeWidth, roadEdgeHeight,
+            out Mesh roadMesh, out Mesh edgeMesh);
 
         SetRoadLayer();
-        SetupRoadCollider();
-        splineExtrude.Rebuild();
+        EnsureRoadMeshObjects();
+        EnsureRoadMaterials();
+        ApplyGeneratedMesh(roadMeshFilter, roadMesh, roadMaterial, addRoadCollider);
+        ApplyGeneratedMesh(roadEdgeFilter, edgeMesh, roadEdgeMaterial, false);
+        roadMeshRoot.SetActive(true);
+
+        // ถ้า scene เก่าเคยใช้ SplineExtrude ให้ปิดของเก่าไว้ ไม่งั้น mesh จะซ้อนกัน
+        if (TryGetComponent(out SplineExtrude oldExtrude)) oldExtrude.enabled = false;
+        if (TryGetComponent(out MeshRenderer meshRenderer))
+            meshRenderer.enabled = false;
+        if (TryGetComponent(out MeshCollider oldCollider))
+            oldCollider.enabled = false;
+    }
+
+    private List<Vector3[]> SampleRoadSplines(float spacing)
+    {
+        var paths = new List<Vector3[]>();
+
+        foreach (Spline spline in splineContainer.Splines)
+        {
+            float length = spline.GetLength();
+            if (length <= 0.0001f) continue;
+
+            int sampleCount = Mathf.Clamp(Mathf.CeilToInt(length / spacing), 1, 10000);
+            var points = new Vector3[sampleCount + 1];
+
+            for (int i = 0; i <= sampleCount; i++)
+                points[i] = spline.EvaluatePosition(i / (float)sampleCount);
+
+            paths.Add(points);
+        }
+
+        return paths;
+    }
+
+    private void EnsureRoadMeshObjects()
+    {
+        if (roadMeshRoot == null)
+            roadMeshRoot = CreateRoadMeshObject("Road Mesh", transform);
+        if (roadMeshFilter == null)
+            roadMeshFilter = CreateRoadMeshChild("Road", roadMeshRoot.transform);
+        if (roadEdgeFilter == null)
+            roadEdgeFilter = CreateRoadMeshChild("Road Edges", roadMeshRoot.transform);
+    }
+
+    private MeshFilter CreateRoadMeshChild(string objectName, Transform parent)
+    {
+        GameObject child = CreateRoadMeshObject(objectName, parent);
+        child.AddComponent<MeshRenderer>();
+        return child.AddComponent<MeshFilter>();
+    }
+
+    private GameObject CreateRoadMeshObject(string objectName, Transform parent)
+    {
+        var child = new GameObject(objectName);
+        child.transform.SetParent(parent, false);
+        child.layer = gameObject.layer;
+        return child;
+    }
+
+    private void EnsureRoadMaterials()
+    {
+        if (roadMaterial == null)
+            roadMaterial = CreateRoadMaterial("Road", new Color(0.16f, 0.18f, 0.21f));
+        if (roadEdgeMaterial == null)
+            roadEdgeMaterial = CreateRoadMaterial("Road Edge", new Color(0.7f, 0.73f, 0.77f));
+    }
+
+    private static Material CreateRoadMaterial(string materialName, Color color)
+    {
+        bool hasRenderPipeline = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null;
+        Shader shader = Shader.Find(hasRenderPipeline ? "Universal Render Pipeline/Lit" : "Standard");
+        if (shader == null) shader = Shader.Find("Standard");
+        return new Material(shader) { name = materialName, color = color };
+    }
+
+    private void ApplyGeneratedMesh(MeshFilter filter, Mesh mesh, Material material, bool addCollider)
+    {
+        Mesh oldMesh = filter.sharedMesh;
+        filter.sharedMesh = mesh;
+        filter.GetComponent<MeshRenderer>().sharedMaterial = material;
+
+        // Rebuild ใน Editor บ่อยได้ ล้าง mesh รอบเก่าไว้ ไม่ให้ค้างกินหน่วยความจำ
+        if (oldMesh != null && oldMesh != mesh)
+        {
+            if (Application.isPlaying) Destroy(oldMesh);
+            else DestroyImmediate(oldMesh);
+        }
+
+        MeshCollider collider = filter.GetComponent<MeshCollider>();
+        if (addCollider && collider == null) collider = filter.gameObject.AddComponent<MeshCollider>();
+        if (collider == null) return;
+
+        collider.sharedMesh = null;
+        collider.enabled = addCollider && mesh != null && mesh.vertexCount > 0;
+        if (collider.enabled) collider.sharedMesh = mesh;
     }
 
     private void SetRoadLayer()
@@ -1878,30 +1966,6 @@ public class RoadNetworkSplineCreator : MonoBehaviour
 
         Debug.LogWarning($"Could not create layer '{roadLayerName}' because all user layers are full.", this);
 #endif
-    }
-
-    private void SetupRoadCollider()
-    {
-        if (TryGetComponent(out MeshCollider meshCollider))
-        {
-            meshCollider.enabled = addRoadCollider;
-            return;
-        }
-
-        if (addRoadCollider)
-        {
-            GetOrAddComponent<MeshCollider>();
-        }
-    }
-
-    private static void SetRoadExtrudeShape(SplineExtrude extrude)
-    {
-        if (ShapeField == null)
-        {
-            return;
-        }
-
-        ShapeField.SetValue(extrude, new Road());
     }
 
     private static Vector3 Point(float x, float y, float z)

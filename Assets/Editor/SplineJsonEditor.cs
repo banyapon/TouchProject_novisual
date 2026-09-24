@@ -83,8 +83,8 @@ public sealed class SplineJsonEditor : Editor
             Mesh temporarySurface = source.RoadMesh, temporaryCurbs = source.CurbMesh;
             Mesh savedSurface = SaveMesh(temporarySurface, shared ? null : oldSurface, folder + "/Road.asset");
             Mesh savedCurbs = SaveMesh(temporaryCurbs, shared ? null : oldCurbs, folder + "/Curbs.asset");
-            SaveMaterial(source.RoadMaterial, folder + "/Road Material.mat");
-            SaveMaterial(source.CurbMaterial, folder + "/Curb Material.mat");
+            SaveMaterial(source.RoadMaterial, folder + "/Road.mat");
+            SaveMaterial(source.CurbMaterial, folder + "/Road Edge.mat");
             source.SetMeshes(savedSurface, savedCurbs);
             if (temporarySurface != savedSurface) DestroyImmediate(temporarySurface);
             if (temporaryCurbs != savedCurbs) DestroyImmediate(temporaryCurbs);

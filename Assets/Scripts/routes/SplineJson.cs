@@ -36,18 +36,21 @@ public class SplineJson : MonoBehaviour
     [Header("JSON Source")]
     [SerializeField] private TextAsset junctionJson;
     [SerializeField] private string resourcePath = "data/junction";
+
     [Header("JSON coordinates to local X/Z")]
     [SerializeField] private Vector2 jsonOrigin = new Vector2(0f, -200f);
     [SerializeField, Min(0.0001f)] private float unitsPerJsonUnit = 0.1f;
     [SerializeField] private float surfaceHeight = 0.02f;
+
     [Header("Road and Raised Edges")]
     [SerializeField, Min(0.01f)] private float roadWidth = 2.5f;
     [SerializeField, Min(0f)] private float curbWidth = 0.2f;
     [SerializeField, Min(0f)] private float curbHeight = 0.35f;
-    [SerializeField, Min(0.02f)] private float sampleSpacing = 0.25f;
+    [SerializeField, Min(0.02f)] private float sampleSpacing = 0.1f;
     [SerializeField] private Material roadMaterial;
     [SerializeField] private Material curbMaterial;
     [SerializeField] private bool addMeshColliders = true;
+
     [Header("Scene View")]
     [SerializeField] private bool showLabels = true;
     [SerializeField] private bool showEndpoints = true;
@@ -80,7 +83,10 @@ public class SplineJson : MonoBehaviour
     public bool ShowConnections => showConnections;
     public float RoadWidth => roadWidth;
 
-    private void Reset() { junctionJson = Resources.Load<TextAsset>(resourcePath); }
+    private void Reset()
+    {
+        junctionJson = Resources.Load<TextAsset>(resourcePath);
+    }
 
     private void OnValidate()
     {
@@ -88,98 +94,152 @@ public class SplineJson : MonoBehaviour
         roadWidth = Mathf.Max(0.01f, roadWidth);
         curbWidth = Mathf.Max(0f, curbWidth);
         curbHeight = Mathf.Max(0f, curbHeight);
-        sampleSpacing = Mathf.Max(0.02f, sampleSpacing);
+        // ห่างเกิน 0.1 โค้งจะเริ่มเห็นเป็นเหลี่ยม
+        sampleSpacing = Mathf.Clamp(sampleSpacing, 0.02f, 0.1f);
     }
 
     public Vector3 JsonToLocal(float[] point)
     {
-        // JSON y increases down the picture; north is +Z in Unity.
-        return new Vector3((point[0] - jsonOrigin.x) * unitsPerJsonUnit, surfaceHeight,
-            (jsonOrigin.y - point[1]) * unitsPerJsonUnit);
+        // JSON ลงล่างเป็นบวก แต่ในฉากเราใช้ Z ขึ้นบน เลยต้องกลับ - ตรงนี้
+        float x = (point[0] - jsonOrigin.x) * unitsPerJsonUnit;
+        float z = (jsonOrigin.y - point[1]) * unitsPerJsonUnit;
+        return new Vector3(x, surfaceHeight, z);
     }
 
     public bool Refresh()
     {
         try
         {
-            TextAsset asset = junctionJson != null ? junctionJson : Resources.Load<TextAsset>(resourcePath);
-            if (asset == null) throw new InvalidOperationException("Assign junction.json or provide Resources/" + resourcePath + ".json.");
-            // Parse, validate, and construct everything before changing the existing scene.
-            var document = SplineJsonDocument.Parse(asset.text);
-            var nextSplines = new List<Spline>();
-            var nextRoads = new List<RoadBinding>();
-            foreach (var road in document.roads)
+            TextAsset asset = junctionJson != null
+                ? junctionJson
+                : Resources.Load<TextAsset>(resourcePath);
+
+            if (asset == null)
+                throw new InvalidOperationException("หาไฟล์ JSON ไม่เจอ: Resources/" + resourcePath + ".json");
+
+            SplineJsonDocument document = SplineJsonDocument.Parse(asset.text);
+            var roadSplines = new List<Spline>();
+            var roadBindings = new List<RoadBinding>();
+
+            foreach (SplineJsonRoad road in document.roads)
             {
-                nextRoads.Add(new RoadBinding
-                {
-                    id = road.id, label = string.IsNullOrEmpty(road.label) ? road.id.ToString() : road.label,
-                    kind = road.kind, bidirectional = road.bidirectional, splineIndex = nextSplines.Count,
-                    nodeS = road.nodeS, nodeE = road.nodeE, defaultRoadS = road.defaultRoadS, defaultRoadE = road.defaultRoadE,
-                    hasJunctionControl = road.kind == "turn" && road.controlPoint != null,
-                    junctionControl = road.controlPoint != null ? JsonToLocal(road.controlPoint) : Vector3.zero
-                });
-                nextSplines.Add(CreateSpline(road.points, road.controlPoint));
+                roadBindings.Add(CreateRoadBinding(road, roadSplines.Count));
+                roadSplines.Add(CreateSpline(road.points, road.controlPoint));
             }
-            var nextStraightSplines = new List<Spline>();
-            var nextStraights = new List<StraightBinding>();
-            foreach (var straight in document.straightConnections)
+
+            var straightSplines = new List<Spline>();
+            var straightBindings = new List<StraightBinding>();
+
+            foreach (SplineJsonStraight straight in document.straightConnections)
             {
-                nextStraightSplines.Add(CreateSpline(straight.points, null));
-                nextStraights.Add(new StraightBinding
+                straightSplines.Add(CreateSpline(straight.points, null));
+                straightBindings.Add(new StraightBinding
                 {
-                    fromRoadNo = straight.fromRoadNo, fromNode = straight.fromNode,
-                    toRoadNo = straight.toRoadNo, toNode = straight.toNode
+                    fromRoadNo = straight.fromRoadNo,
+                    fromNode = straight.fromNode,
+                    toRoadNo = straight.toRoadNo,
+                    toNode = straight.toNode
                 });
             }
+
             RecordChange("Refresh JSON Splines");
-            if (straightContainer == null)
-                straightContainer = AddOwnedComponent<SplineContainer>(CreateChild("Straight Connections (no road IDs)", transform));
-            Container.Splines = nextSplines;
-            straightContainer.Splines = nextStraightSplines;
-            roads = nextRoads.ToArray(); straights = nextStraights.ToArray(); junctionJson = asset;
-            if (meshRoot != null) meshRoot.SetActive(false); // Old geometry must not masquerade as the refreshed layout.
+            EnsureStraightContainer();
+
+            Container.Splines = roadSplines;
+            straightContainer.Splines = straightSplines;
+            roads = roadBindings.ToArray();
+            straights = straightBindings.ToArray();
+            junctionJson = asset;
+
+            //เปลี่ยนเส้นแล้ว ซ่อน mesh เก่าไว้ก่อน มี Extrude ค่อยสร้างใหม่
+            if (meshRoot != null) meshRoot.SetActive(false);
+
             hasError = false;
-            lastMessage = $"Refreshed {roads.Length} road splines and {straights.Length} straight connections. Click Extrude to build meshes.";
+            lastMessage = $"โหลดถนน {roads.Length} เส้น และทางตรงกลางแยก {straights.Length} เส้นแล้ว";
             return true;
         }
-        catch (Exception exception) { return Fail(exception.Message); }
+        catch (Exception exception)
+        {
+            return Fail(exception.Message);
+        }
+    }
+
+    private RoadBinding CreateRoadBinding(SplineJsonRoad road, int splineIndex)
+    {
+        return new RoadBinding
+        {
+            id = road.id,
+            label = string.IsNullOrEmpty(road.label) ? road.id.ToString() : road.label,
+            kind = road.kind,
+            splineIndex = splineIndex,
+            bidirectional = road.bidirectional,
+            nodeS = road.nodeS,
+            nodeE = road.nodeE,
+            defaultRoadS = road.defaultRoadS,
+            defaultRoadE = road.defaultRoadE,
+            hasJunctionControl = road.kind == "turn" && road.controlPoint != null,
+            junctionControl = road.controlPoint != null ? JsonToLocal(road.controlPoint) : Vector3.zero
+        };
     }
 
     private Spline CreateSpline(float[][] points, float[] controlPoint)
     {
-        var spline = new Spline();
-        if (controlPoint != null)
+        // มี control หรือมี 3 จุด = ถนนโค้ง ส่วน 2 จุด = ถนนตรง
+        if (controlPoint != null || points.Length == 3)
         {
-            float3 start = JsonToLocal(points[0]), end = JsonToLocal(points[points.Length - 1]);
-            float3 control = JsonToLocal(controlPoint);
-            // Exact conversion of the JSON quadratic curve to a cubic Unity spline.
-            spline.Add(new BezierKnot(start, float3.zero, (control - start) * (2f / 3f), quaternion.identity), TangentMode.Broken);
-            spline.Add(new BezierKnot(end, (control - end) * (2f / 3f), float3.zero, quaternion.identity), TangentMode.Broken);
+            float[] curveControl = controlPoint ?? points[1];
+            return CreateCurve(points[0], curveControl, points[points.Length - 1]);
         }
-        else
-            foreach (var point in points) spline.Add((float3)JsonToLocal(point), TangentMode.Linear);
+
+        var spline = new Spline();
+        foreach (float[] point in points)
+            spline.Add((float3)JsonToLocal(point), TangentMode.Linear);
+        return spline;
+    }
+
+    private Spline CreateCurve(float[] startPoint, float[] controlPoint, float[] endPoint)
+    {
+        float3 start = JsonToLocal(startPoint);
+        float3 control = JsonToLocal(controlPoint);
+        float3 end = JsonToLocal(endPoint);
+
+        // 0.9 ทำให้เลี้ยวกว้าง ไม่หักเป็นมุมแหลม
+        var spline = new Spline();
+        spline.Add(new BezierKnot(start, float3.zero, (control - start) * 1.1f, quaternion.identity), TangentMode.Broken);
+        spline.Add(new BezierKnot(end, (control - end) * 1.1f, float3.zero, quaternion.identity), TangentMode.Broken);
         return spline;
     }
 
     public RoadBinding FindRoad(int id)
     {
-        foreach (var road in roads) if (road.id == id) return road;
+        foreach (RoadBinding road in roads)
+            if (road.id == id) return road;
         return null;
     }
 
-    public bool TryGetTravelPose(int roadId, int enterNode, float progress, out Vector3 position, out Vector3 forward)
+    public bool TryGetTravelPose(int roadId, int enterNode, float progress,
+        out Vector3 position, out Vector3 forward)
     {
-        position = default; forward = default;
-        var road = FindRoad(roadId);
-        if (road == null || (enterNode != 0 && enterNode != 1) || (!road.bidirectional && enterNode == 1) ||
-            road.splineIndex >= Container.Splines.Count) return false;
+        position = default;
+        forward = default;
+        RoadBinding road = FindRoad(roadId);
+
+        if (road == null || (enterNode != 0 && enterNode != 1)) return false;
+        if (!road.bidirectional && enterNode == 1) return false;
+        if (road.splineIndex >= Container.Splines.Count) return false;
+
         float t = enterNode == 0 ? Mathf.Clamp01(progress) : 1f - Mathf.Clamp01(progress);
         position = Container.EvaluatePosition(road.splineIndex, t);
         forward = Container.EvaluateTangent(road.splineIndex, t);
-        // Linear Unity knots have zero Bezier derivative exactly at their endpoints.
+
+        // เส้นตรงบางทีปลายสุดให้ tangent เป็นศูนย์ เลยขยับมาวัดใกล้ๆ แทน
         if (forward.sqrMagnitude < 0.000001f)
-            forward = (Vector3)Container.EvaluatePosition(road.splineIndex, Mathf.Min(1f, t + 0.001f)) -
-                (Vector3)Container.EvaluatePosition(road.splineIndex, Mathf.Max(0f, t - 0.001f));
+        {
+            Vector3 after = Container.EvaluatePosition(road.splineIndex, Mathf.Min(1f, t + 0.001f));
+            Vector3 before = Container.EvaluatePosition(road.splineIndex, Mathf.Max(0f, t - 0.001f));
+            forward = after - before;
+        }
+
         forward = forward.normalized * (enterNode == 0 ? 1f : -1f);
         return true;
     }
@@ -189,39 +249,64 @@ public class SplineJson : MonoBehaviour
         try
         {
             if (roads.Length == 0 && !Refresh()) return false;
-            if (Container.Splines.Count != roads.Length || straightContainer == null || straightContainer.Splines.Count != straights.Length)
-                throw new InvalidOperationException("Spline count changed. Click Refresh before Extrude.");
-            var paths = new List<Vector3[]>();
-            Sample(Container, paths);
-            Sample(straightContainer, paths);
-            var fillCenters = new Vector3?[paths.Count];
-            foreach (var road in roads)
-                if (road.hasJunctionControl) fillCenters[road.splineIndex] = road.junctionControl;
-            SplineJsonMeshBuilder.Build(paths, roadWidth, curbWidth, curbHeight, out var surface, out var curbs, fillCenters);
+            ValidateSplineCount();
+
+            List<Vector3[]> paths = SampleAllSplines();
+            Vector3?[] fillCenters = FindJunctionCenters(paths.Count);
+
+            // แยกชัดๆ ผิวถนนทำส่วนหนึ่ง ขอบถนนทำอีกส่วนหนึ่ง
+            Mesh roadMesh = BuildRoadMesh(paths, fillCenters);
+            Mesh edgeMesh = ExtrudeRoadEdges(paths, fillCenters);
+
             RecordChange("Extrude JSON Roads");
-            if (meshRoot == null) meshRoot = CreateChild("Generated Road Mesh", transform);
-            if (surfaceFilter == null) surfaceFilter = CreateMeshChild("Road Surface", meshRoot.transform);
-            if (curbFilter == null) curbFilter = CreateMeshChild("Raised Curbs", meshRoot.transform);
-            if (roadMaterial == null) roadMaterial = MakeMaterial("Road Surface", new Color(0.16f, 0.18f, 0.21f));
-            if (curbMaterial == null) curbMaterial = MakeMaterial("Raised Curbs", new Color(0.7f, 0.73f, 0.77f));
-            SetMeshes(surface, curbs);
+            EnsureMeshObjects();
+            EnsureMaterials();
+            SetMeshes(roadMesh, edgeMesh);
             meshRoot.SetActive(true);
+
             hasError = false;
-            lastMessage = $"Extruded {roads.Length} roads + {straights.Length} connections; curbs {curbHeight:0.##} units high.";
+            lastMessage = $"สร้าง Road mesh {roads.Length} เส้น และขอบสูง {curbHeight:0.##} เรียบร้อย";
             return true;
         }
-        catch (Exception exception) { return Fail(exception.Message); }
+        catch (Exception exception)
+        {
+            return Fail(exception.Message);
+        }
+    }
+
+    private Mesh BuildRoadMesh(IReadOnlyList<Vector3[]> paths, IReadOnlyList<Vector3?> fillCenters)
+    {
+        // ฟังก์ชันนี้ทำเฉพาะพื้นถนน จะได้แก้เรื่องผิวโดยไม่ไปยุ่งกับขอบ
+        return SplineJsonMeshBuilder.BuildRoad(paths, roadWidth, fillCenters);
+    }
+
+    private Mesh ExtrudeRoadEdges(IReadOnlyList<Vector3[]> paths, IReadOnlyList<Vector3?> fillCenters)
+    {
+        // ฟังก์ชันนี้ทำเฉพาะขอบ Extrude ถ้า width/height เป็นศูนย์ก็ได้ mesh ว่าง
+        return SplineJsonMeshBuilder.BuildEdges(paths, roadWidth, curbWidth, curbHeight, fillCenters);
+    }
+
+    private List<Vector3[]> SampleAllSplines()
+    {
+        var paths = new List<Vector3[]>();
+        Sample(Container, paths);
+        Sample(straightContainer, paths);
+        return paths;
     }
 
     private void Sample(SplineContainer container, List<Vector3[]> destination)
     {
-        foreach (var spline in container.Splines)
+        foreach (Spline spline in container.Splines)
         {
             float length = spline.GetLength();
             if (float.IsNaN(length) || float.IsInfinity(length) || length < 0.0001f)
-                throw new InvalidOperationException("A spline has no usable length. Click Refresh to restore it from JSON.");
+                throw new InvalidOperationException("มี spline สั้นเกินไปหรือใช้งานไม่ได้ ลองกด Refresh ใหม่");
+
+            // ระยะ sample ยิ่งน้อย โค้งยิ่งเนียน แต่จำนวน vertex ก็เพิ่มตาม
             int count = Mathf.Max(1, Mathf.CeilToInt(length / sampleSpacing));
-            if (count > 10000) throw new InvalidOperationException("Too many mesh samples. Increase Sample Spacing or reduce coordinate scale.");
+            if (count > 10000)
+                throw new InvalidOperationException("จุด mesh เยอะเกินไป เพิ่ม Sample Spacing ขึ้นอีกนิด");
+
             var points = new Vector3[count + 1];
             for (int i = 0; i <= count; i++)
             {
@@ -232,10 +317,48 @@ public class SplineJson : MonoBehaviour
         }
     }
 
-    public void SetMeshes(Mesh surface, Mesh curbs)
+    private Vector3?[] FindJunctionCenters(int pathCount)
     {
-        ApplyMesh(surfaceFilter, surface, roadMaterial);
-        ApplyMesh(curbFilter, curbs, curbMaterial);
+        var centers = new Vector3?[pathCount];
+        foreach (RoadBinding road in roads)
+            if (road.hasJunctionControl) centers[road.splineIndex] = road.junctionControl;
+        return centers;
+    }
+
+    private void ValidateSplineCount()
+    {
+        bool roadCountWrong = Container.Splines.Count != roads.Length;
+        bool straightCountWrong = straightContainer == null || straightContainer.Splines.Count != straights.Length;
+        if (roadCountWrong || straightCountWrong)
+            throw new InvalidOperationException("จำนวน spline ไม่ตรงกับ JSON กด Refresh ก่อน Extrude");
+    }
+
+    private void EnsureStraightContainer()
+    {
+        if (straightContainer != null) return;
+        GameObject child = CreateChild("Straight Connections (no road IDs)", transform);
+        straightContainer = AddOwnedComponent<SplineContainer>(child);
+    }
+
+    private void EnsureMeshObjects()
+    {
+        if (meshRoot == null) meshRoot = CreateChild("Generated Road Mesh", transform);
+        if (surfaceFilter == null) surfaceFilter = CreateMeshChild("Road", meshRoot.transform);
+        if (curbFilter == null) curbFilter = CreateMeshChild("Road Edges", meshRoot.transform);
+    }
+
+    private void EnsureMaterials()
+    {
+        if (roadMaterial == null)
+            roadMaterial = MakeMaterial("Road", new Color(0.16f, 0.18f, 0.21f));
+        if (curbMaterial == null)
+            curbMaterial = MakeMaterial("Road Edge", new Color(0.7f, 0.73f, 0.77f));
+    }
+
+    public void SetMeshes(Mesh roadMesh, Mesh edgeMesh)
+    {
+        ApplyMesh(surfaceFilter, roadMesh, roadMaterial);
+        ApplyMesh(curbFilter, edgeMesh, curbMaterial);
     }
 
     private void ApplyMesh(MeshFilter filter, Mesh mesh, Material material)
@@ -243,30 +366,32 @@ public class SplineJson : MonoBehaviour
         if (filter == null) return;
         filter.sharedMesh = mesh;
         filter.GetComponent<MeshRenderer>().sharedMaterial = material;
-        var collider = filter.GetComponent<MeshCollider>();
-        if (addMeshColliders && collider == null) collider = AddOwnedComponent<MeshCollider>(filter.gameObject);
-        if (collider != null)
-        {
-            collider.sharedMesh = null;
-            collider.enabled = addMeshColliders && mesh != null && mesh.vertexCount > 0;
-            if (collider.enabled) collider.sharedMesh = mesh;
-        }
+
+        MeshCollider collider = filter.GetComponent<MeshCollider>();
+        if (addMeshColliders && collider == null)
+            collider = AddOwnedComponent<MeshCollider>(filter.gameObject);
+
+        if (collider == null) return;
+        collider.sharedMesh = null;
+        collider.enabled = addMeshColliders && mesh != null && mesh.vertexCount > 0;
+        if (collider.enabled) collider.sharedMesh = mesh;
     }
 
-    private MeshFilter CreateMeshChild(string name, Transform parent)
+    private MeshFilter CreateMeshChild(string objectName, Transform parent)
     {
-        var child = CreateChild(name, parent);
+        GameObject child = CreateChild(objectName, parent);
         AddOwnedComponent<MeshRenderer>(child);
         return AddOwnedComponent<MeshFilter>(child);
     }
 
-    private GameObject CreateChild(string name, Transform parent)
+    private GameObject CreateChild(string objectName, Transform parent)
     {
-        var child = new GameObject(name);
+        var child = new GameObject(objectName);
         child.transform.SetParent(parent, false);
         child.layer = gameObject.layer;
 #if UNITY_EDITOR
-        if (!Application.isPlaying) Undo.RegisterCreatedObjectUndo(child, "Create JSON Road Object");
+        if (!Application.isPlaying)
+            Undo.RegisterCreatedObjectUndo(child, "Create JSON Road Object");
 #endif
         return child;
     }
@@ -279,24 +404,26 @@ public class SplineJson : MonoBehaviour
         return target.AddComponent<T>();
     }
 
-    private static Material MakeMaterial(string name, Color color)
+    private static Material MakeMaterial(string materialName, Color color)
     {
-        var shader = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null
-            ? Shader.Find("Universal Render Pipeline/Lit") : Shader.Find("Standard");
+        bool usesRenderPipeline = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null;
+        Shader shader = Shader.Find(usesRenderPipeline ? "Universal Render Pipeline/Lit" : "Standard");
         if (shader == null) shader = Shader.Find("Standard");
-        return new Material(shader) { name = name, color = color };
+        return new Material(shader) { name = materialName, color = color };
     }
 
-    private void RecordChange(string name)
+    private void RecordChange(string actionName)
     {
 #if UNITY_EDITOR
-        if (!Application.isPlaying) Undo.RegisterFullObjectHierarchyUndo(gameObject, name);
+        if (!Application.isPlaying)
+            Undo.RegisterFullObjectHierarchyUndo(gameObject, actionName);
 #endif
     }
 
     private bool Fail(string message)
     {
-        hasError = true; lastMessage = message;
+        hasError = true;
+        lastMessage = message;
         Debug.LogError("SplineJson: " + message, this);
         return false;
     }

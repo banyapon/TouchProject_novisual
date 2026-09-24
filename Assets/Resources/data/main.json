@@ -1,0 +1,2006 @@
+{
+    "roads":  [
+                  {
+                      "id":  1,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  49,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  50,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  2,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  38,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  39,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  49,
+                      "defaultRoadE":  2,
+                      "points":  [
+                                     [
+                                         198,
+                                         364
+                                     ],
+                                     [
+                                         198,
+                                         292
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  2,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  1,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  37,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  40,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  3,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  26,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  27,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  1,
+                      "defaultRoadE":  3,
+                      "points":  [
+                                     [
+                                         198,
+                                         276
+                                     ],
+                                     [
+                                         198,
+                                         208
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  3,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  4,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  30,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  31,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  2,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  25,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  28,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  4,
+                      "defaultRoadE":  2,
+                      "points":  [
+                                     [
+                                         198,
+                                         116
+                                     ],
+                                     [
+                                         198,
+                                         188
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  4,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  45,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  46,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  3,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  29,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  32,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  45,
+                      "defaultRoadE":  3,
+                      "points":  [
+                                     [
+                                         198,
+                                         28
+                                     ],
+                                     [
+                                         198,
+                                         100
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  5,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  6,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  39,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  40,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  7,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  6,
+                      "defaultRoadE":  7,
+                      "points":  [
+                                     [
+                                         190,
+                                         284
+                                     ],
+                                     [
+                                         118,
+                                         284
+                                     ],
+                                     [
+                                         110,
+                                         276
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  6,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  5,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  37,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  38,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  8,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  5,
+                      "defaultRoadE":  8,
+                      "points":  [
+                                     [
+                                         206,
+                                         284
+                                     ],
+                                     [
+                                         278,
+                                         284
+                                     ],
+                                     [
+                                         286,
+                                         276
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  7,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  11,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  42,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  43,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  5,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  11,
+                      "defaultRoadE":  5,
+                      "points":  [
+                                     [
+                                         110,
+                                         204
+                                     ],
+                                     [
+                                         110,
+                                         276
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  8,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  12,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  34,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  35,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  6,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  12,
+                      "defaultRoadE":  6,
+                      "points":  [
+                                     [
+                                         286,
+                                         204
+                                     ],
+                                     [
+                                         286,
+                                         276
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  9,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  19,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  41,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  42,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  10,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  27,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  28,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  19,
+                      "defaultRoadE":  10,
+                      "points":  [
+                                     [
+                                         118,
+                                         196
+                                     ],
+                                     [
+                                         190,
+                                         196
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  10,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  9,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  25,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  26,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  20,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  35,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  36,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  9,
+                      "defaultRoadE":  20,
+                      "points":  [
+                                     [
+                                         206,
+                                         196
+                                     ],
+                                     [
+                                         278,
+                                         196
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  11,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  13,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  7,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  41,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  44,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  13,
+                      "defaultRoadE":  7,
+                      "points":  [
+                                     [
+                                         114,
+                                         112
+                                     ],
+                                     [
+                                         110,
+                                         188
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  12,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  14,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  8,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  33,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  36,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  14,
+                      "defaultRoadE":  8,
+                      "points":  [
+                                     [
+                                         282,
+                                         112
+                                     ],
+                                     [
+                                         286,
+                                         188
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  13,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  11,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  14,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  31,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  32,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  11,
+                      "defaultRoadE":  14,
+                      "points":  [
+                                     [
+                                         114,
+                                         112
+                                     ],
+                                     [
+                                         190,
+                                         108
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  14,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  13,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  29,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  30,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  12,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  13,
+                      "defaultRoadE":  12,
+                      "points":  [
+                                     [
+                                         206,
+                                         108
+                                     ],
+                                     [
+                                         282,
+                                         112
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  15,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  16,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  45,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  17,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  16,
+                      "defaultRoadE":  17,
+                      "points":  [
+                                     [
+                                         190,
+                                         20
+                                     ],
+                                     [
+                                         48,
+                                         20
+                                     ],
+                                     [
+                                         28,
+                                         36
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  16,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  15,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  46,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  18,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  15,
+                      "defaultRoadE":  18,
+                      "points":  [
+                                     [
+                                         206,
+                                         20
+                                     ],
+                                     [
+                                         348,
+                                         20
+                                     ],
+                                     [
+                                         368,
+                                         36
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  17,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  15,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  21,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  52,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  15,
+                      "defaultRoadE":  21,
+                      "points":  [
+                                     [
+                                         28,
+                                         36
+                                     ],
+                                     [
+                                         24,
+                                         188
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  18,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  16,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  22,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  47,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  16,
+                      "defaultRoadE":  22,
+                      "points":  [
+                                     [
+                                         368,
+                                         36
+                                     ],
+                                     [
+                                         372,
+                                         188
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  19,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  51,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  52,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  9,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  43,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  44,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  51,
+                      "defaultRoadE":  9,
+                      "points":  [
+                                     [
+                                         32,
+                                         196
+                                     ],
+                                     [
+                                         102,
+                                         196
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  20,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  10,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  33,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  34,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  47,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  48,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  10,
+                      "defaultRoadE":  47,
+                      "points":  [
+                                     [
+                                         294,
+                                         196
+                                     ],
+                                     [
+                                         364,
+                                         196
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  21,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  17,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  51,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  23,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  17,
+                      "defaultRoadE":  23,
+                      "points":  [
+                                     [
+                                         24,
+                                         204
+                                     ],
+                                     [
+                                         24,
+                                         348
+                                     ],
+                                     [
+                                         36,
+                                         368
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  22,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  18,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  48,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  24,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  18,
+                      "defaultRoadE":  24,
+                      "points":  [
+                                     [
+                                         372,
+                                         204
+                                     ],
+                                     [
+                                         372,
+                                         348
+                                     ],
+                                     [
+                                         360,
+                                         368
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  23,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  21,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  24,
+                                        "direction":  0
+                                    },
+                                    {
+                                        "roadNo":  50,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  21,
+                      "defaultRoadE":  24,
+                      "points":  [
+                                     [
+                                         36,
+                                         368
+                                     ],
+                                     [
+                                         190,
+                                         372
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  24,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  23,
+                                        "direction":  1
+                                    },
+                                    {
+                                        "roadNo":  49,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  22,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  23,
+                      "defaultRoadE":  22,
+                      "points":  [
+                                     [
+                                         206,
+                                         372
+                                     ],
+                                     [
+                                         360,
+                                         368
+                                     ]
+                                 ]
+                  },
+                  {
+                      "id":  25,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  3,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  10,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  3,
+                      "defaultRoadE":  10,
+                      "points":  [
+                                     [
+                                         198,
+                                         188
+                                     ],
+                                     [
+                                         206,
+                                         196
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  26,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  10,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  2,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  10,
+                      "defaultRoadE":  2,
+                      "points":  [
+                                     [
+                                         206,
+                                         196
+                                     ],
+                                     [
+                                         198,
+                                         208
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  27,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  2,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  9,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  2,
+                      "defaultRoadE":  9,
+                      "points":  [
+                                     [
+                                         198,
+                                         208
+                                     ],
+                                     [
+                                         190,
+                                         196
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  28,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  9,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  3,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  9,
+                      "defaultRoadE":  3,
+                      "points":  [
+                                     [
+                                         190,
+                                         196
+                                     ],
+                                     [
+                                         198,
+                                         188
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  29,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  4,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  14,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  4,
+                      "defaultRoadE":  14,
+                      "points":  [
+                                     [
+                                         198,
+                                         100
+                                     ],
+                                     [
+                                         206,
+                                         108
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           108
+                                       ]
+                  },
+                  {
+                      "id":  30,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  14,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  3,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  14,
+                      "defaultRoadE":  3,
+                      "points":  [
+                                     [
+                                         206,
+                                         108
+                                     ],
+                                     [
+                                         198,
+                                         116
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           108
+                                       ]
+                  },
+                  {
+                      "id":  31,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  3,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  13,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  3,
+                      "defaultRoadE":  13,
+                      "points":  [
+                                     [
+                                         198,
+                                         116
+                                     ],
+                                     [
+                                         190,
+                                         108
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           108
+                                       ]
+                  },
+                  {
+                      "id":  32,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  13,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  4,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  13,
+                      "defaultRoadE":  4,
+                      "points":  [
+                                     [
+                                         190,
+                                         108
+                                     ],
+                                     [
+                                         198,
+                                         100
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           108
+                                       ]
+                  },
+                  {
+                      "id":  33,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  12,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  20,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  12,
+                      "defaultRoadE":  20,
+                      "points":  [
+                                     [
+                                         286,
+                                         188
+                                     ],
+                                     [
+                                         294,
+                                         196
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           286,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  34,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  20,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  8,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  20,
+                      "defaultRoadE":  8,
+                      "points":  [
+                                     [
+                                         294,
+                                         196
+                                     ],
+                                     [
+                                         286,
+                                         204
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           286,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  35,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  8,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  10,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  8,
+                      "defaultRoadE":  10,
+                      "points":  [
+                                     [
+                                         286,
+                                         204
+                                     ],
+                                     [
+                                         278,
+                                         196
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           286,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  36,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  10,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  12,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  10,
+                      "defaultRoadE":  12,
+                      "points":  [
+                                     [
+                                         278,
+                                         196
+                                     ],
+                                     [
+                                         286,
+                                         188
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           286,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  37,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  2,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  6,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  2,
+                      "defaultRoadE":  6,
+                      "points":  [
+                                     [
+                                         198,
+                                         276
+                                     ],
+                                     [
+                                         206,
+                                         284
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           284
+                                       ]
+                  },
+                  {
+                      "id":  38,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  6,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  1,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  6,
+                      "defaultRoadE":  1,
+                      "points":  [
+                                     [
+                                         206,
+                                         284
+                                     ],
+                                     [
+                                         198,
+                                         292
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           284
+                                       ]
+                  },
+                  {
+                      "id":  39,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  1,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  5,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  1,
+                      "defaultRoadE":  5,
+                      "points":  [
+                                     [
+                                         198,
+                                         292
+                                     ],
+                                     [
+                                         190,
+                                         284
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           284
+                                       ]
+                  },
+                  {
+                      "id":  40,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  5,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  2,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  5,
+                      "defaultRoadE":  2,
+                      "points":  [
+                                     [
+                                         190,
+                                         284
+                                     ],
+                                     [
+                                         198,
+                                         276
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           284
+                                       ]
+                  },
+                  {
+                      "id":  41,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  11,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  9,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  11,
+                      "defaultRoadE":  9,
+                      "points":  [
+                                     [
+                                         110,
+                                         188
+                                     ],
+                                     [
+                                         118,
+                                         196
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           110,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  42,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  9,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  7,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  9,
+                      "defaultRoadE":  7,
+                      "points":  [
+                                     [
+                                         118,
+                                         196
+                                     ],
+                                     [
+                                         110,
+                                         204
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           110,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  43,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  7,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  19,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  7,
+                      "defaultRoadE":  19,
+                      "points":  [
+                                     [
+                                         110,
+                                         204
+                                     ],
+                                     [
+                                         102,
+                                         196
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           110,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  44,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  19,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  11,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  19,
+                      "defaultRoadE":  11,
+                      "points":  [
+                                     [
+                                         102,
+                                         196
+                                     ],
+                                     [
+                                         110,
+                                         188
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           110,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  45,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  15,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  4,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  15,
+                      "defaultRoadE":  4,
+                      "points":  [
+                                     [
+                                         190,
+                                         20
+                                     ],
+                                     [
+                                         198,
+                                         28
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           20
+                                       ]
+                  },
+                  {
+                      "id":  46,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  4,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  16,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  4,
+                      "defaultRoadE":  16,
+                      "points":  [
+                                     [
+                                         198,
+                                         28
+                                     ],
+                                     [
+                                         206,
+                                         20
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           20
+                                       ]
+                  },
+                  {
+                      "id":  47,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  18,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  20,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  18,
+                      "defaultRoadE":  20,
+                      "points":  [
+                                     [
+                                         372,
+                                         188
+                                     ],
+                                     [
+                                         364,
+                                         196
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           372,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  48,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  20,
+                                        "direction":  1
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  22,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  20,
+                      "defaultRoadE":  22,
+                      "points":  [
+                                     [
+                                         364,
+                                         196
+                                     ],
+                                     [
+                                         372,
+                                         204
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           372,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  49,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  24,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  1,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  24,
+                      "defaultRoadE":  1,
+                      "points":  [
+                                     [
+                                         206,
+                                         372
+                                     ],
+                                     [
+                                         198,
+                                         364
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           372
+                                       ]
+                  },
+                  {
+                      "id":  50,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  1,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  23,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  1,
+                      "defaultRoadE":  23,
+                      "points":  [
+                                     [
+                                         198,
+                                         364
+                                     ],
+                                     [
+                                         190,
+                                         372
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           198,
+                                           372
+                                       ]
+                  },
+                  {
+                      "id":  51,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  21,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  19,
+                                        "direction":  0
+                                    }
+                                ],
+                      "defaultRoadS":  21,
+                      "defaultRoadE":  19,
+                      "points":  [
+                                     [
+                                         24,
+                                         204
+                                     ],
+                                     [
+                                         32,
+                                         196
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           24,
+                                           196
+                                       ]
+                  },
+                  {
+                      "id":  52,
+                      "nodeS":  [
+                                    {
+                                        "roadNo":  19,
+                                        "direction":  0
+                                    }
+                                ],
+                      "nodeE":  [
+                                    {
+                                        "roadNo":  17,
+                                        "direction":  1
+                                    }
+                                ],
+                      "defaultRoadS":  19,
+                      "defaultRoadE":  17,
+                      "points":  [
+                                     [
+                                         32,
+                                         196
+                                     ],
+                                     [
+                                         24,
+                                         188
+                                     ]
+                                 ],
+                      "kind":  "turn",
+                      "controlPoint":  [
+                                           24,
+                                           196
+                                       ]
+                  }
+              ],
+    "mainRoad":  [
+                     {
+                         "fromRoadNo":  3,
+                         "fromNode":  1,
+                         "toRoadNo":  2,
+                         "toNode":  1,
+                         "points":  [
+                                        [
+                                            198,
+                                            188
+                                        ],
+                                        [
+                                            198,
+                                            208
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  9,
+                         "fromNode":  1,
+                         "toRoadNo":  10,
+                         "toNode":  0,
+                         "points":  [
+                                        [
+                                            190,
+                                            196
+                                        ],
+                                        [
+                                            206,
+                                            196
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  4,
+                         "fromNode":  1,
+                         "toRoadNo":  3,
+                         "toNode":  0,
+                         "points":  [
+                                        [
+                                            198,
+                                            100
+                                        ],
+                                        [
+                                            198,
+                                            116
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  13,
+                         "fromNode":  1,
+                         "toRoadNo":  14,
+                         "toNode":  0,
+                         "points":  [
+                                        [
+                                            190,
+                                            108
+                                        ],
+                                        [
+                                            206,
+                                            108
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  12,
+                         "fromNode":  1,
+                         "toRoadNo":  8,
+                         "toNode":  0,
+                         "points":  [
+                                        [
+                                            286,
+                                            188
+                                        ],
+                                        [
+                                            286,
+                                            204
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  10,
+                         "fromNode":  1,
+                         "toRoadNo":  20,
+                         "toNode":  0,
+                         "points":  [
+                                        [
+                                            278,
+                                            196
+                                        ],
+                                        [
+                                            294,
+                                            196
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  2,
+                         "fromNode":  0,
+                         "toRoadNo":  1,
+                         "toNode":  1,
+                         "points":  [
+                                        [
+                                            198,
+                                            276
+                                        ],
+                                        [
+                                            198,
+                                            292
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  5,
+                         "fromNode":  0,
+                         "toRoadNo":  6,
+                         "toNode":  0,
+                         "points":  [
+                                        [
+                                            190,
+                                            284
+                                        ],
+                                        [
+                                            206,
+                                            284
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  11,
+                         "fromNode":  1,
+                         "toRoadNo":  7,
+                         "toNode":  0,
+                         "points":  [
+                                        [
+                                            110,
+                                            188
+                                        ],
+                                        [
+                                            110,
+                                            204
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  19,
+                         "fromNode":  1,
+                         "toRoadNo":  9,
+                         "toNode":  0,
+                         "points":  [
+                                        [
+                                            102,
+                                            196
+                                        ],
+                                        [
+                                            118,
+                                            196
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  15,
+                         "fromNode":  0,
+                         "toRoadNo":  16,
+                         "toNode":  0,
+                         "points":  [
+                                        [
+                                            190,
+                                            20
+                                        ],
+                                        [
+                                            206,
+                                            20
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  18,
+                         "fromNode":  1,
+                         "toRoadNo":  22,
+                         "toNode":  0,
+                         "points":  [
+                                        [
+                                            372,
+                                            188
+                                        ],
+                                        [
+                                            372,
+                                            204
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  24,
+                         "fromNode":  0,
+                         "toRoadNo":  23,
+                         "toNode":  1,
+                         "points":  [
+                                        [
+                                            206,
+                                            372
+                                        ],
+                                        [
+                                            190,
+                                            372
+                                        ]
+                                    ]
+                     },
+                     {
+                         "fromRoadNo":  21,
+                         "fromNode":  0,
+                         "toRoadNo":  17,
+                         "toNode":  1,
+                         "points":  [
+                                        [
+                                            24,
+                                            204
+                                        ],
+                                        [
+                                            24,
+                                            188
+                                        ]
+                                    ]
+                     }
+                 ]
+}
