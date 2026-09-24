@@ -1836,6 +1836,7 @@ public class RoadNetworkSplineCreator : MonoBehaviour
         if (TryGetComponent(out SplineExtrude oldExtrude)) oldExtrude.enabled = false;
         if (TryGetComponent(out MeshRenderer meshRenderer))
             meshRenderer.enabled = false;
+            //เปิด
         if (TryGetComponent(out MeshCollider oldCollider))
             oldCollider.enabled = false;
     }
