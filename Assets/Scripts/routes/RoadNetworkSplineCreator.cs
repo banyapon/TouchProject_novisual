@@ -1597,6 +1597,8 @@ public class RoadNetworkSplineCreator : MonoBehaviour
             spline.Add(new BezierKnot(ToFloat3(points[0]), float3.zero, ToFloat3(approach)), TangentMode.Broken);
         }
 
+        //spline.Add(new BezierKnot(position, tangentIn,tangentOut), TangentMode.Broken);
+
         spline.Add(new BezierKnot(ToFloat3(start), ToFloat3(-approach),
             ToFloat3((control - start) * 1.1f)), TangentMode.Broken);
         spline.Add(new BezierKnot(ToFloat3(end), ToFloat3((control - end) * 1.1f),
