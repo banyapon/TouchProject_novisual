@@ -13,12 +13,12 @@ public class SplineRoute : MonoBehaviour
         //A
         Spline spline = container.AddSpline();
         BezierKnot knotStart = new BezierKnot(
-            position: new float3(0f, -20f, 0f),
+            position: new float3(0f, 0f, -20f),
             tangentIn: float3.zero,
             tangentOut: new float3(0f, 0f, 0f)
         );
         BezierKnot knotEnd = new BezierKnot(
-            position: new float3(0f, -5f, 0f),
+            position: new float3(0f, 0f, -5f),
             tangentIn: new float3(0f, 0f, 0f),
             tangentOut: float3.zero
         );
@@ -29,15 +29,15 @@ public class SplineRoute : MonoBehaviour
         //B
         spline = container.AddSpline();
         knotStart = new BezierKnot(
-            position: new float3(0f, -5f, 0f),
+            position: new float3(0f, 0f, -5f),
             tangentIn: float3.zero,
             //tangentOut: new float3(0f, 3.75f, 0f)
-            tangentOut: new float3(0f, 5.0f, 0f)
+            tangentOut: new float3(0f, 0f, 5.0f)
         );
         knotEnd = new BezierKnot(
-            position: new float3(-5f, 0f, 0f),
+            position: new float3(-1f, 0f, 0f),
             //tangentIn: new float3(3.75f, 0f, 0f),
-            tangentIn: new float3(5.0f, 0f, 0f),
+            tangentIn: new float3(1.0f, 0f, 0f),
             tangentOut: float3.zero
         );
         spline.Add(knotStart, TangentMode.Broken);
@@ -47,15 +47,15 @@ public class SplineRoute : MonoBehaviour
         //C
         spline = container.AddSpline();
         knotStart = new BezierKnot(
-            position: new float3(0f, -5f, 0f),
+            position: new float3(0f, 0f, -5f),
             tangentIn: float3.zero,
             //tangentOut: new float3(0f, 3.75f, 0f)
-            tangentOut: new float3(0f, 5.0f, 0f)
+            tangentOut: new float3(0f, 0f, 5.0f)
         );
         knotEnd = new BezierKnot(
-            position: new float3(5f, 0f, 0f),
+            position: new float3(1f, 0f, 0f),
             //tangentIn: new float3(-3.75f, 0f, 0f),
-            tangentIn: new float3(-5.0f, 0f, 0f),
+            tangentIn: new float3(-1.0f, 0f, 0f),
             tangentOut: float3.zero
         );
         spline.Add(knotStart, TangentMode.Broken);
@@ -97,15 +97,15 @@ public class SplineRoute : MonoBehaviour
         //F
         spline = container.AddSpline();
         knotStart = new BezierKnot(
-            position: new float3(-5f, 0f, 0f),
+            position: new float3(-1f, 0f, 0f),
             tangentIn: float3.zero,
             //tangentOut: new float3(3.75f, 0f, 0f)
-            tangentOut: new float3(5.0f, 0f, 0f)
+            tangentOut: new float3(1.0f, 0f, 0f)
         );
         knotEnd = new BezierKnot(
-            position: new float3(0f, 5f, 0f),
+            position: new float3(0f, 0f, 5f),
             //tangentIn: new float3(0f, -3.75f, 0f),
-            tangentIn: new float3(0f, -5.0f, 0f),
+            tangentIn: new float3(0f, 0f, -5.0f),
             tangentOut: float3.zero
         );
         spline.Add(knotStart, TangentMode.Broken);
@@ -115,15 +115,15 @@ public class SplineRoute : MonoBehaviour
         //G
         spline = container.AddSpline();
         knotStart = new BezierKnot(
-            position: new float3(0f, 5f, 0f),
+            position: new float3(0f, 0f, 5f),
             tangentIn: float3.zero,
             //tangentOut: new float3(0f, -3.75f, 0f)
-            tangentOut: new float3(0f, -5.0f, 0f)
+            tangentOut: new float3(0f, 0f, -5.0f)
         );
         knotEnd = new BezierKnot(
-            position: new float3(5f, 0f, 0f),
+            position: new float3(1f, 0f, 0f),
             //tangentIn: new float3(-3.75f, 0f, 0f),
-            tangentIn: new float3(-5.0f, 0f, 0f),
+            tangentIn: new float3(-1.0f, 0f, 0f),
             tangentOut: float3.zero
         );
         spline.Add(knotStart, TangentMode.Broken);
@@ -133,12 +133,12 @@ public class SplineRoute : MonoBehaviour
         //H
         spline = container.AddSpline();
         knotStart = new BezierKnot(
-            position: new float3(0f, 20f, 0f),
+            position: new float3(0f, 0f, 20f),
             tangentIn: float3.zero,
             tangentOut: new float3(0f, 0f, 0f)
         );
         knotEnd = new BezierKnot(
-            position: new float3(0f, 5f, 0f),
+            position: new float3(0f, 0f, 5f),
             tangentIn: new float3(0f, 0f, 0f),
             tangentOut: float3.zero
         );
@@ -149,12 +149,12 @@ public class SplineRoute : MonoBehaviour
         //I
         spline = container.AddSpline();
         knotStart = new BezierKnot(
-            position: new float3(0f, -5f, 0f),
+            position: new float3(0f, 0f, -5f),
             tangentIn: float3.zero,
             tangentOut: new float3(0f, 0f, 0f)
         );
         knotEnd = new BezierKnot(
-            position: new float3(0f, 5f, 0f),
+            position: new float3(0f, 0f, 5f),
             tangentIn: new float3(0f, 0f, 0f),
             tangentOut: float3.zero
         );
